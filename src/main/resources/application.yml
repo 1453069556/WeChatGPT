@@ -1,0 +1,47 @@
+logging:
+  level:
+    root: INFO
+openai:
+  token: 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
+  temperature: 0.6
+  presence_penalty: 0
+  frequency_penalty: 0
+  n: 1
+  max_tokens: 500
+  stop: null
+  stream: false
+  timeout: 60
+  system_default: 你的名字叫小C，你回答内容请尽可能的精准简洁。
+  welcome_words: 有人关注了你！请你用优美的语句来欢迎！
+wxchat:
+  default_response: 正在思考中...请稍后
+  default_welcome_words_end: ->(我现在处于测试阶段，有任何问题或者好的建议可以联系客服微信：AIXC2023)
+wx:
+  mp:
+    app-id: wxba4cf742c969fb56
+    secret: a5477d800eb2501068840fed99dafda1
+    token: axovhm2nIJZDRPzx2ZcQ9bnsZd
+    aes-key: axovhm2nIJZDRPzx2ZcQ9bnsZdraKa37jFr81Dc9Xhc
+#    # 公众号配置(必填)
+#    wx.mp.appId = appId
+#    wx.mp.secret = @secret
+#    wx.mp.token = @token
+#    wx.mp.aesKey = @aesKey
+#    # 存储配置redis(可选)
+#    wx.mp.config-storage.type = Jedis                     # 配置类型: Memory(默认), Jedis, RedisTemplate
+#    wx.mp.config-storage.key-prefix = wx                  # 相关redis前缀配置: wx(默认)
+#    wx.mp.config-storage.redis.host = 127.0.0.1
+#    wx.mp.config-storage.redis.port = 6379
+#    #单机和sentinel同时存在时，优先使用sentinel配置
+#    #wx.mp.config-storage.redis.sentinel-ips=127.0.0.1:16379,127.0.0.1:26379
+#    #wx.mp.config-storage.redis.sentinel-name=mymaster
+#    # http客户端配置
+#    wx.mp.config-storage.http-client-type=httpclient      # http客户端类型: HttpClient(默认), OkHttp, JoddHttp
+#    wx.mp.config-storage.http-proxy-host=
+#    wx.mp.config-storage.http-proxy-port=
+#    wx.mp.config-storage.http-proxy-username=
+#    wx.mp.config-storage.http-proxy-password=
+#    # 公众号地址host配置
+#    #wx.mp.hosts.api-host=http://proxy.com/
+#    #wx.mp.hosts.open-host=http://proxy.com/
+#    #wx.mp.hosts.mp-host=http://proxy.com/
