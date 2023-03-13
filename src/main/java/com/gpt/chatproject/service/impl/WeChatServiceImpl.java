@@ -2,6 +2,7 @@ package com.gpt.chatproject.service.impl;
 
 import com.gpt.chatproject.service.WeChatService;
 import com.gpt.chatproject.utils.GptUtils;
+import com.gpt.chatproject.vo.RedisLock;
 import com.theokanning.openai.completion.chat.ChatMessage;
 import me.chanjar.weixin.common.error.WxErrorException;
 import me.chanjar.weixin.mp.api.WxMpService;
@@ -21,25 +22,41 @@ public class WeChatServiceImpl implements WeChatService {
     @Autowired
     private WxMpService wxMpService;
 
+    @Autowired
+    private RedisLock redisLock;
+
     @Value("${openai.welcome_words}")
     private String WELCOME_WORDS;
+
     @Value("${wxchat.default_welcome_words_end}")
     private String DEFAULT_WELCOME_WORDS_END;
 
     @Override
-    public void weChatAsyncReply(WxMpXmlMessage wechatTextMessage) throws WxErrorException {
-        ChatMessage chatMessage = new ChatMessage("user", wechatTextMessage.getContent());
-        WxMpKefuMessage kefuMessage = getReply(chatMessage, wechatTextMessage.getFromUser());
-        wxMpService.getKefuService().sendKefuMessage(kefuMessage);
+    public void weChatAsyncReply(WxMpXmlMessage wechatTextMessage){
+        try {
+            ChatMessage chatMessage = new ChatMessage("user", wechatTextMessage.getContent());
+            WxMpKefuMessage kefuMessage = getReply(chatMessage, wechatTextMessage.getFromUser());
+            wxMpService.getKefuService().sendKefuMessage(kefuMessage);
+        } catch (WxErrorException e) {
+            e.printStackTrace();
+        } finally {
+            redisLock.releaseLock(wechatTextMessage.getFromUser());
+        }
     }
 
     @Override
-    public void subscribeEvent(WxMpXmlMessage weChatSubscribeEvents) throws WxErrorException {
-        ChatMessage chatMessage = new ChatMessage("system", WELCOME_WORDS);
-        WxMpKefuMessage kefuMessage = getReply(chatMessage, weChatSubscribeEvents.getFromUser());
-        StringBuilder original = new StringBuilder(kefuMessage.getContent());
-        kefuMessage.setContent(original.append(DEFAULT_WELCOME_WORDS_END).toString());
-        wxMpService.getKefuService().sendKefuMessage(kefuMessage);
+    public void subscribeEvent(WxMpXmlMessage weChatSubscribeEvents){
+        try {
+            ChatMessage chatMessage = new ChatMessage("system", WELCOME_WORDS);
+            WxMpKefuMessage kefuMessage = getReply(chatMessage, weChatSubscribeEvents.getFromUser());
+            StringBuilder original = new StringBuilder(kefuMessage.getContent());
+            kefuMessage.setContent(original.append(DEFAULT_WELCOME_WORDS_END).toString());
+            wxMpService.getKefuService().sendKefuMessage(kefuMessage);
+        } catch (WxErrorException e) {
+            e.printStackTrace();
+        } finally {
+            redisLock.releaseLock(weChatSubscribeEvents.getFromUser());
+        }
     }
 
     WxMpKefuMessage getReply(ChatMessage chatMessage, String fromUserName) throws WxErrorException {
