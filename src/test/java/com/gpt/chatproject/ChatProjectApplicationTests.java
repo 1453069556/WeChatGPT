@@ -78,8 +78,5 @@ class ChatProjectApplicationTests {
 //        wxMpService.getKefuService().sendKefuMessage(kefuMessage);
 //
 //    }
-//    @Test
-//    void test3(){
-//    }
 
 }

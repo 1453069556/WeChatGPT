@@ -25,6 +25,12 @@ public class WechatController {
     @Value("${wxchat.frequency_response}")
     private String FREQUENCY_RESPONSE;
 
+    @Value("${wxchat.max_tokens}")
+    private Integer MAX_TOKENS;
+
+    @Value("${wxchat.chars_overflow_response}")
+    private String CHARS_OVERFLOW_RESPONSE;
+
     @Autowired
     private WxMpService wxMpService;
 
@@ -61,6 +67,12 @@ public class WechatController {
         if (!redisUtils.tryLock(wxMpXmlMessage.getFromUser())) {
             WechatResponseTextMessage wechatResponseTextMessage = new WechatResponseTextMessage(wxMpXmlMessage.getFromUser(),
                     wxMpXmlMessage.getToUser(), wxMpXmlMessage.getMsgType(), FREQUENCY_RESPONSE);
+            return xmlMapper.writeValueAsString(wechatResponseTextMessage);
+        }
+        // 字数限制
+        if (wxMpXmlMessage.getContent().length() > MAX_TOKENS){
+            WechatResponseTextMessage wechatResponseTextMessage = new WechatResponseTextMessage(wxMpXmlMessage.getFromUser(),
+                    wxMpXmlMessage.getToUser(), wxMpXmlMessage.getMsgType(), CHARS_OVERFLOW_RESPONSE);
             return xmlMapper.writeValueAsString(wechatResponseTextMessage);
         }
         // 消息路由
