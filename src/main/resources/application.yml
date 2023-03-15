@@ -12,10 +12,11 @@ openai:
   stream: false
   timeout: 60
   system_default: 你的名字叫小C，你回答内容请尽可能的精准简洁。
-  welcome_words: 有人关注了你！请你用优美的语句来欢迎！
+  welcome_words: 你的名字叫小C，现在用户首次使用小C。请你用优美的语句来欢迎他并给出与小C相对应的聊天技巧。
 wxchat:
   frequency_response: 小C正在处理您上个问题。为了保证会话连贯，请耐心等待!
   default_welcome_words_end: -->(我现在处于测试阶段，有任何问题或者好的建议可以联系客服微信：AIXC2023)
+  chatMaxCatch: 4
 wx:
   mp:
     app-id: wxba4cf742c969fb56
@@ -36,7 +37,8 @@ wx:
     #    #wx.mp.hosts.open-host=http://proxy.com/
     #    #wx.mp.hosts.mp-host=http://proxy.com/
 redislock:
-  expireSeconds: 300
+  expireSeconds: 60
+  chatTimeOut: 600
 spring:
   redis:
     database: 0
