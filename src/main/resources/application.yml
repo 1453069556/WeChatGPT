@@ -47,3 +47,5 @@ spring:
     password: 123456
   aop:
     auto: true
+server:
+  port: 80
