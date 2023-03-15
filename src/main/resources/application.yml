@@ -10,7 +10,7 @@ openai:
   max_tokens: 500
   stop: null
   stream: false
-  timeout: 60
+  timeout: 100
   system_default: 你的名字叫小C，你回答内容请尽可能的精准简洁。
   welcome_words: 你的名字叫小C，现在用户首次使用小C。请你用优美的语句来欢迎他并给出与小C相对应的聊天技巧。
 wxchat:

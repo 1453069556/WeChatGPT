@@ -44,19 +44,19 @@ public class GptUtils {
     final static String PROXY_HOST_NAME = "127.0.0.1";
     final static Integer PROXY_PORT = 10809;
 
-    private OpenAiApi initApi() {
-        // 设置代理
-        ObjectMapper mapper = defaultObjectMapper();
-        Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(PROXY_HOST_NAME, PROXY_PORT));
-        OkHttpClient client = defaultClient(TOKEN, Duration.ofSeconds(TIME_OUT)).newBuilder().proxy(proxy).build();
-        Retrofit retrofit = defaultRetrofit(client, mapper);
-        return retrofit.create(OpenAiApi.class);
-    }
+//    private OpenAiApi initApi() {
+//        // 设置代理
+//        ObjectMapper mapper = defaultObjectMapper();
+//        Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(PROXY_HOST_NAME, PROXY_PORT));
+//        OkHttpClient client = defaultClient(TOKEN, Duration.ofSeconds(TIME_OUT)).newBuilder().proxy(proxy).build();
+//        Retrofit retrofit = defaultRetrofit(client, mapper);
+//        return retrofit.create(OpenAiApi.class);
+//    }
 
     // 与GPT对话
     public ChatMessage askGpt(List<ChatMessage> messages) {
         // 创建 OpenAI 客户端
-        OpenAiService service = new OpenAiService(this.initApi());
+        OpenAiService service = new OpenAiService(TOKEN, Duration.ofSeconds(TIME_OUT));
         messages.add(0, new ChatMessage("system", SYSTEM_DEFAULT));
         // 设置请求参数
         ChatCompletionRequest request = ChatCompletionRequest.builder()

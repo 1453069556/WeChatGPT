@@ -49,7 +49,6 @@ public class WechatController {
         if (!wxMpService.checkSignature(timestamp, nonce, signature)) {
             return null;
         }
-
         return echostr;
     }
 
