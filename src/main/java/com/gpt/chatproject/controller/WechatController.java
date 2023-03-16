@@ -63,16 +63,16 @@ public class WechatController {
     public String weChatPost(HttpServletRequest request) throws IOException {
         ServletInputStream inputStream = request.getInputStream();
         WxMpXmlMessage wxMpXmlMessage = WxMpXmlMessage.fromXml(inputStream);
-        // 一问一答限制
-        if (!redisUtils.tryLock(wxMpXmlMessage.getFromUser())) {
-            WechatResponseTextMessage wechatResponseTextMessage = new WechatResponseTextMessage(wxMpXmlMessage.getFromUser(),
-                    wxMpXmlMessage.getToUser(), wxMpXmlMessage.getMsgType(), FREQUENCY_RESPONSE);
-            return xmlMapper.writeValueAsString(wechatResponseTextMessage);
-        }
         // 字数限制
         if (wxMpXmlMessage.getContent().length() > MAX_TOKENS){
             WechatResponseTextMessage wechatResponseTextMessage = new WechatResponseTextMessage(wxMpXmlMessage.getFromUser(),
                     wxMpXmlMessage.getToUser(), wxMpXmlMessage.getMsgType(), CHARS_OVERFLOW_RESPONSE);
+            return xmlMapper.writeValueAsString(wechatResponseTextMessage);
+        }
+        // 一问一答限制
+        if (!redisUtils.tryLock(wxMpXmlMessage.getFromUser())) {
+            WechatResponseTextMessage wechatResponseTextMessage = new WechatResponseTextMessage(wxMpXmlMessage.getFromUser(),
+                    wxMpXmlMessage.getToUser(), wxMpXmlMessage.getMsgType(), FREQUENCY_RESPONSE);
             return xmlMapper.writeValueAsString(wechatResponseTextMessage);
         }
         // 消息路由

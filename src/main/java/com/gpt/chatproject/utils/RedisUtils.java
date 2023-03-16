@@ -9,7 +9,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -73,6 +72,7 @@ public class RedisUtils {
             ArrayList<ChatMessage> messages = new ArrayList<>();
             messages.add(new ChatMessage(role, content));
             newWxRedisCatchVo.setChatCatch(messages);
+            newWxRedisCatchVo.setChatCount(newWxRedisCatchVo.getChatCount() + 1);
             redisTemplate.opsForValue().set(fromUser, newWxRedisCatchVo, CHAT_TIME_OUT, TimeUnit.SECONDS);
             return true;
         } catch (Exception e) {
