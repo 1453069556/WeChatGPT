@@ -38,9 +38,6 @@ public class WechatController {
     private WeChatHandler weChatHandler;
 
     @Autowired
-    private WeChatService weChatService;
-
-    @Autowired
     private WxMpMessageRouter messageRouter;
 
     @Autowired
@@ -63,17 +60,20 @@ public class WechatController {
     public String weChatPost(HttpServletRequest request) throws IOException {
         ServletInputStream inputStream = request.getInputStream();
         WxMpXmlMessage wxMpXmlMessage = WxMpXmlMessage.fromXml(inputStream);
-        // 字数限制
-        if (wxMpXmlMessage.getContent().length() > MAX_TOKENS){
-            WechatResponseTextMessage wechatResponseTextMessage = new WechatResponseTextMessage(wxMpXmlMessage.getFromUser(),
-                    wxMpXmlMessage.getToUser(), wxMpXmlMessage.getMsgType(), CHARS_OVERFLOW_RESPONSE);
-            return xmlMapper.writeValueAsString(wechatResponseTextMessage);
-        }
-        // 一问一答限制
-        if (!redisUtils.tryLock(wxMpXmlMessage.getFromUser())) {
-            WechatResponseTextMessage wechatResponseTextMessage = new WechatResponseTextMessage(wxMpXmlMessage.getFromUser(),
-                    wxMpXmlMessage.getToUser(), wxMpXmlMessage.getMsgType(), FREQUENCY_RESPONSE);
-            return xmlMapper.writeValueAsString(wechatResponseTextMessage);
+        // 是文本消息才做以下处理
+        if (WxConsts.XmlMsgType.TEXT.equals(wxMpXmlMessage.getMsgType())) {
+            // 字数限制
+            if (wxMpXmlMessage.getContent().length() > MAX_TOKENS) {
+                WechatResponseTextMessage wechatResponseTextMessage = new WechatResponseTextMessage(wxMpXmlMessage.getFromUser(),
+                        wxMpXmlMessage.getToUser(), wxMpXmlMessage.getMsgType(), CHARS_OVERFLOW_RESPONSE);
+                return xmlMapper.writeValueAsString(wechatResponseTextMessage);
+            }
+            // 加锁&&一问一答限制
+            if (!redisUtils.tryLock(wxMpXmlMessage.getFromUser())) {
+                WechatResponseTextMessage wechatResponseTextMessage = new WechatResponseTextMessage(wxMpXmlMessage.getFromUser(),
+                        wxMpXmlMessage.getToUser(), wxMpXmlMessage.getMsgType(), FREQUENCY_RESPONSE);
+                return xmlMapper.writeValueAsString(wechatResponseTextMessage);
+            }
         }
         // 消息路由
         messageRouter
