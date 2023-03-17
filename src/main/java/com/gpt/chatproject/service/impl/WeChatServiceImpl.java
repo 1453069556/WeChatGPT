@@ -152,10 +152,11 @@ public class WeChatServiceImpl implements WeChatService {
         try {
             // 获取微信的语音识别
             String recognition = voiceEvents.getRecognition();
-            logger.info("voice-->" + recognition);
+            String fromUser = voiceEvents.getFromUser();
+            // 缓存
+            redisUtils.catchChat(fromUser, GptRoleType.USER.getRole(), recognition);
             // 整理推送
             ChatMessage actualChatMessage = new ChatMessage(GptRoleType.USER.getRole(), recognition);
-            String fromUser = voiceEvents.getFromUser();
             ChatMessage responseMessages = getResponseMessages(actualChatMessage, fromUser);
             WxMpKefuMessage kefuMessage = getWxMpKefuMessage(responseMessages, fromUser);
             boolean sendResult = wxMpService.getKefuService().sendKefuMessage(kefuMessage);
