@@ -7,38 +7,28 @@ openai:
   presence_penalty: 0
   frequency_penalty: 0
   n: 1
-  max_tokens: 500
+  max_tokens: 450
   stop: null
   stream: false
   timeout: 100
   system_default: 你的名字叫小C，你回答内容请尽可能拟人化、富有感情色彩。尽可能的完成用户的要求。
   welcome_words: 你的名字叫小C，现在用户首次使用小C。请你用优美的语句来欢迎他并给出与小C相对应的聊天技巧。
+  use_proxy: 1
 wxchat:
   frequency_response: 小C正在处理您上个问题。为了保证会话连贯，请耐心等待!
   chars_overflow_response: 超出文本最大范围。请尝试精简您的内容!
   default_welcome_words_end: -->(我现在处于测试阶段，有任何问题或者好的建议可以联系客服微信：AIXC2023)
   server_error_replay: 抱歉，刚才小C开了小差，现在继续我们的话题~
-  chatMaxCatch: 6
+  chatMaxCatch: 7
   max_tokens: 600
+server:
+  port: 80
 wx:
   mp:
     app-id: wxba4cf742c969fb56
     secret: a5477d800eb2501068840fed99dafda1
     token: axovhm2nIJZDRPzx2ZcQ9bnsZd
     aes-key: axovhm2nIJZDRPzx2ZcQ9bnsZdraKa37jFr81Dc9Xhc
-    #    #单机和sentinel同时存在时，优先使用sentinel配置
-    #    #wx.mp.config-storage.redis.sentinel-ips=127.0.0.1:16379,127.0.0.1:26379
-    #    #wx.mp.config-storage.redis.sentinel-name=mymaster
-    #    # http客户端配置
-    #    wx.mp.config-storage.http-client-type=httpclient      # http客户端类型: HttpClient(默认), OkHttp, JoddHttp
-    #    wx.mp.config-storage.http-proxy-host=
-    #    wx.mp.config-storage.http-proxy-port=
-    #    wx.mp.config-storage.http-proxy-username=
-    #    wx.mp.config-storage.http-proxy-password=
-    #    # 公众号地址host配置
-    #    #wx.mp.hosts.api-host=http://proxy.com/
-    #    #wx.mp.hosts.open-host=http://proxy.com/
-    #    #wx.mp.hosts.mp-host=http://proxy.com/
 redislock:
   expireSeconds: 60
   chatTimeOut: 600
@@ -50,5 +40,3 @@ spring:
     password: 123456
   aop:
     auto: true
-server:
-  port: 80

@@ -14,6 +14,8 @@ import me.chanjar.weixin.common.error.WxErrorException;
 import me.chanjar.weixin.mp.api.WxMpService;
 import me.chanjar.weixin.mp.bean.kefu.WxMpKefuMessage;
 import me.chanjar.weixin.mp.bean.message.WxMpXmlMessage;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -52,6 +54,8 @@ public class WeChatServiceImpl implements WeChatService {
 
     @Value("${wxchat.chars_overflow_response}")
     private String CHARS_OVERFLOW_RESPONSE;
+
+    private static final Logger logger = LogManager.getLogger(WeChatServiceImpl.class);
 
     @Override
     public String shouldFilterMessage(WxMpXmlMessage wxMpXmlMessage) throws JsonProcessingException {
@@ -148,6 +152,7 @@ public class WeChatServiceImpl implements WeChatService {
         try {
             // 获取微信的语音识别
             String recognition = voiceEvents.getRecognition();
+            logger.info("voice-->" + recognition);
             // 整理推送
             ChatMessage actualChatMessage = new ChatMessage(GptRoleType.USER.getRole(), recognition);
             String fromUser = voiceEvents.getFromUser();
