@@ -13,7 +13,6 @@ openai:
   timeout: 100
   system_default: 你的名字叫小C，你回答内容请尽可能拟人化、富有感情色彩。尽可能的完成用户的要求。
   welcome_words: 你的名字叫小C，现在用户首次使用小C。请你用优美的语句来欢迎他并给出与小C相对应的聊天技巧。
-  use_proxy: 1
 wxchat:
   frequency_response: 小C正在处理您上个问题。为了保证会话连贯，请耐心等待!
   chars_overflow_response: 超出文本最大范围。请尝试精简您的内容!
