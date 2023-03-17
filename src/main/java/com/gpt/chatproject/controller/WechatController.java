@@ -1,16 +1,14 @@
 package com.gpt.chatproject.controller;
 
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.gpt.chatproject.handler.WeChatHandler;
 import com.gpt.chatproject.service.WeChatService;
-import com.gpt.chatproject.utils.RedisUtils;
-import com.gpt.chatproject.vo.WechatResponseTextMessage;
 import me.chanjar.weixin.common.api.WxConsts;
+import me.chanjar.weixin.common.error.WxErrorException;
 import me.chanjar.weixin.mp.api.WxMpMessageRouter;
 import me.chanjar.weixin.mp.api.WxMpService;
 import me.chanjar.weixin.mp.bean.message.WxMpXmlMessage;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.ServletInputStream;
@@ -22,14 +20,6 @@ import java.io.IOException;
 @RequestMapping("/wechat")
 public class WechatController {
 
-    @Value("${wxchat.frequency_response}")
-    private String FREQUENCY_RESPONSE;
-
-    @Value("${wxchat.max_tokens}")
-    private Integer MAX_TOKENS;
-
-    @Value("${wxchat.chars_overflow_response}")
-    private String CHARS_OVERFLOW_RESPONSE;
 
     @Autowired
     private WxMpService wxMpService;
@@ -41,10 +31,7 @@ public class WechatController {
     private WxMpMessageRouter messageRouter;
 
     @Autowired
-    private RedisUtils redisUtils;
-
-    @Autowired
-    private XmlMapper xmlMapper;
+    private WeChatService weChatService;
 
     // 接入认证
     @GetMapping()
@@ -57,23 +44,14 @@ public class WechatController {
 
     // 被关注和取关事件
     @PostMapping()
-    public String weChatPost(HttpServletRequest request) throws IOException {
+    public String weChatPost(HttpServletRequest request) throws IOException, WxErrorException {
         ServletInputStream inputStream = request.getInputStream();
         WxMpXmlMessage wxMpXmlMessage = WxMpXmlMessage.fromXml(inputStream);
-        // 是文本消息才做以下处理
-        if (WxConsts.XmlMsgType.TEXT.equals(wxMpXmlMessage.getMsgType())) {
-            // 字数限制
-            if (wxMpXmlMessage.getContent().length() > MAX_TOKENS) {
-                WechatResponseTextMessage wechatResponseTextMessage = new WechatResponseTextMessage(wxMpXmlMessage.getFromUser(),
-                        wxMpXmlMessage.getToUser(), wxMpXmlMessage.getMsgType(), CHARS_OVERFLOW_RESPONSE);
-                return xmlMapper.writeValueAsString(wechatResponseTextMessage);
-            }
-            // 加锁&&一问一答限制
-            if (!redisUtils.tryLock(wxMpXmlMessage.getFromUser())) {
-                WechatResponseTextMessage wechatResponseTextMessage = new WechatResponseTextMessage(wxMpXmlMessage.getFromUser(),
-                        wxMpXmlMessage.getToUser(), wxMpXmlMessage.getMsgType(), FREQUENCY_RESPONSE);
-                return xmlMapper.writeValueAsString(wechatResponseTextMessage);
-            }
+        // 聊天过滤条件，如频率、字数等
+        String filterMessage = weChatService.shouldFilterMessage(wxMpXmlMessage);
+        //如果返回值不为空字符串则说明被拦截
+        if (StringUtils.isNotBlank(filterMessage)) {
+            return filterMessage;
         }
         // 消息路由
         messageRouter
@@ -83,7 +61,10 @@ public class WechatController {
                 .handler(weChatHandler.getSubscribeEventHandler()).end()
                 // 路由用户文本消息
                 .rule().msgType(WxConsts.XmlMsgType.TEXT)
-                .handler(weChatHandler.getWeChatAsyncReplyHandler()).end();
+                .handler(weChatHandler.getWeChatAsyncReplyHandler()).end()
+                // 路由语音消息
+                .rule().msgType(WxConsts.XmlMsgType.VOICE)
+                .handler(weChatHandler.getWeChatVoiceReplyHandler()).end();
         messageRouter.route(wxMpXmlMessage);
         return "";
     }

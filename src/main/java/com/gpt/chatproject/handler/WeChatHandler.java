@@ -31,7 +31,18 @@ public class WeChatHandler {
     public WxMpMessageHandler getWeChatAsyncReplyHandler() {
         return (wxMessage, context, wxMpService, sessionManager) -> {
             try {
-                weChatService.weChatAsyncReply(wxMessage);
+                weChatService.textEvent(wxMessage);
+            } catch (WxErrorException e) {
+                e.printStackTrace();
+            }
+            return null;
+        };
+    }
+
+    public WxMpMessageHandler getWeChatVoiceReplyHandler() {
+        return (wxMessage, context, wxMpService, sessionManager) -> {
+            try {
+                weChatService.voiceEvent(wxMessage);
             } catch (WxErrorException e) {
                 e.printStackTrace();
             }

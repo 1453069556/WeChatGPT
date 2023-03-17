@@ -2,6 +2,7 @@ package com.gpt.chatproject.utils;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.gpt.chatproject.enums.GptRoleType;
 import com.theokanning.openai.OpenAiApi;
 import com.theokanning.openai.completion.chat.ChatCompletionRequest;
 import com.theokanning.openai.completion.chat.ChatCompletionResult;
@@ -17,7 +18,7 @@ import java.net.Proxy;
 import java.time.Duration;
 import java.util.List;
 
-import static com.gpt.chatproject.enums.GtpModelType.GPT_TURBO;
+import static com.gpt.chatproject.enums.GptModelType.GPT_TURBO;
 import static com.theokanning.openai.service.OpenAiService.*;
 
 
@@ -57,7 +58,7 @@ public class GptUtils {
     public ChatMessage askGpt(List<ChatMessage> messages) {
         // 创建 OpenAI 客户端
         OpenAiService service = new OpenAiService(TOKEN, Duration.ofSeconds(TIME_OUT));
-        messages.add(0, new ChatMessage("system", SYSTEM_DEFAULT));
+        messages.add(0, new ChatMessage(GptRoleType.SYSTEM.getRole(), SYSTEM_DEFAULT));
         // 设置请求参数
         ChatCompletionRequest request = ChatCompletionRequest.builder()
                 .messages(messages)
