@@ -152,7 +152,7 @@ public class WeChatServiceImpl implements WeChatService {
             ChatMessage actualChatMessage = new ChatMessage(GptRoleType.USER.getRole(), recognition);
             String fromUser = voiceEvents.getFromUser();
             ChatMessage responseMessages = getResponseMessages(actualChatMessage, fromUser);
-            WxMpKefuMessage kefuMessage = getWxMpKefuMessage(actualChatMessage, fromUser);
+            WxMpKefuMessage kefuMessage = getWxMpKefuMessage(responseMessages, fromUser);
             boolean sendResult = wxMpService.getKefuService().sendKefuMessage(kefuMessage);
             if (sendResult) {
                 redisUtils.catchChat(fromUser, responseMessages.getRole(), responseMessages.getContent());
