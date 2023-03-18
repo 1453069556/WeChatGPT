@@ -56,34 +56,37 @@ public class WeChatServiceImpl implements WeChatService {
 
     @Override
     public String shouldFilterMessage(WxMpXmlMessage wxMpXmlMessage) throws JsonProcessingException {
+        String fromUser = wxMpXmlMessage.getFromUser();
+        String msgType = wxMpXmlMessage.getMsgType();
+        String result;
         // 是文本消息才做以下处理
-        if (WxConsts.XmlMsgType.TEXT.equals(wxMpXmlMessage.getMsgType())) {
+        if (WxConsts.XmlMsgType.TEXT.equals(msgType)) {
             // 字数限制
             if (wxMpXmlMessage.getContent().length() > MAX_TOKENS) {
-                WechatResponseTextMessage wechatResponseTextMessage = new WechatResponseTextMessage(wxMpXmlMessage.getFromUser(),
-                        wxMpXmlMessage.getToUser(), wxMpXmlMessage.getMsgType(), CHARS_OVERFLOW_RESPONSE);
-                return xmlMapper.writeValueAsString(wechatResponseTextMessage);
+                result = xmlMapper.writeValueAsString(new WechatResponseTextMessage(fromUser,
+                        wxMpXmlMessage.getToUser(), WxConsts.XmlMsgType.TEXT, CHARS_OVERFLOW_RESPONSE));
+                return result;
             }
             // 加锁&&一问一答限制
-            if (!redisUtils.tryLock(wxMpXmlMessage.getFromUser())) {
-                WechatResponseTextMessage wechatResponseTextMessage = new WechatResponseTextMessage(wxMpXmlMessage.getFromUser(),
-                        wxMpXmlMessage.getToUser(), wxMpXmlMessage.getMsgType(), FREQUENCY_RESPONSE);
-                return xmlMapper.writeValueAsString(wechatResponseTextMessage);
+            if (!redisUtils.tryLock(fromUser)) {
+                result = xmlMapper.writeValueAsString(new WechatResponseTextMessage(fromUser,
+                        wxMpXmlMessage.getToUser(), WxConsts.XmlMsgType.TEXT, FREQUENCY_RESPONSE));
+                return result;
             }
         }
         // 是语音消息才做以下处理
-        if (WxConsts.XmlMsgType.VOICE.equals(wxMpXmlMessage.getMsgType())) {
+        if (WxConsts.XmlMsgType.VOICE.equals(msgType)) {
             // 字数限制
             if (wxMpXmlMessage.getRecognition().length() > MAX_TOKENS) {
-                WechatResponseTextMessage wechatResponseTextMessage = new WechatResponseTextMessage(wxMpXmlMessage.getFromUser(),
-                        wxMpXmlMessage.getToUser(), wxMpXmlMessage.getMsgType(), CHARS_OVERFLOW_RESPONSE);
-                return xmlMapper.writeValueAsString(wechatResponseTextMessage);
+                result = xmlMapper.writeValueAsString(new WechatResponseTextMessage(fromUser,
+                        wxMpXmlMessage.getToUser(), WxConsts.XmlMsgType.TEXT, CHARS_OVERFLOW_RESPONSE));
+                return result;
             }
             // 加锁&&一问一答限制
-            if (!redisUtils.tryLock(wxMpXmlMessage.getFromUser())) {
-                WechatResponseTextMessage wechatResponseTextMessage = new WechatResponseTextMessage(wxMpXmlMessage.getFromUser(),
-                        wxMpXmlMessage.getToUser(), wxMpXmlMessage.getMsgType(), FREQUENCY_RESPONSE);
-                return xmlMapper.writeValueAsString(wechatResponseTextMessage);
+            if (!redisUtils.tryLock(fromUser)) {
+                result = xmlMapper.writeValueAsString(new WechatResponseTextMessage(fromUser,
+                        wxMpXmlMessage.getToUser(), WxConsts.XmlMsgType.TEXT, FREQUENCY_RESPONSE));
+                return result;
             }
         }
         return "";

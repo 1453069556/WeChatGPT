@@ -80,7 +80,7 @@ public class GptUtils {
             gptResult.setContent(gptResult.getContent().replaceFirst("(\\n)+", ""));
             // 打印 API 返回结果
             return chatCompletion.getChoices().get(0).getMessage();
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             e.printStackTrace();
             return new ChatMessage(GptRoleType.ASSISTANT.getRole(), TIME_OUT_REPLAY);
         }
