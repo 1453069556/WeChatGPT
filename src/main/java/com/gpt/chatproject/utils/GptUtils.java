@@ -42,8 +42,6 @@ public class GptUtils {
     private boolean stream;
     @Value("${openai.system_default}")
     private String SYSTEM_DEFAULT;
-    @Value("${openai.time_out_replay}")
-    private String TIME_OUT_REPLAY;
     final static String PROXY_HOST_NAME = "127.0.0.1";
     final static Integer PROXY_PORT = 10809;
 
@@ -59,30 +57,25 @@ public class GptUtils {
 
     // 与GPT对话
     public ChatMessage askGpt(List<ChatMessage> messages) {
-        try {
-            // 创建 OpenAI 客户端
-            OpenAiService service = new OpenAiService(TOKEN, Duration.ofSeconds(TIME_OUT));
-            messages.add(0, new ChatMessage(GptRoleType.SYSTEM.getRole(), SYSTEM_DEFAULT));
-            // 设置请求参数
-            ChatCompletionRequest request = ChatCompletionRequest.builder()
-                    .messages(messages)
-                    .model(GPT_TURBO.getType())
-                    .temperature(TEMPERATURE)
-                    .presencePenalty(PRESENCE_PENALTY)
-                    .frequencyPenalty(FREQUENCY_PENALTY)
-                    .n(N)
-                    .maxTokens(max_tokens)
-                    .stream(stream)
-                    .build();
-            // 调用 GPT-3 API
-            ChatCompletionResult chatCompletion = service.createChatCompletion(request);
-            ChatMessage gptResult = chatCompletion.getChoices().get(0).getMessage();
-            gptResult.setContent(gptResult.getContent().replaceFirst("(\\n)+", ""));
-            // 打印 API 返回结果
-            return chatCompletion.getChoices().get(0).getMessage();
-        } catch (RuntimeException e) {
-            e.printStackTrace();
-            return new ChatMessage(GptRoleType.ASSISTANT.getRole(), TIME_OUT_REPLAY);
-        }
+        // 创建 OpenAI 客户端
+        OpenAiService service = new OpenAiService(TOKEN, Duration.ofSeconds(TIME_OUT));
+        messages.add(0, new ChatMessage(GptRoleType.SYSTEM.getRole(), SYSTEM_DEFAULT));
+        // 设置请求参数
+        ChatCompletionRequest request = ChatCompletionRequest.builder()
+                .messages(messages)
+                .model(GPT_TURBO.getType())
+                .temperature(TEMPERATURE)
+                .presencePenalty(PRESENCE_PENALTY)
+                .frequencyPenalty(FREQUENCY_PENALTY)
+                .n(N)
+                .maxTokens(max_tokens)
+                .stream(stream)
+                .build();
+        // 调用 GPT-3 API
+        ChatCompletionResult chatCompletion = service.createChatCompletion(request);
+        ChatMessage gptResult = chatCompletion.getChoices().get(0).getMessage();
+        gptResult.setContent(gptResult.getContent().replaceFirst("(\\n)+", ""));
+        // 打印 API 返回结果
+        return chatCompletion.getChoices().get(0).getMessage();
     }
 }
