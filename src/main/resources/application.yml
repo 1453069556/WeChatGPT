@@ -11,7 +11,7 @@ openai:
   stop: null
   stream: false
   timeout: 120
-  system_default: 你的名字叫小C，你回答内容长度字符计数长度超出2000请截断。
+  system_default: "Please remember, your name is 小C. If your answer exceeds 2000 characters, please truncate it."
 wxchat:
   welcome_words: "
   Hi! 欢迎使用小C！\n\n
