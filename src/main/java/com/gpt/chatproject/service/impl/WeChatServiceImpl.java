@@ -35,7 +35,7 @@ public class WeChatServiceImpl implements WeChatService {
     @Autowired
     private XmlMapper xmlMapper;
 
-    @Value("${openai.welcome_words}")
+    @Value("${wxchat.welcome_words}")
     private String WELCOME_WORDS;
 
     @Value("${wxchat.default_welcome_words_end}")
@@ -105,7 +105,7 @@ public class WeChatServiceImpl implements WeChatService {
             String fromUser = wechatTextMessage.getFromUser();
             redisUtils.catchChat(fromUser, GptRoleType.USER.getRole(), content);
             ChatMessage responseMessages = getResponseMessages(actualChatMessage, fromUser);
-            WxMpKefuMessage kefuMessage = getWxMpKefuMessage(responseMessages, fromUser);
+            WxMpKefuMessage kefuMessage = getWxMpKefuMessage(responseMessages.getContent(), fromUser);
             boolean sendResult = wxMpService.getKefuService().sendKefuMessage(kefuMessage);
             if (sendResult) {
                 redisUtils.catchChat(fromUser, responseMessages.getRole(), responseMessages.getContent());
@@ -126,11 +126,11 @@ public class WeChatServiceImpl implements WeChatService {
     @Override
     public void subscribeEvent(WxMpXmlMessage weChatSubscribeEvents) {
         try {
-            ChatMessage actualChatMessage = new ChatMessage(GptRoleType.SYSTEM.getRole(), WELCOME_WORDS);
+//            ChatMessage actualChatMessage = new ChatMessage(GptRoleType.SYSTEM.getRole(), WELCOME_WORDS);
             String fromUser = weChatSubscribeEvents.getFromUser();
-            redisUtils.catchChat(fromUser, GptRoleType.SYSTEM.getRole(), WELCOME_WORDS);
-            ChatMessage responseMessages = getResponseMessages(actualChatMessage, fromUser);
-            WxMpKefuMessage kefuMessage = getWxMpKefuMessage(responseMessages, fromUser);
+//            redisUtils.catchChat(fromUser, GptRoleType.SYSTEM.getRole(), WELCOME_WORDS);
+//            ChatMessage responseMessages = getResponseMessages(actualChatMessage, fromUser);
+            WxMpKefuMessage kefuMessage = getWxMpKefuMessage(WELCOME_WORDS, fromUser);
             StringBuilder original = new StringBuilder(kefuMessage.getContent());
             kefuMessage.setContent(original.append(DEFAULT_WELCOME_WORDS_END).toString());
             wxMpService.getKefuService().sendKefuMessage(kefuMessage);
@@ -158,7 +158,7 @@ public class WeChatServiceImpl implements WeChatService {
             // 整理推送
             ChatMessage actualChatMessage = new ChatMessage(GptRoleType.USER.getRole(), recognition);
             ChatMessage responseMessages = getResponseMessages(actualChatMessage, fromUser);
-            WxMpKefuMessage kefuMessage = getWxMpKefuMessage(responseMessages, fromUser);
+            WxMpKefuMessage kefuMessage = getWxMpKefuMessage(responseMessages.getContent(), fromUser);
             boolean sendResult = wxMpService.getKefuService().sendKefuMessage(kefuMessage);
             if (sendResult) {
                 redisUtils.catchChat(fromUser, responseMessages.getRole(), responseMessages.getContent());
@@ -178,7 +178,7 @@ public class WeChatServiceImpl implements WeChatService {
      * @param fromUser
      * @return
      */
-    private ChatMessage getResponseMessages(ChatMessage actualChatMessage, String fromUser) {
+    private ChatMessage getResponseMessages(ChatMessage actualChatMessage, String fromUser){
         WxRedisCatchVo aCatch = redisUtils.getCatch(fromUser);
         ArrayList<ChatMessage> messages = new ArrayList<>();
         if (ObjectUtils.isEmpty(aCatch)) {
@@ -196,11 +196,10 @@ public class WeChatServiceImpl implements WeChatService {
      * @param fromUserName
      * @return
      */
-    private WxMpKefuMessage getWxMpKefuMessage(ChatMessage responseMessages, String fromUserName) {
-        String responseContent = responseMessages.getContent();
+    private WxMpKefuMessage getWxMpKefuMessage(String responseMessages, String fromUserName) {
         return WxMpKefuMessage.TEXT()
                 .toUser(fromUserName)
-                .content(responseContent)
+                .content(responseMessages)
                 .build();
     }
 
