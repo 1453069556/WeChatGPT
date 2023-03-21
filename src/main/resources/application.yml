@@ -10,7 +10,7 @@ openai:
   max_tokens: 500
   stop: null
   stream: false
-  timeout: 120
+  timeout: 60
   system_default: "Please remember, your name is 小C. If your answer exceeds 2000 characters, please truncate it."
 wxchat:
   welcome_words: "

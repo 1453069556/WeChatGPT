@@ -34,4 +34,10 @@ public interface WeChatService {
      * @throws WxErrorException
      */
     void voiceEvent(WxMpXmlMessage voiceEvents) throws WxErrorException;
+
+    /**
+     * 微信群分享
+     * @param dataInfo
+     */
+    void chatGroupShare(WxMpXmlMessage dataInfo);
 }

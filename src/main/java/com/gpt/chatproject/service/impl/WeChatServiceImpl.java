@@ -1,5 +1,8 @@
 package com.gpt.chatproject.service.impl;
 
+import com.aliyun.oss.OSS;
+import com.aliyun.oss.OSSClientBuilder;
+import com.aliyun.oss.model.OSSObject;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.gpt.chatproject.enums.GptRoleType;
@@ -10,6 +13,7 @@ import com.gpt.chatproject.vo.WechatResponseTextMessage;
 import com.gpt.chatproject.vo.WxRedisCatchVo;
 import com.theokanning.openai.completion.chat.ChatMessage;
 import me.chanjar.weixin.common.api.WxConsts;
+import me.chanjar.weixin.common.bean.result.WxMediaUploadResult;
 import me.chanjar.weixin.common.error.WxErrorException;
 import me.chanjar.weixin.mp.api.WxMpService;
 import me.chanjar.weixin.mp.bean.kefu.WxMpKefuMessage;
@@ -19,6 +23,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 
 @Service
@@ -117,7 +122,6 @@ public class WeChatServiceImpl implements WeChatService {
             redisUtils.releaseLock(wechatTextMessage.getFromUser());
         }
     }
-
     /**
      * 被关注回复欢迎语
      *
@@ -171,6 +175,48 @@ public class WeChatServiceImpl implements WeChatService {
         }
     }
 
+    /**
+     * 微信群分享
+     * @param dataInfo
+     */
+    @Override
+    public void chatGroupShare(WxMpXmlMessage dataInfo) {
+        try {
+            String fromUser = dataInfo.getFromUser();
+            String mediaId = uploadImageAndGetMediaId("Group chat sharing/微信群邀请链接.jpg");
+            WxMpKefuMessage kefuMessage = WxMpKefuMessage.IMAGE().toUser(fromUser).mediaId(mediaId).build();
+            wxMpService.getKefuService().sendKefuMessage(kefuMessage);
+        } catch (Exception e) {
+            e.printStackTrace();
+            serverErrorKefuReplay(dataInfo.getFromUser());
+        } finally {
+            redisUtils.releaseLock(dataInfo.getFromUser());
+        }
+    }
+
+    // 上传图片并获取media_id
+    public String uploadImageAndGetMediaId(String alyDataName) throws Exception {
+        String accessKeyId = "LTAI5tA2tf4MXbRJHg9z5NQq";
+        String accessKeySecret = "S6CyPTrtqK3Lb2ZG69jWREXFXE2tQO";
+        String endpoint = "https://oss-us-west-1.aliyuncs.com";
+        OSS ossClient = new OSSClientBuilder().build(endpoint, accessKeyId, accessKeySecret);
+        try {
+            ossClient = new OSSClientBuilder().build(endpoint, accessKeyId, accessKeySecret);
+            // 调用ossClient.getObject返回一个OSSObject实例，该实例包含文件内容及文件元信息。
+            OSSObject ossObject = ossClient.getObject("wechat-gpt", alyDataName);
+            InputStream data = ossObject.getObjectContent();
+            // 上传图片并获取media_id
+            WxMediaUploadResult wxMediaUploadResult = wxMpService.getMaterialService().mediaUpload(WxConsts.XmlMsgType.IMAGE, "jpg", data);
+            return wxMediaUploadResult.getMediaId();
+        }catch (Exception e){
+            e.printStackTrace();
+        }finally{
+            if (ossClient != null) {
+                ossClient.shutdown();
+            }
+        }
+        return null;
+    }
     /**
      * 获取GPT回复
      *

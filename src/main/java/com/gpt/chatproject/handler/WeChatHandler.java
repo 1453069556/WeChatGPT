@@ -44,4 +44,15 @@ public class WeChatHandler {
             return null;
         };
     }
+
+    public WxMpMessageHandler getChatGroupShareHandler() {
+        return (wxMessage, context, wxMpService, sessionManager) -> {
+            try {
+                weChatService.chatGroupShare(wxMessage);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return null;
+        };
+    }
 }

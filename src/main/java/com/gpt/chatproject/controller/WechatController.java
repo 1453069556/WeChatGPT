@@ -57,8 +57,13 @@ public class WechatController {
         messageRouter
                 // 路由用户关注事件
                 .rule().msgType(WxConsts.XmlMsgType.EVENT)
-                .event("subscribe")
+                .event(WxConsts.EventType.SUBSCRIBE)
                 .handler(weChatHandler.getSubscribeEventHandler()).end()
+                // 路由菜单按钮消息
+                .rule().msgType(WxConsts.XmlMsgType.EVENT)
+                .event(WxConsts.EventType.CLICK)
+                .eventKey("JOIN_GROUP_POST")
+                .handler(weChatHandler.getChatGroupShareHandler()).end()
                 // 路由用户文本消息
                 .rule().msgType(WxConsts.XmlMsgType.TEXT)
                 .handler(weChatHandler.getWeChatAsyncReplyHandler()).end()
