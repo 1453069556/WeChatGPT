@@ -22,13 +22,6 @@ public interface WeChatService {
     void textEvent(WxMpXmlMessage wechatTextMessage) throws WxErrorException;
 
     /**
-     * 被关注回复欢迎语
-     * @param weChatSubscribeEvents
-     * @throws WxErrorException
-     */
-    void subscribeEvent(WxMpXmlMessage weChatSubscribeEvents) throws WxErrorException;
-
-    /**
      * 异步回复语音事件
      * @param voiceEvents
      * @throws WxErrorException

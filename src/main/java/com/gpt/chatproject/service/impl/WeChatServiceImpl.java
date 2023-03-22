@@ -8,6 +8,7 @@ import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.gpt.chatproject.enums.GptRoleType;
 import com.gpt.chatproject.service.WeChatService;
 import com.gpt.chatproject.utils.GptUtils;
+import com.gpt.chatproject.utils.MyStringUtils;
 import com.gpt.chatproject.utils.RedisUtils;
 import com.gpt.chatproject.vo.WechatResponseTextMessage;
 import com.gpt.chatproject.vo.WxRedisCatchVo;
@@ -24,7 +25,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class WeChatServiceImpl implements WeChatService {
@@ -40,8 +43,8 @@ public class WeChatServiceImpl implements WeChatService {
     @Autowired
     private XmlMapper xmlMapper;
 
-    @Value("${wxchat.welcome_words}")
-    private String WELCOME_WORDS;
+    @Autowired
+    private MyStringUtils myStringUtils;
 
     @Value("${wxchat.default_welcome_words_end}")
     private String DEFAULT_WELCOME_WORDS_END;
@@ -52,8 +55,10 @@ public class WeChatServiceImpl implements WeChatService {
     @Value("${wxchat.frequency_response}")
     private String FREQUENCY_RESPONSE;
 
-    @Value("${wxchat.max_tokens}")
-    private Integer MAX_TOKENS;
+    @Value("${wxchat.max_send_tokens}")
+    private Integer MAX_SEND_TOKENS;
+    @Value("${wxchat.max_replay_tokens}")
+    private Integer MAX_REPLAY_TOKENS;
 
     @Value("${wxchat.chars_overflow_response}")
     private String CHARS_OVERFLOW_RESPONSE;
@@ -67,7 +72,7 @@ public class WeChatServiceImpl implements WeChatService {
         // 是文本消息才做以下处理
         if (WxConsts.XmlMsgType.TEXT.equals(msgType)) {
             // 字数限制
-            if (wxMpXmlMessage.getContent().length() > MAX_TOKENS) {
+            if (wxMpXmlMessage.getContent().length() > MAX_SEND_TOKENS) {
                 result = xmlMapper.writeValueAsString(new WechatResponseTextMessage(fromUser,
                         wxMpXmlMessage.getToUser(), WxConsts.XmlMsgType.TEXT, CHARS_OVERFLOW_RESPONSE));
                 return result;
@@ -82,7 +87,7 @@ public class WeChatServiceImpl implements WeChatService {
         // 是语音消息才做以下处理
         if (WxConsts.XmlMsgType.VOICE.equals(msgType)) {
             // 字数限制
-            if (wxMpXmlMessage.getRecognition().length() > MAX_TOKENS) {
+            if (wxMpXmlMessage.getRecognition().length() > MAX_SEND_TOKENS) {
                 result = xmlMapper.writeValueAsString(new WechatResponseTextMessage(fromUser,
                         wxMpXmlMessage.getToUser(), WxConsts.XmlMsgType.TEXT, CHARS_OVERFLOW_RESPONSE));
                 return result;
@@ -109,40 +114,14 @@ public class WeChatServiceImpl implements WeChatService {
             ChatMessage actualChatMessage = new ChatMessage(GptRoleType.USER.getRole(), content);
             String fromUser = wechatTextMessage.getFromUser();
             redisUtils.catchChat(fromUser, GptRoleType.USER.getRole(), content);
-            ChatMessage responseMessages = getResponseMessages(actualChatMessage, fromUser);
-            WxMpKefuMessage kefuMessage = getWxMpKefuMessage(responseMessages.getContent(), fromUser);
-            boolean sendResult = wxMpService.getKefuService().sendKefuMessage(kefuMessage);
-            if (sendResult) {
-                redisUtils.catchChat(fromUser, responseMessages.getRole(), responseMessages.getContent());
-            }
+            sendKefuMessages(fromUser, actualChatMessage);
         } catch (WxErrorException e) {
             e.printStackTrace();
             serverErrorKefuReplay(wechatTextMessage.getFromUser());
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
         } finally {
             redisUtils.releaseLock(wechatTextMessage.getFromUser());
-        }
-    }
-    /**
-     * 被关注回复欢迎语
-     *
-     * @param weChatSubscribeEvents
-     */
-    @Override
-    public void subscribeEvent(WxMpXmlMessage weChatSubscribeEvents) {
-        try {
-//            ChatMessage actualChatMessage = new ChatMessage(GptRoleType.SYSTEM.getRole(), WELCOME_WORDS);
-            String fromUser = weChatSubscribeEvents.getFromUser();
-//            redisUtils.catchChat(fromUser, GptRoleType.SYSTEM.getRole(), WELCOME_WORDS);
-//            ChatMessage responseMessages = getResponseMessages(actualChatMessage, fromUser);
-            WxMpKefuMessage kefuMessage = getWxMpKefuMessage(WELCOME_WORDS, fromUser);
-            StringBuilder original = new StringBuilder(kefuMessage.getContent());
-            kefuMessage.setContent(original.append(DEFAULT_WELCOME_WORDS_END).toString());
-            wxMpService.getKefuService().sendKefuMessage(kefuMessage);
-        } catch (WxErrorException e) {
-            e.printStackTrace();
-            serverErrorKefuReplay(weChatSubscribeEvents.getFromUser());
-        } finally {
-            redisUtils.releaseLock(weChatSubscribeEvents.getFromUser());
         }
     }
 
@@ -161,17 +140,32 @@ public class WeChatServiceImpl implements WeChatService {
             redisUtils.catchChat(fromUser, GptRoleType.USER.getRole(), recognition);
             // 整理推送
             ChatMessage actualChatMessage = new ChatMessage(GptRoleType.USER.getRole(), recognition);
-            ChatMessage responseMessages = getResponseMessages(actualChatMessage, fromUser);
-            WxMpKefuMessage kefuMessage = getWxMpKefuMessage(responseMessages.getContent(), fromUser);
-            boolean sendResult = wxMpService.getKefuService().sendKefuMessage(kefuMessage);
-            if (sendResult) {
-                redisUtils.catchChat(fromUser, responseMessages.getRole(), responseMessages.getContent());
-            }
+            sendKefuMessages(fromUser, actualChatMessage);
         } catch (WxErrorException e) {
             e.printStackTrace();
             serverErrorKefuReplay(voiceEvents.getFromUser());
+        } catch (UnsupportedEncodingException e) {
+            serverErrorKefuReplay(voiceEvents.getFromUser());
+            throw new RuntimeException(e);
         } finally {
             redisUtils.releaseLock(voiceEvents.getFromUser());
+        }
+    }
+
+    /**
+     * 发送客服消息公用方法
+     * @param fromUser
+     * @param chatMessage
+     * @throws WxErrorException
+     */
+    private void sendKefuMessages(String fromUser, ChatMessage chatMessage) throws WxErrorException, UnsupportedEncodingException {
+        ChatMessage responseMessages = getResponseMessages(chatMessage, fromUser);
+        ArrayList<WxMpKefuMessage> kefuMessages = getWxMpKefuMessage(responseMessages.getContent(), fromUser);
+        for (WxMpKefuMessage message : kefuMessages) {
+            boolean sendResult = wxMpService.getKefuService().sendKefuMessage(message);
+            if (sendResult) {
+                redisUtils.catchChat(fromUser, responseMessages.getRole(), responseMessages.getContent());
+            }
         }
     }
 
@@ -236,17 +230,19 @@ public class WeChatServiceImpl implements WeChatService {
     }
 
     /**
-     * 获取WxMpKefuMessage
+     * 获取WxMpKefuMessage列表
      *
      * @param responseMessages
      * @param fromUserName
      * @return
      */
-    private WxMpKefuMessage getWxMpKefuMessage(String responseMessages, String fromUserName) {
-        return WxMpKefuMessage.TEXT()
-                .toUser(fromUserName)
-                .content(responseMessages)
-                .build();
+    private ArrayList<WxMpKefuMessage> getWxMpKefuMessage(String responseMessages, String fromUserName) throws UnsupportedEncodingException {
+        List<String> contents = myStringUtils.splitString(responseMessages, MAX_REPLAY_TOKENS);
+        ArrayList<WxMpKefuMessage> kefuMessages = new ArrayList<>();
+        for (String content : contents) {
+            kefuMessages.add(WxMpKefuMessage.TEXT().toUser(fromUserName).content(content).build());
+        }
+        return kefuMessages;
     }
 
 

@@ -11,29 +11,31 @@ openai:
   stop: null
   stream: false
   timeout: 60
-  system_default: "Please remember, your name is 小C. If your answer exceeds 2000 characters, please truncate it."
+  system_default: "From now on, you have a name. Please remember that your name is 小C.Your name is given as 小C."
 wxchat:
   welcome_words: "
   Hi! 欢迎使用小C！\n\n
-  您可以尝试这样问我：\n
+  💭 您可以尝试这样问我：\n
   1. 用简单的术语解释量子计算？\n
   2. 对一个10岁的生日有什么创意吗？\n
   3. 如何在JavaScript中发出http请求？\n\n
-  我能力包含以下：\n
+  🔧 我能力包含以下：\n
   1. 记住用户之前在对话中说过的话\n
   2. 允许用户提供后续更正\n
   3. 能够接受语音消息，讲普通话噢~\n\n
-  我局限性包含以下：\n
+  ❌ 我局限性包含以下：\n
   1. 可能偶尔生成不正确的信息\n
   2. 对2021年后的世界和事了解有限\n
   3. 暂时无法处理图片，后续可以噢~\n\n
   "
-  frequency_response: 小C正在处理您上个问题。为了保证会话连贯，请耐心等待!
+  frequency_response: 小C正在处理您上个问题。为了保证会话连贯，请耐心等待回复!
   chars_overflow_response: 超出文本最大范围。请尝试精简您的内容!
-  default_welcome_words_end: 我现在处于测试阶段，有任何问题或者好的建议可以联系客服微信：AIXC2023
+  default_welcome_words_end: 我现在处于测试阶段，有任何问题或者好的建议可以加群讨论。
   server_error_replay: 抱歉，刚才小C开了小差，现在继续我们的话题~
-  chatMaxCatch: 7
-  max_tokens: 600
+  tips: 点击菜单旁边键盘开始和我聊天~
+  chatMaxCatch: 8
+  max_send_tokens: 600
+  max_replay_tokens: 2000
 server:
   port: 80
 wx:

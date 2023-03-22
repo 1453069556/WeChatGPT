@@ -7,7 +7,11 @@ import me.chanjar.weixin.common.error.WxErrorException;
 import me.chanjar.weixin.mp.api.WxMpMessageRouter;
 import me.chanjar.weixin.mp.api.WxMpService;
 import me.chanjar.weixin.mp.bean.message.WxMpXmlMessage;
+import me.chanjar.weixin.mp.bean.message.WxMpXmlOutMessage;
+import org.apache.catalina.connector.Response;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -55,22 +59,31 @@ public class WechatController {
         }
         // 消息路由
         messageRouter
-                // 路由用户关注事件
-                .rule().msgType(WxConsts.XmlMsgType.EVENT)
-                .event(WxConsts.EventType.SUBSCRIBE)
-                .handler(weChatHandler.getSubscribeEventHandler()).end()
                 // 路由菜单按钮消息
-                .rule().msgType(WxConsts.XmlMsgType.EVENT)
+                .rule().async(true).msgType(WxConsts.XmlMsgType.EVENT)
                 .event(WxConsts.EventType.CLICK)
                 .eventKey("JOIN_GROUP_POST")
                 .handler(weChatHandler.getChatGroupShareHandler()).end()
+                // 路由TIPS按钮消息
+                .rule().async(false).msgType(WxConsts.XmlMsgType.EVENT)
+                .event(WxConsts.EventType.CLICK)
+                .eventKey("TIPS")
+                .handler(weChatHandler.getTipsButtonHandler()).end()
+                // 路由用户关注事件
+                .rule().async(false).msgType(WxConsts.XmlMsgType.EVENT)
+                .event(WxConsts.EventType.SUBSCRIBE)
+                .handler(weChatHandler.getSubscribeEventHandler()).end()
                 // 路由用户文本消息
-                .rule().msgType(WxConsts.XmlMsgType.TEXT)
+                .rule().async(true).msgType(WxConsts.XmlMsgType.TEXT)
                 .handler(weChatHandler.getWeChatAsyncReplyHandler()).end()
                 // 路由语音消息
-                .rule().msgType(WxConsts.XmlMsgType.VOICE)
+                .rule().async(true).msgType(WxConsts.XmlMsgType.VOICE)
                 .handler(weChatHandler.getWeChatVoiceReplyHandler()).end();
-        messageRouter.route(wxMpXmlMessage);
-        return "";
+        WxMpXmlOutMessage outMessage = messageRouter.route(wxMpXmlMessage);
+        if (outMessage == null) {
+            //为null，返回空
+            return "";
+        }
+        return outMessage.toXml();
     }
 }
