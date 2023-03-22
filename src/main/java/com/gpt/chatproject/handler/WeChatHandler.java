@@ -24,12 +24,14 @@ public class WeChatHandler {
 
     @Value("${wxchat.welcome_words}")
     private String WELCOME_WORDS;
+    @Value("${wxchat.default_welcome_words_end}")
+    private String DEFAULT_WELCOME_WORDS_END;
 
     public WxMpMessageHandler getSubscribeEventHandler() {
         return (wxMessage, context, wxMpService, sessionManager) ->
                 WxMpXmlOutMessage.TEXT().fromUser(wxMessage.getToUser())
                         .toUser(wxMessage.getFromUser())
-                        .content(WELCOME_WORDS).build();
+                        .content(WELCOME_WORDS + DEFAULT_WELCOME_WORDS_END).build();
     }
 
     public WxMpMessageHandler getWeChatAsyncReplyHandler() {

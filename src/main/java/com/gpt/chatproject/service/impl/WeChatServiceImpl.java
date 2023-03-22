@@ -46,8 +46,6 @@ public class WeChatServiceImpl implements WeChatService {
     @Autowired
     private MyStringUtils myStringUtils;
 
-    @Value("${wxchat.default_welcome_words_end}")
-    private String DEFAULT_WELCOME_WORDS_END;
 
     @Value("${wxchat.server_error_replay}")
     private String SERVER_ERROR_REPLAY;
