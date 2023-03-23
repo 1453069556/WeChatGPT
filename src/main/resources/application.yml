@@ -35,7 +35,7 @@ wxchat:
   tips: 点击菜单旁边键盘开始和我聊天~
   chatMaxCatch: 8
   max_send_tokens: 600
-  max_replay_tokens: 1500
+  max_replay_tokens: 1800
 server:
   port: 80
 wx:

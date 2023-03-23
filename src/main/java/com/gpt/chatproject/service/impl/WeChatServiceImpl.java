@@ -13,6 +13,8 @@ import com.gpt.chatproject.utils.RedisUtils;
 import com.gpt.chatproject.vo.WechatResponseTextMessage;
 import com.gpt.chatproject.vo.WxRedisCatchVo;
 import com.theokanning.openai.completion.chat.ChatMessage;
+import lombok.extern.java.Log;
+import lombok.extern.log4j.Log4j2;
 import me.chanjar.weixin.common.api.WxConsts;
 import me.chanjar.weixin.common.bean.result.WxMediaUploadResult;
 import me.chanjar.weixin.common.error.WxErrorException;
@@ -28,8 +30,10 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 @Service
+@Log4j2
 public class WeChatServiceImpl implements WeChatService {
     @Autowired
     private GptUtils gptUtils;
@@ -60,7 +64,6 @@ public class WeChatServiceImpl implements WeChatService {
 
     @Value("${wxchat.chars_overflow_response}")
     private String CHARS_OVERFLOW_RESPONSE;
-
 
     @Override
     public String shouldFilterMessage(WxMpXmlMessage wxMpXmlMessage) throws JsonProcessingException {
@@ -114,9 +117,11 @@ public class WeChatServiceImpl implements WeChatService {
             redisUtils.catchChat(fromUser, GptRoleType.USER.getRole(), content);
             sendKefuMessages(fromUser, actualChatMessage);
         } catch (WxErrorException e) {
+            log.debug(e.getMessage());
             e.printStackTrace();
             serverErrorKefuReplay(wechatTextMessage.getFromUser());
         } catch (UnsupportedEncodingException e) {
+            log.debug(e.getMessage());
             throw new RuntimeException(e);
         } finally {
             redisUtils.releaseLock(wechatTextMessage.getFromUser());
@@ -140,9 +145,11 @@ public class WeChatServiceImpl implements WeChatService {
             ChatMessage actualChatMessage = new ChatMessage(GptRoleType.USER.getRole(), recognition);
             sendKefuMessages(fromUser, actualChatMessage);
         } catch (WxErrorException e) {
+            log.debug(e.getMessage());
             e.printStackTrace();
             serverErrorKefuReplay(voiceEvents.getFromUser());
         } catch (UnsupportedEncodingException e) {
+            log.debug(e.getMessage());
             serverErrorKefuReplay(voiceEvents.getFromUser());
             throw new RuntimeException(e);
         } finally {
@@ -180,6 +187,7 @@ public class WeChatServiceImpl implements WeChatService {
             wxMpService.getKefuService().sendKefuMessage(kefuMessage);
         } catch (Exception e) {
             e.printStackTrace();
+            log.debug(e.getMessage());
             serverErrorKefuReplay(dataInfo.getFromUser());
         } finally {
             redisUtils.releaseLock(dataInfo.getFromUser());
@@ -202,6 +210,7 @@ public class WeChatServiceImpl implements WeChatService {
             return wxMediaUploadResult.getMediaId();
         }catch (Exception e){
             e.printStackTrace();
+            log.debug(e.getMessage());
         }finally{
             if (ossClient != null) {
                 ossClient.shutdown();
@@ -258,6 +267,7 @@ public class WeChatServiceImpl implements WeChatService {
                             .build()
             );
         } catch (Exception e) {
+            log.debug(e.getMessage());
             e.printStackTrace();
         }
     }

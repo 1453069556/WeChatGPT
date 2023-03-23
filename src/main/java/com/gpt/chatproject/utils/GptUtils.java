@@ -8,6 +8,7 @@ import com.theokanning.openai.completion.chat.ChatCompletionRequest;
 import com.theokanning.openai.completion.chat.ChatCompletionResult;
 import com.theokanning.openai.completion.chat.ChatMessage;
 import com.theokanning.openai.service.OpenAiService;
+import lombok.extern.log4j.Log4j2;
 import okhttp3.OkHttpClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -23,6 +24,7 @@ import static com.theokanning.openai.service.OpenAiService.*;
 
 
 @Component
+@Log4j2
 public class GptUtils {
     @Value("${openai.token}")
     private String TOKEN;
@@ -81,6 +83,7 @@ public class GptUtils {
             // 打印 API 返回结果
             return chatCompletion.getChoices().get(0).getMessage();
         }catch (Exception e){
+            log.debug(e.getMessage());
             e.printStackTrace();
             return new ChatMessage(GptRoleType.ASSISTANT.getRole(), SERVER_ERROR_REPLAY);
         }
