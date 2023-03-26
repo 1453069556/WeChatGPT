@@ -32,7 +32,7 @@ wxchat:
   chars_overflow_response: 超出文本最大范围。请尝试精简您的内容!
   default_welcome_words_end: 我现在处于测试阶段，有任何问题或者好的建议可以加群讨论。
   server_error_replay: 抱歉，刚才小C开了小差，现在继续我们的话题~
-  tips: 点击菜单旁边键盘开始和我聊天~
+  tips: 如果小C回复内容不全，那是因为内容过长，请对他说"继续"~
   chatMaxCatch: 8
   max_send_tokens: 600
   max_replay_tokens: 1800
