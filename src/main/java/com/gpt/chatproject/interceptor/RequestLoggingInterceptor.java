@@ -20,6 +20,7 @@ public class RequestLoggingInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         // 打印请求信息
+        log.info("Request From: " + request.getRemoteAddr());
         log.info("Request URL: " + request.getRequestURL());
         log.info("Request Method: " + request.getMethod());
         return true;
