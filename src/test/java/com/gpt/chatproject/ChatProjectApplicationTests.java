@@ -3,11 +3,20 @@ package com.gpt.chatproject;
 import me.chanjar.weixin.common.api.WxConsts;
 import me.chanjar.weixin.common.bean.menu.WxMenu;
 import me.chanjar.weixin.common.bean.menu.WxMenuButton;
+import me.chanjar.weixin.common.enums.TicketType;
 import me.chanjar.weixin.common.error.WxErrorException;
+import me.chanjar.weixin.mp.api.WxMpQrcodeService;
 import me.chanjar.weixin.mp.api.WxMpService;
+import me.chanjar.weixin.mp.bean.result.WxMpQrCodeTicket;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.Random;
+import java.util.UUID;
 
 
 @SpringBootTest
@@ -28,12 +37,24 @@ class ChatProjectApplicationTests {
         // 生成群邀请二维码按钮
         WxMenuButton menuButton1 = new WxMenuButton();
         menuButton1.setType(WxConsts.MenuButtonType.CLICK);
-        menuButton1.setName("生成群二维码");
+        menuButton1.setName("添加客服微信进群");
         menuButton1.setKey("JOIN_GROUP_POST");
         menuButton.getSubButtons().add(menuButton1);
         menu.getButtons().add(menuButton);
         menu.getButtons().add(tips);
         this.wxService.getMenuService().menuCreate(menu);
+    }
+
+
+    @Test
+    public void testCreat() throws WxErrorException, IOException {
+        WxMpQrcodeService qrcodeService = wxService.getQrcodeService();
+        WxMpQrCodeTicket wxMpQrCodeTicket = qrcodeService.qrCodeCreateLastTicket(UUID.randomUUID().toString());
+        File file = qrcodeService.qrCodePicture(wxMpQrCodeTicket);
+        FileWriter writer = new FileWriter(file);
+        writer.write(file.getAbsolutePath());
+        writer.close();
+        System.out.println(wxMpQrCodeTicket);
     }
 
 }

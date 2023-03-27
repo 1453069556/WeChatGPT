@@ -13,7 +13,6 @@ import com.gpt.chatproject.utils.RedisUtils;
 import com.gpt.chatproject.vo.WechatResponseTextMessage;
 import com.gpt.chatproject.vo.WxRedisCatchVo;
 import com.theokanning.openai.completion.chat.ChatMessage;
-import lombok.extern.java.Log;
 import lombok.extern.log4j.Log4j2;
 import me.chanjar.weixin.common.api.WxConsts;
 import me.chanjar.weixin.common.bean.result.WxMediaUploadResult;
@@ -30,7 +29,6 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
 
 @Service
 @Log4j2
@@ -54,9 +52,11 @@ public class WeChatServiceImpl implements WeChatService {
     @Value("${wxchat.server_error_replay}")
     private String SERVER_ERROR_REPLAY;
 
-    @Value("${wxchat.frequency_response}")
-    private String FREQUENCY_RESPONSE;
+    @Value("${wxchat.chat_frequency_response}")
+    private String CHAT_FREQUENCY_RESPONSE;
 
+    @Value("${wxchat.time_frequency_response}")
+    private String TIME_FREQUENCY_RESPONSE;
     @Value("${wxchat.max_send_tokens}")
     private Integer MAX_SEND_TOKENS;
     @Value("${wxchat.max_replay_tokens}")
@@ -79,9 +79,9 @@ public class WeChatServiceImpl implements WeChatService {
                 return result;
             }
             // 加锁&&一问一答限制
-            if (!redisUtils.tryLock(fromUser)) {
+            if (redisUtils.tryChatLock(fromUser)) {
                 result = xmlMapper.writeValueAsString(new WechatResponseTextMessage(fromUser,
-                        wxMpXmlMessage.getToUser(), WxConsts.XmlMsgType.TEXT, FREQUENCY_RESPONSE));
+                        wxMpXmlMessage.getToUser(), WxConsts.XmlMsgType.TEXT, CHAT_FREQUENCY_RESPONSE));
                 return result;
             }
         }
@@ -94,11 +94,17 @@ public class WeChatServiceImpl implements WeChatService {
                 return result;
             }
             // 加锁&&一问一答限制
-            if (!redisUtils.tryLock(fromUser)) {
+            if (redisUtils.tryChatLock(fromUser)) {
                 result = xmlMapper.writeValueAsString(new WechatResponseTextMessage(fromUser,
-                        wxMpXmlMessage.getToUser(), WxConsts.XmlMsgType.TEXT, FREQUENCY_RESPONSE));
+                        wxMpXmlMessage.getToUser(), WxConsts.XmlMsgType.TEXT, CHAT_FREQUENCY_RESPONSE));
                 return result;
             }
+        }
+        // 过滤每小时会话频率，超过阈值则强制休息一小时
+        if (!redisUtils.tryTimeLock(fromUser)){
+            result = xmlMapper.writeValueAsString(new WechatResponseTextMessage(fromUser,
+                    wxMpXmlMessage.getToUser(), WxConsts.XmlMsgType.TEXT, TIME_FREQUENCY_RESPONSE));
+            return result;
         }
         return "";
     }
@@ -124,7 +130,7 @@ public class WeChatServiceImpl implements WeChatService {
             log.debug(e.getMessage());
             throw new RuntimeException(e);
         } finally {
-            redisUtils.releaseLock(wechatTextMessage.getFromUser());
+            redisUtils.releaseChatLock(wechatTextMessage.getFromUser());
         }
     }
 
@@ -153,7 +159,7 @@ public class WeChatServiceImpl implements WeChatService {
             serverErrorKefuReplay(voiceEvents.getFromUser());
             throw new RuntimeException(e);
         } finally {
-            redisUtils.releaseLock(voiceEvents.getFromUser());
+            redisUtils.releaseChatLock(voiceEvents.getFromUser());
         }
     }
 
@@ -190,7 +196,7 @@ public class WeChatServiceImpl implements WeChatService {
             log.debug(e.getMessage());
             serverErrorKefuReplay(dataInfo.getFromUser());
         } finally {
-            redisUtils.releaseLock(dataInfo.getFromUser());
+            redisUtils.releaseChatLock(dataInfo.getFromUser());
         }
     }
 
