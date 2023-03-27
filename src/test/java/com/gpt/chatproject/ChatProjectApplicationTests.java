@@ -28,7 +28,7 @@ class ChatProjectApplicationTests {
         WxMenu menu = new WxMenu();
         // 提示用的
         WxMenuButton tips = new WxMenuButton();
-        tips.setName("点击小键盘聊天噢~");
+        tips.setName("小C没答完的处理方式");
         tips.setType(WxConsts.MenuButtonType.CLICK);
         tips.setKey("TIPS");
         // 菜单按钮
