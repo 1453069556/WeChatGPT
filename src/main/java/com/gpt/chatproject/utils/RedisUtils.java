@@ -83,9 +83,9 @@ public class RedisUtils {
         if (success) {
             // 获取锁成功，设置锁的过期时间
             redisTemplate.expire(lockKey, CHAT_EXPIRE_SECONDS, TimeUnit.SECONDS);
-            return false;
+            return true;
         }
-        return true;
+        return false;
     }
 
     /**

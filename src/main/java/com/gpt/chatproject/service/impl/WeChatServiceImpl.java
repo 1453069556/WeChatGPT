@@ -79,7 +79,7 @@ public class WeChatServiceImpl implements WeChatService {
                 return result;
             }
             // 加锁&&一问一答限制
-            if (redisUtils.tryChatLock(fromUser)) {
+            if (!redisUtils.tryChatLock(fromUser)) {
                 result = xmlMapper.writeValueAsString(new WechatResponseTextMessage(fromUser,
                         wxMpXmlMessage.getToUser(), WxConsts.XmlMsgType.TEXT, CHAT_FREQUENCY_RESPONSE));
                 return result;
@@ -94,7 +94,7 @@ public class WeChatServiceImpl implements WeChatService {
                 return result;
             }
             // 加锁&&一问一答限制
-            if (redisUtils.tryChatLock(fromUser)) {
+            if (!redisUtils.tryChatLock(fromUser)) {
                 result = xmlMapper.writeValueAsString(new WechatResponseTextMessage(fromUser,
                         wxMpXmlMessage.getToUser(), WxConsts.XmlMsgType.TEXT, CHAT_FREQUENCY_RESPONSE));
                 return result;
