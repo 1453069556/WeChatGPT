@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.gpt.chatproject.dao.UserPropertiesDao">
+    <resultMap id="UserPropertiesResultMap" type="com.gpt.chatproject.entity.UserProperties">
+        <id column="user_id" property="userId" />
+        <result column="invited_count" property="invitedCount" />
+        <result column="consumption_total" property="consumptionTotal" />
+        <result column="balance" property="balance" />
+        <result column="points" property="points" />
+    </resultMap>
+    <select id="getUserPropertiesByUserId" resultMap="UserPropertiesResultMap" parameterType="String">
+        SELECT user_id, invited_count, consumption_total, balance, points
+        FROM user_properties
+        WHERE user_id = #{userId}
+    </select>
+    <insert id="saveUserProperties" parameterType="com.gpt.chatproject.entity.UserProperties">
+        INSERT INTO user_properties(user_id, invited_count, consumption_total, balance, points)
+        VALUES(#{userId}, #{invitedCount}, #{consumptionTotal}, #{balance}, #{points})
+    </insert>
+    <update id="updateUserProperties" parameterType="com.gpt.chatproject.entity.UserProperties">
+    UPDATE user_properties
+    SET invited_count = #{invitedCount}, consumption_total = #{consumptionTotal},
+        balance = #{balance}, points = #{points}
+    WHERE user_id = #{userId}
+</update>
+    <delete id="deleteUserProperties" parameterType="String">
+        DELETE FROM user_properties WHERE user_id = #{userId}
+    </delete>
+</mapper>
+

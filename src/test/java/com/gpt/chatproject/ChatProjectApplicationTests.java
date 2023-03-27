@@ -1,5 +1,8 @@
 package com.gpt.chatproject;
 
+import com.gpt.chatproject.dao.FansDao;
+import com.gpt.chatproject.entity.Fans;
+import com.gpt.chatproject.utils.RedisUtils;
 import me.chanjar.weixin.common.api.WxConsts;
 import me.chanjar.weixin.common.bean.menu.WxMenu;
 import me.chanjar.weixin.common.bean.menu.WxMenuButton;
@@ -23,6 +26,10 @@ import java.util.UUID;
 class ChatProjectApplicationTests {
     @Autowired
     private WxMpService wxService;
+    @Autowired
+    private RedisUtils redisUtils;
+    @Autowired
+    private FansDao fansDao;
     @Test
     public void getMenu() throws WxErrorException {
         WxMenu menu = new WxMenu();
@@ -44,16 +51,17 @@ class ChatProjectApplicationTests {
         menu.getButtons().add(tips);
         this.wxService.getMenuService().menuCreate(menu);
     }
-//
-//
+
+
 //    @Test
-//    public void testCreat() throws WxErrorException, IOException {
+//    public void testCreat() throws WxErrorException{
+//        // 二维码服务
 //        WxMpQrcodeService qrcodeService = wxService.getQrcodeService();
-//        WxMpQrCodeTicket wxMpQrCodeTicket = qrcodeService.qrCodeCreateLastTicket(UUID.randomUUID().toString());
+//        String s = UUID.randomUUID().toString();
+//        // 获取永久二维码ticket
+//        WxMpQrCodeTicket wxMpQrCodeTicket = qrcodeService.qrCodeCreateLastTicket(s);
+//        // 获取图片二维码
 //        File file = qrcodeService.qrCodePicture(wxMpQrCodeTicket);
-//        FileWriter writer = new FileWriter(file);
-//        writer.write(file.getAbsolutePath());
-//        writer.close();
 //        System.out.println(wxMpQrCodeTicket);
 //    }
 

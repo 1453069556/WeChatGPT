@@ -9,13 +9,21 @@ import org.springframework.stereotype.Service;
 public interface WeChatService {
     /**
      * 过滤条件
+     *
      * @param wxMpXmlMessage
      * @throws WxErrorException
      */
-    String shouldFilterMessage(WxMpXmlMessage wxMpXmlMessage) throws WxErrorException, JsonProcessingException;
+    String shouldFilterMessage(WxMpXmlMessage wxMpXmlMessage) throws Exception;
+
+    /**
+     * 关注事件，处理数据库
+     * @param wxMpXmlMessage
+     */
+    void invitedDBEvent(WxMpXmlMessage wxMpXmlMessage) throws WxErrorException;
 
     /**
      * 异步回复文本消息
+     *
      * @param wechatTextMessage
      * @throws WxErrorException
      */
@@ -23,6 +31,7 @@ public interface WeChatService {
 
     /**
      * 异步回复语音事件
+     *
      * @param voiceEvents
      * @throws WxErrorException
      */
@@ -30,6 +39,7 @@ public interface WeChatService {
 
     /**
      * 微信群分享
+     *
      * @param dataInfo
      */
     void chatGroupShare(WxMpXmlMessage dataInfo);

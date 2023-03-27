@@ -36,6 +36,11 @@ public class RedisUtils {
     private Integer CHAT_TIME_OUT;
 
 
+    public long getExpireByKey(String key){
+        String lockKey = TIME_LOCK_PREFIX + key;
+        return redisTemplate.getExpire(lockKey);
+    }
+
     /**
      * 尝试获取时长频率锁
      *
@@ -68,6 +73,8 @@ public class RedisUtils {
      */
     public void releaseTimeLock(String key) {
         // TODO 二维码关注解锁
+        String lockKey = TIME_LOCK_PREFIX + key;
+        redisTemplate.delete(lockKey);
     }
 
     /**

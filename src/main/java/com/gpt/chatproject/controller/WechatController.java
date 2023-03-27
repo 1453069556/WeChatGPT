@@ -48,7 +48,7 @@ public class WechatController {
 
     // 被关注和取关事件
     @PostMapping()
-    public String weChatPost(HttpServletRequest request) throws IOException, WxErrorException {
+    public String weChatPost(HttpServletRequest request) throws Exception {
         ServletInputStream inputStream = request.getInputStream();
         WxMpXmlMessage wxMpXmlMessage = WxMpXmlMessage.fromXml(inputStream);
         // 聊天过滤条件，如频率、字数等
@@ -69,7 +69,11 @@ public class WechatController {
                 .event(WxConsts.EventType.CLICK)
                 .eventKey("TIPS")
                 .handler(weChatHandler.getTipsButtonHandler()).end()
-                // 路由用户关注事件
+                // 路由用户关注事件，异步处理数据库
+                .rule().async(true).msgType(WxConsts.XmlMsgType.EVENT)
+                .event(WxConsts.EventType.SUBSCRIBE)
+                .handler(weChatHandler.getInvitedEventDBHandler()).end()
+                // 路由用户关注事件，回复消息
                 .rule().async(false).msgType(WxConsts.XmlMsgType.EVENT)
                 .event(WxConsts.EventType.SUBSCRIBE)
                 .handler(weChatHandler.getSubscribeEventHandler()).end()

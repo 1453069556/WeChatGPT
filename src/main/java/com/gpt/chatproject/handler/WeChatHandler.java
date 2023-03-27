@@ -27,11 +27,26 @@ public class WeChatHandler {
     @Value("${wxchat.default_welcome_words_end}")
     private String DEFAULT_WELCOME_WORDS_END;
 
+    /**
+     * 回复关注语
+     * @return
+     */
     public WxMpMessageHandler getSubscribeEventHandler() {
         return (wxMessage, context, wxMpService, sessionManager) ->
                 WxMpXmlOutMessage.TEXT().fromUser(wxMessage.getToUser())
                         .toUser(wxMessage.getFromUser())
                         .content(WELCOME_WORDS + DEFAULT_WELCOME_WORDS_END).build();
+    }
+
+    /**
+     * 异步处理数据库相关操作
+     * @return
+     */
+    public WxMpMessageHandler getInvitedEventDBHandler() {
+        return (wxMessage, context, wxMpService, sessionManager) -> {
+            weChatService.invitedDBEvent(wxMessage);
+            return null;
+        };
     }
 
     public WxMpMessageHandler getWeChatAsyncReplyHandler() {
