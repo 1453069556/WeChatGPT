@@ -19,6 +19,8 @@ import java.io.File;
 import java.text.Format;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.util.UUID;
@@ -69,7 +71,7 @@ public class WeChatUtils {
         // 过滤每小时会话频率，超过阈值则强制休息一小时
         if (!redisUtils.tryTimeLock(fromUser)) {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
-            LocalDateTime localDateTime = dateAddSeconds(redisUtils.getExpireByKey(fromUser));
+            ZonedDateTime localDateTime = dateAddSeconds(redisUtils.getExpireByKey(fromUser));
             String replay = TIME_FREQUENCY_RESPONSE + "预计" + localDateTime.format(formatter) + "可以重新开始对话。";
             // 返回提示语
             result = xmlMapper.writeValueAsString(new WechatResponseTextMessage(fromUser,
@@ -98,11 +100,13 @@ public class WeChatUtils {
     }
 
 
-    public static LocalDateTime dateAddSeconds(long seconds) {
-        // 当前北京时间
-        LocalDateTime now = LocalDateTime.now();
+    public static ZonedDateTime dateAddSeconds(long seconds) {
+        // 创建中国北京的时区对象
+        ZoneId chinaZone = ZoneId.of("Asia/Shanghai");
+        // 获取当前在中国北京的时间
+        ZonedDateTime chinaTime = ZonedDateTime.now(chinaZone);
         // 加上秒数后的时间
-        return now.plus(Duration.ofSeconds(seconds));
+        return chinaTime.plus(Duration.ofSeconds(seconds));
     }
 
 }
