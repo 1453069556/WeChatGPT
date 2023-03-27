@@ -16,10 +16,18 @@ import java.util.concurrent.TimeUnit;
 public class RedisUtils {
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
-    private static final String LOCK_PREFIX = "lock:";
-    // 锁的过期时间，单位为秒
-    @Value("${redislock.expireSeconds}")
-    private int EXPIRE_SECONDS;
+    private static final String CHAT_LOCK_PREFIX = "chat_lock:";
+    private static final String TIME_LOCK_PREFIX = "time_lock:";
+    // 会话锁的过期时间，单位为秒
+    @Value("${redislock.chatExpireSeconds}")
+    private int CHAT_EXPIRE_SECONDS;
+
+    // 时长频率锁的过期时间，单位为秒
+    @Value("${redislock.timeExpireSeconds}")
+    private int TIME_EXPIRE_SECONDS;
+    // 时长频率锁会话的最大频率（次）
+    @Value("${redislock.timeMaxCount}")
+    private int TIME_MAX_COUNT;
 
     @Value("${wxchat.chatMaxCatch}")
     private Integer CHAT_MAX_CATCH;
@@ -27,35 +35,84 @@ public class RedisUtils {
     @Value("${redislock.chatTimeOut}")
     private Integer CHAT_TIME_OUT;
 
+
+    public long getExpireByKey(String key){
+        String lockKey = TIME_LOCK_PREFIX + key;
+        return redisTemplate.getExpire(lockKey);
+    }
+
     /**
-     * 尝试获取锁
+     * 尝试获取时长频率锁
+     *
+     * @param key
+     * @return
+     */
+    public boolean tryTimeLock(String key) {
+        String lockKey = TIME_LOCK_PREFIX + key;
+        Object timeLock = redisTemplate.opsForValue().get(lockKey);
+        if (ObjectUtils.isEmpty(timeLock)) {
+            // 首次设定为1
+            redisTemplate.opsForValue().increment(lockKey, 1);
+            // 首次设定超时时间
+            redisTemplate.expire(lockKey, TIME_EXPIRE_SECONDS, TimeUnit.SECONDS);
+        } else {
+            if (Integer.parseInt(timeLock.toString()) > TIME_MAX_COUNT) {
+                return false;
+            }
+            // 增长1
+            redisTemplate.opsForValue().increment(lockKey, 1);
+        }
+        return true;
+    }
+
+
+    /**
+     * 释放时长频率锁
+     *
+     * @param key 锁的 key
+     */
+    public void releaseTimeLock(String key) {
+        // TODO 二维码关注解锁
+        String lockKey = TIME_LOCK_PREFIX + key;
+        redisTemplate.delete(lockKey);
+    }
+
+    /**
+     * 尝试获取会话锁
      *
      * @param key 锁的 key
      * @return 如果获取锁成功，返回 true；否则，返回 false
      */
-    public boolean tryLock(String key) {
-        String lockKey = LOCK_PREFIX + key;
+    public boolean tryChatLock(String key) {
+        String lockKey = CHAT_LOCK_PREFIX + key;
         // 尝试获取锁
         boolean success = redisTemplate.opsForValue().setIfAbsent(lockKey, UUID.randomUUID().toString());
         if (success) {
             // 获取锁成功，设置锁的过期时间
-            redisTemplate.expire(lockKey, EXPIRE_SECONDS, TimeUnit.SECONDS);
+            redisTemplate.expire(lockKey, CHAT_EXPIRE_SECONDS, TimeUnit.SECONDS);
             return true;
         }
         return false;
     }
 
     /**
-     * 释放锁
+     * 释放会话锁
      *
      * @param key 锁的 key
      */
-    public void releaseLock(String key) {
-        String lockKey = LOCK_PREFIX + key;
+    public void releaseChatLock(String key) {
+        String lockKey = CHAT_LOCK_PREFIX + key;
         redisTemplate.delete(lockKey);
     }
 
-    // redis缓存处理
+    /**
+     * 上下文缓存
+     *
+     * @param fromUser
+     * @param role
+     * @param content
+     * @return
+     */
     public boolean catchChat(String fromUser, String role, String content) {
         try {
             WxRedisCatchVo wxRedisCatchVo = (WxRedisCatchVo) redisTemplate.opsForValue().get(fromUser);

@@ -5,15 +5,17 @@ import com.aliyun.oss.OSSClientBuilder;
 import com.aliyun.oss.model.OSSObject;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.gpt.chatproject.dao.FansDao;
+import com.gpt.chatproject.entity.Fans;
 import com.gpt.chatproject.enums.GptRoleType;
 import com.gpt.chatproject.service.WeChatService;
 import com.gpt.chatproject.utils.GptUtils;
 import com.gpt.chatproject.utils.MyStringUtils;
 import com.gpt.chatproject.utils.RedisUtils;
+import com.gpt.chatproject.utils.WeChatUtils;
 import com.gpt.chatproject.vo.WechatResponseTextMessage;
 import com.gpt.chatproject.vo.WxRedisCatchVo;
 import com.theokanning.openai.completion.chat.ChatMessage;
-import lombok.extern.java.Log;
 import lombok.extern.log4j.Log4j2;
 import me.chanjar.weixin.common.api.WxConsts;
 import me.chanjar.weixin.common.bean.result.WxMediaUploadResult;
@@ -21,16 +23,17 @@ import me.chanjar.weixin.common.error.WxErrorException;
 import me.chanjar.weixin.mp.api.WxMpService;
 import me.chanjar.weixin.mp.bean.kefu.WxMpKefuMessage;
 import me.chanjar.weixin.mp.bean.message.WxMpXmlMessage;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 
+import java.io.File;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
 
 @Service
 @Log4j2
@@ -50,12 +53,16 @@ public class WeChatServiceImpl implements WeChatService {
     @Autowired
     private MyStringUtils myStringUtils;
 
+    @Autowired
+    private WeChatUtils weChatUtils;
+
+    @Autowired
+    private FansDao fansDao;
 
     @Value("${wxchat.server_error_replay}")
     private String SERVER_ERROR_REPLAY;
-
-    @Value("${wxchat.frequency_response}")
-    private String FREQUENCY_RESPONSE;
+    @Value("${wxchat.release_lock_replay}")
+    private String RELEASE_LOCK_REPLAY;
 
     @Value("${wxchat.max_send_tokens}")
     private Integer MAX_SEND_TOKENS;
@@ -65,8 +72,10 @@ public class WeChatServiceImpl implements WeChatService {
     @Value("${wxchat.chars_overflow_response}")
     private String CHARS_OVERFLOW_RESPONSE;
 
+    private static final String WX_ID_PRE_STR = "qrscene_";
+
     @Override
-    public String shouldFilterMessage(WxMpXmlMessage wxMpXmlMessage) throws JsonProcessingException {
+    public String shouldFilterMessage(WxMpXmlMessage wxMpXmlMessage) throws Exception {
         String fromUser = wxMpXmlMessage.getFromUser();
         String msgType = wxMpXmlMessage.getMsgType();
         String result;
@@ -78,12 +87,7 @@ public class WeChatServiceImpl implements WeChatService {
                         wxMpXmlMessage.getToUser(), WxConsts.XmlMsgType.TEXT, CHARS_OVERFLOW_RESPONSE));
                 return result;
             }
-            // 加锁&&一问一答限制
-            if (!redisUtils.tryLock(fromUser)) {
-                result = xmlMapper.writeValueAsString(new WechatResponseTextMessage(fromUser,
-                        wxMpXmlMessage.getToUser(), WxConsts.XmlMsgType.TEXT, FREQUENCY_RESPONSE));
-                return result;
-            }
+            return weChatUtils.getLock(fromUser, wxMpXmlMessage);
         }
         // 是语音消息才做以下处理
         if (WxConsts.XmlMsgType.VOICE.equals(msgType)) {
@@ -93,14 +97,31 @@ public class WeChatServiceImpl implements WeChatService {
                         wxMpXmlMessage.getToUser(), WxConsts.XmlMsgType.TEXT, CHARS_OVERFLOW_RESPONSE));
                 return result;
             }
-            // 加锁&&一问一答限制
-            if (!redisUtils.tryLock(fromUser)) {
-                result = xmlMapper.writeValueAsString(new WechatResponseTextMessage(fromUser,
-                        wxMpXmlMessage.getToUser(), WxConsts.XmlMsgType.TEXT, FREQUENCY_RESPONSE));
-                return result;
-            }
+            return weChatUtils.getLock(fromUser, wxMpXmlMessage);
         }
         return "";
+    }
+
+    @Override
+    public void invitedDBEvent(WxMpXmlMessage wxMpXmlMessage) throws WxErrorException {
+        // 关注公众号的用户
+        String fromUser = wxMpXmlMessage.getFromUser();
+        // 邀请人
+        String invitedUser = wxMpXmlMessage.getEventKey().startsWith(WX_ID_PRE_STR)
+                ? wxMpXmlMessage.getEventKey().substring(WX_ID_PRE_STR.length())
+                : wxMpXmlMessage.getEventKey();
+        // 录入未关注过的用户
+        Fans fansByUserId = fansDao.getFansByUserId(fromUser);
+        if (ObjectUtils.isEmpty(fansByUserId)) {
+            Fans fans = new Fans();
+            fans.setUserId(fromUser);
+            fans.setInviterId(invitedUser);
+            fansDao.saveFans(fans);
+            // 将邀请人的频率锁去除
+            redisUtils.releaseTimeLock(invitedUser);
+            WxMpKefuMessage kefuMessage = WxMpKefuMessage.TEXT().toUser(invitedUser).content(RELEASE_LOCK_REPLAY).build();
+            wxMpService.getKefuService().sendKefuMessage(kefuMessage);
+        }
     }
 
     /**
@@ -124,7 +145,7 @@ public class WeChatServiceImpl implements WeChatService {
             log.debug(e.getMessage());
             throw new RuntimeException(e);
         } finally {
-            redisUtils.releaseLock(wechatTextMessage.getFromUser());
+            redisUtils.releaseChatLock(wechatTextMessage.getFromUser());
         }
     }
 
@@ -153,12 +174,13 @@ public class WeChatServiceImpl implements WeChatService {
             serverErrorKefuReplay(voiceEvents.getFromUser());
             throw new RuntimeException(e);
         } finally {
-            redisUtils.releaseLock(voiceEvents.getFromUser());
+            redisUtils.releaseChatLock(voiceEvents.getFromUser());
         }
     }
 
     /**
      * 发送客服消息公用方法
+     *
      * @param fromUser
      * @param chatMessage
      * @throws WxErrorException
@@ -176,6 +198,7 @@ public class WeChatServiceImpl implements WeChatService {
 
     /**
      * 微信群分享
+     *
      * @param dataInfo
      */
     @Override
@@ -190,7 +213,7 @@ public class WeChatServiceImpl implements WeChatService {
             log.debug(e.getMessage());
             serverErrorKefuReplay(dataInfo.getFromUser());
         } finally {
-            redisUtils.releaseLock(dataInfo.getFromUser());
+            redisUtils.releaseChatLock(dataInfo.getFromUser());
         }
     }
 
@@ -208,16 +231,17 @@ public class WeChatServiceImpl implements WeChatService {
             // 上传图片并获取media_id
             WxMediaUploadResult wxMediaUploadResult = wxMpService.getMaterialService().mediaUpload(WxConsts.XmlMsgType.IMAGE, "jpg", data);
             return wxMediaUploadResult.getMediaId();
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             log.debug(e.getMessage());
-        }finally{
+        } finally {
             if (ossClient != null) {
                 ossClient.shutdown();
             }
         }
         return null;
     }
+
     /**
      * 获取GPT回复
      *
@@ -225,7 +249,7 @@ public class WeChatServiceImpl implements WeChatService {
      * @param fromUser
      * @return
      */
-    private ChatMessage getResponseMessages(ChatMessage actualChatMessage, String fromUser){
+    private ChatMessage getResponseMessages(ChatMessage actualChatMessage, String fromUser) {
         WxRedisCatchVo aCatch = redisUtils.getCatch(fromUser);
         ArrayList<ChatMessage> messages = new ArrayList<>();
         if (ObjectUtils.isEmpty(aCatch)) {
