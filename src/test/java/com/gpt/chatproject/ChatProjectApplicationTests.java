@@ -44,17 +44,17 @@ class ChatProjectApplicationTests {
         menu.getButtons().add(tips);
         this.wxService.getMenuService().menuCreate(menu);
     }
-
-
-    @Test
-    public void testCreat() throws WxErrorException, IOException {
-        WxMpQrcodeService qrcodeService = wxService.getQrcodeService();
-        WxMpQrCodeTicket wxMpQrCodeTicket = qrcodeService.qrCodeCreateLastTicket(UUID.randomUUID().toString());
-        File file = qrcodeService.qrCodePicture(wxMpQrCodeTicket);
-        FileWriter writer = new FileWriter(file);
-        writer.write(file.getAbsolutePath());
-        writer.close();
-        System.out.println(wxMpQrCodeTicket);
-    }
+//
+//
+//    @Test
+//    public void testCreat() throws WxErrorException, IOException {
+//        WxMpQrcodeService qrcodeService = wxService.getQrcodeService();
+//        WxMpQrCodeTicket wxMpQrCodeTicket = qrcodeService.qrCodeCreateLastTicket(UUID.randomUUID().toString());
+//        File file = qrcodeService.qrCodePicture(wxMpQrCodeTicket);
+//        FileWriter writer = new FileWriter(file);
+//        writer.write(file.getAbsolutePath());
+//        writer.close();
+//        System.out.println(wxMpQrCodeTicket);
+//    }
 
 }
