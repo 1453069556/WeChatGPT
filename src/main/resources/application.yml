@@ -2,7 +2,8 @@ logging:
   level:
     root: INFO
 openai:
-  token: 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
+#  token: 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
+  token: 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
   temperature: 0.8
   presence_penalty: 0
   frequency_penalty: 0
@@ -28,9 +29,9 @@ wxchat:
   2. 对2021年后的世界和事了解有限\n
   3. 暂时无法处理图片，后续可以噢~\n\n
   "
-  chat_frequency_response: 小C正在处理您上个问题。为了保证会话连贯，请耐心等待回复!
+  chat_frequency_response: 小C正在处理您上个问题，请耐心等待!
   time_frequency_response: "小C在一个小时内与您聊天过于频繁啦~请休息一会再来！\nTips:通过此二维码邀请朋友关注可立马刷新等待时间噢~"
-  chars_overflow_response: 超出文本最大范围。请尝试精简您的内容!
+  chars_overflow_response: 超出文本最大范围，请尝试精简您的内容!
   default_welcome_words_end: 我现在处于测试阶段，有任何问题或者好的建议可以加群讨论。
   server_error_replay: 抱歉，刚才小C开了小差，现在继续我们的话题~
   release_lock_replay: 成功邀请用户关注，小C又回来了~现在继续我们的话题。
