@@ -49,8 +49,8 @@ wx:
     aes-key: axovhm2nIJZDRPzx2ZcQ9bnsZdraKa37jFr81Dc9Xhc
 redislock:
   chatExpireSeconds: 60
-  timeExpireSeconds: 3600
-  timeMaxCount: 12
+  timeExpireSeconds: 10800
+  timeMaxCount: 20
   chatTimeOut: 600
 spring:
   redis:
