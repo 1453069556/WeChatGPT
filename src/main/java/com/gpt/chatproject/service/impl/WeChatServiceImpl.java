@@ -200,10 +200,7 @@ public class WeChatServiceImpl implements WeChatService {
     public void chatGroupShare(WxMpXmlMessage dataInfo) {
         try {
             String fromUser = dataInfo.getFromUser();
-//            String mediaId = uploadImageAndGetMediaId("Group chat sharing/微信群邀请链接.jpg");
-            URL url = WeChatServiceImpl.class.getClassLoader().getResource("wxResources/qrCode.jpg");
-            assert url != null;
-            String mediaId = uploadImageAndGetMediaId(new File(url.getFile()));
+            String mediaId = uploadImageAndGetMediaId("Group chat sharing/微信群邀请链接.jpg");
             WxMpKefuMessage kefuMessage = WxMpKefuMessage.IMAGE().toUser(fromUser).mediaId(mediaId).build();
             wxMpService.getKefuService().sendKefuMessage(kefuMessage);
         } catch (Exception e) {
