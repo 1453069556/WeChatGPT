@@ -42,15 +42,10 @@ class ChatProjectApplicationTests {
         this.wxService.getMenuService().menuCreate(menu);
     }
 
-//
+
 //    @Test
 //    public void testCreat() throws WxErrorException{
-//        String originalString = null; // or originalString = null;
-//        String newString = "";
-//        if (originalString != null && originalString.length() > 0) {
-//            newString = originalString.substring(Math.max(0, originalString.length() - 28));
-//            System.out.println(newString);
-//        }
+//        System.out.println(System.getProperty("qrCode.jpg"));
 //    }
 
 }

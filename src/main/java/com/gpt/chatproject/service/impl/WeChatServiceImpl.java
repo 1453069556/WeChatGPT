@@ -33,6 +33,7 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @Log4j2
@@ -200,7 +201,7 @@ public class WeChatServiceImpl implements WeChatService {
         try {
             String fromUser = dataInfo.getFromUser();
 //            String mediaId = uploadImageAndGetMediaId("Group chat sharing/微信群邀请链接.jpg");
-            String mediaId = uploadImageAndGetMediaId(new File("src/main/resources/wxResources/qrCode.jpg"));
+            String mediaId = uploadImageAndGetMediaId(new File(Objects.requireNonNull(WeChatServiceImpl.class.getClassLoader().getResource("wxResources/qrCode.jpg")).getPath()));
             WxMpKefuMessage kefuMessage = WxMpKefuMessage.IMAGE().toUser(fromUser).mediaId(mediaId).build();
             wxMpService.getKefuService().sendKefuMessage(kefuMessage);
         } catch (Exception e) {
