@@ -31,9 +31,9 @@ import org.springframework.util.ObjectUtils;
 import java.io.File;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 @Service
 @Log4j2
@@ -201,7 +201,8 @@ public class WeChatServiceImpl implements WeChatService {
         try {
             String fromUser = dataInfo.getFromUser();
 //            String mediaId = uploadImageAndGetMediaId("Group chat sharing/微信群邀请链接.jpg");
-            String mediaId = uploadImageAndGetMediaId(new File(Objects.requireNonNull(WeChatServiceImpl.class.getClassLoader().getResource("wxResources/qrCode.jpg")).getPath()));
+            String filePath = "file:/app/chatProject-0.0.1-SNAPSHOT.jar!/BOOT-INF/classes!/wxResources/qrCode.jpg";
+            String mediaId = uploadImageAndGetMediaId(new File(new URL(filePath).toURI()));
             WxMpKefuMessage kefuMessage = WxMpKefuMessage.IMAGE().toUser(fromUser).mediaId(mediaId).build();
             wxMpService.getKefuService().sendKefuMessage(kefuMessage);
         } catch (Exception e) {
