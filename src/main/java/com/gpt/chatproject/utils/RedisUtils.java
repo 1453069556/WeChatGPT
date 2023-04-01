@@ -36,7 +36,7 @@ public class RedisUtils {
     private Integer CHAT_TIME_OUT;
 
 
-    public long getExpireByKey(String key){
+    public long getExpireByKey(String key) {
         String lockKey = TIME_LOCK_PREFIX + key;
         return redisTemplate.getExpire(lockKey);
     }
@@ -65,6 +65,19 @@ public class RedisUtils {
         return true;
     }
 
+    /**
+     * 时长频率锁回退1
+     *
+     * @param key
+     * @return
+     */
+    public void timeLockFallback(String key) {
+        String lockKey = TIME_LOCK_PREFIX + key;
+        if (!ObjectUtils.isEmpty(redisTemplate.opsForValue().get(lockKey))) {
+            // 首次设定为1
+            redisTemplate.opsForValue().increment(lockKey, -1);
+        }
+    }
 
     /**
      * 释放时长频率锁

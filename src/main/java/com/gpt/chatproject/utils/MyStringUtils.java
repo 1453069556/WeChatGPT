@@ -2,7 +2,6 @@ package com.gpt.chatproject.utils;
 
 import org.springframework.stereotype.Service;
 
-import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
@@ -11,6 +10,7 @@ import java.nio.charset.CoderResult;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Service
 public class MyStringUtils {
@@ -36,5 +36,18 @@ public class MyStringUtils {
             charBuffer.clear();
         }
         return chunks;
+    }
+
+    /**
+     * 指定数量随机数
+     * @param length
+     * @return
+     */
+    public String generateRandomString(int length) {
+        ThreadLocalRandom random = ThreadLocalRandom.current();
+        return random.ints(length, 0, 36)
+                .mapToObj(i -> Integer.toString(i, 36))
+                .collect(StringBuilder::new, StringBuilder::append, StringBuilder::append)
+                .toString();
     }
 }
