@@ -30,7 +30,7 @@ wxchat:
   3. 暂时无法处理图片，后续可以噢~\n\n
   "
   chat_frequency_response: 小C正在处理您上个问题，请耐心等待!
-  time_frequency_response: "小C在一个小时内与您聊天过于频繁啦~请休息一会再来！\nTips:通过此二维码邀请朋友关注可立马刷新等待时间噢~"
+  time_frequency_response: "小C与您聊天过于频繁啦~请休息一会再来！\nTips:通过二维码邀请朋友关注可立马刷新等待时间噢~"
   chars_overflow_response: 超出文本最大范围，请尝试精简您的内容!
   default_welcome_words_end: 我现在处于测试阶段，有任何问题或者好的建议可以加群讨论。
   server_error_replay: 抱歉，刚才小C开了小差，现在继续我们的话题~
@@ -50,7 +50,7 @@ wx:
 redislock:
   chatExpireSeconds: 60
   timeExpireSeconds: 3600
-  timeMaxCount: 12
+  timeMaxCount: 2
   chatTimeOut: 600
 spring:
   redis:

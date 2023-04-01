@@ -73,6 +73,12 @@
             <artifactId>wx-java-mp-spring-boot-starter</artifactId>
             <version>4.4.0</version>
         </dependency>
+        <!--微信支付-->
+        <dependency>
+            <groupId>com.github.binarywang</groupId>
+            <artifactId>wx-java-pay-spring-boot-starter</artifactId>
+            <version>4.4.0</version>
+        </dependency>
         <!--openai sdk-->
         <dependency>
             <groupId>com.theokanning.openai-gpt3-java</groupId>

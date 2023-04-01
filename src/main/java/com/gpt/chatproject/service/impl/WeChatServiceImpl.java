@@ -3,7 +3,6 @@ package com.gpt.chatproject.service.impl;
 import com.aliyun.oss.OSS;
 import com.aliyun.oss.OSSClientBuilder;
 import com.aliyun.oss.model.OSSObject;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.gpt.chatproject.dao.FansDao;
 import com.gpt.chatproject.entity.Fans;
@@ -72,8 +71,6 @@ public class WeChatServiceImpl implements WeChatService {
     @Value("${wxchat.chars_overflow_response}")
     private String CHARS_OVERFLOW_RESPONSE;
 
-    private static final String WX_ID_PRE_STR = "qrscene_";
-
     @Override
     public String shouldFilterMessage(WxMpXmlMessage wxMpXmlMessage) throws Exception {
         String fromUser = wxMpXmlMessage.getFromUser();
@@ -106,21 +103,25 @@ public class WeChatServiceImpl implements WeChatService {
     public void invitedDBEvent(WxMpXmlMessage wxMpXmlMessage) throws WxErrorException {
         // 关注公众号的用户
         String fromUser = wxMpXmlMessage.getFromUser();
-        // 邀请人
-        String invitedUser = wxMpXmlMessage.getEventKey().startsWith(WX_ID_PRE_STR)
-                ? wxMpXmlMessage.getEventKey().substring(WX_ID_PRE_STR.length())
-                : wxMpXmlMessage.getEventKey();
-        // 录入未关注过的用户
-        Fans fansByUserId = fansDao.getFansByUserId(fromUser);
-        if (ObjectUtils.isEmpty(fansByUserId)) {
-            Fans fans = new Fans();
-            fans.setUserId(fromUser);
-            fans.setInviterId(invitedUser);
-            fansDao.saveFans(fans);
-            // 将邀请人的频率锁去除
-            redisUtils.releaseTimeLock(invitedUser);
-            WxMpKefuMessage kefuMessage = WxMpKefuMessage.TEXT().toUser(invitedUser).content(RELEASE_LOCK_REPLAY).build();
-            wxMpService.getKefuService().sendKefuMessage(kefuMessage);
+        // 邀请者
+        String inviteder = null;
+        String eventKey = wxMpXmlMessage.getEventKey();
+        if (eventKey != null && eventKey.length() > 0) {
+            inviteder = eventKey.substring(Math.max(0, eventKey.length() - 28));
+        }
+        if (StringUtils.isNotBlank(inviteder)) {
+            // 录入未关注过的用户
+            Fans fansByUserId = fansDao.getFansByUserId(fromUser);
+            if (ObjectUtils.isEmpty(fansByUserId)) {
+                Fans fans = new Fans();
+                fans.setUserId(fromUser);
+                fans.setInviterId(inviteder);
+                fansDao.saveFans(fans);
+                // 将邀请人的频率锁去除
+                redisUtils.releaseTimeLock(inviteder);
+                WxMpKefuMessage kefuMessage = WxMpKefuMessage.TEXT().toUser(inviteder).content(RELEASE_LOCK_REPLAY).build();
+                wxMpService.getKefuService().sendKefuMessage(kefuMessage);
+            }
         }
     }
 
@@ -137,13 +138,10 @@ public class WeChatServiceImpl implements WeChatService {
             String fromUser = wechatTextMessage.getFromUser();
             redisUtils.catchChat(fromUser, GptRoleType.USER.getRole(), content);
             sendKefuMessages(fromUser, actualChatMessage);
-        } catch (WxErrorException e) {
+        } catch (Exception e) {
             log.debug(e.getMessage());
             e.printStackTrace();
             serverErrorKefuReplay(wechatTextMessage.getFromUser());
-        } catch (UnsupportedEncodingException e) {
-            log.debug(e.getMessage());
-            throw new RuntimeException(e);
         } finally {
             redisUtils.releaseChatLock(wechatTextMessage.getFromUser());
         }
@@ -165,14 +163,10 @@ public class WeChatServiceImpl implements WeChatService {
             // 整理推送
             ChatMessage actualChatMessage = new ChatMessage(GptRoleType.USER.getRole(), recognition);
             sendKefuMessages(fromUser, actualChatMessage);
-        } catch (WxErrorException e) {
+        } catch (Exception e) {
             log.debug(e.getMessage());
             e.printStackTrace();
             serverErrorKefuReplay(voiceEvents.getFromUser());
-        } catch (UnsupportedEncodingException e) {
-            log.debug(e.getMessage());
-            serverErrorKefuReplay(voiceEvents.getFromUser());
-            throw new RuntimeException(e);
         } finally {
             redisUtils.releaseChatLock(voiceEvents.getFromUser());
         }
@@ -185,7 +179,7 @@ public class WeChatServiceImpl implements WeChatService {
      * @param chatMessage
      * @throws WxErrorException
      */
-    private void sendKefuMessages(String fromUser, ChatMessage chatMessage) throws WxErrorException, UnsupportedEncodingException {
+    private void sendKefuMessages(String fromUser, ChatMessage chatMessage) throws Exception {
         ChatMessage responseMessages = getResponseMessages(chatMessage, fromUser);
         ArrayList<WxMpKefuMessage> kefuMessages = getWxMpKefuMessage(responseMessages.getContent(), fromUser);
         for (WxMpKefuMessage message : kefuMessages) {
@@ -205,7 +199,8 @@ public class WeChatServiceImpl implements WeChatService {
     public void chatGroupShare(WxMpXmlMessage dataInfo) {
         try {
             String fromUser = dataInfo.getFromUser();
-            String mediaId = uploadImageAndGetMediaId("Group chat sharing/微信群邀请链接.jpg");
+//            String mediaId = uploadImageAndGetMediaId("Group chat sharing/微信群邀请链接.jpg");
+            String mediaId = uploadImageAndGetMediaId(new File("src/main/resources/wxResources/qrCode.jpg"));
             WxMpKefuMessage kefuMessage = WxMpKefuMessage.IMAGE().toUser(fromUser).mediaId(mediaId).build();
             wxMpService.getKefuService().sendKefuMessage(kefuMessage);
         } catch (Exception e) {
@@ -242,6 +237,13 @@ public class WeChatServiceImpl implements WeChatService {
         return null;
     }
 
+    // 上传图片并获取media_id
+    public String uploadImageAndGetMediaId(File image) throws Exception {
+        // 上传图片并获取media_id
+        WxMediaUploadResult wxMediaUploadResult = wxMpService.getMaterialService().mediaUpload(WxConsts.XmlMsgType.IMAGE, image);
+        return wxMediaUploadResult.getMediaId();
+    }
+
     /**
      * 获取GPT回复
      *
@@ -249,7 +251,7 @@ public class WeChatServiceImpl implements WeChatService {
      * @param fromUser
      * @return
      */
-    private ChatMessage getResponseMessages(ChatMessage actualChatMessage, String fromUser) {
+    private ChatMessage getResponseMessages(ChatMessage actualChatMessage, String fromUser) throws Exception {
         WxRedisCatchVo aCatch = redisUtils.getCatch(fromUser);
         ArrayList<ChatMessage> messages = new ArrayList<>();
         if (ObjectUtils.isEmpty(aCatch)) {
@@ -290,6 +292,8 @@ public class WeChatServiceImpl implements WeChatService {
                             .content(SERVER_ERROR_REPLAY)
                             .build()
             );
+            // 时间频率锁回退1
+            redisUtils.timeLockFallback(fromUserName);
         } catch (Exception e) {
             log.debug(e.getMessage());
             e.printStackTrace();

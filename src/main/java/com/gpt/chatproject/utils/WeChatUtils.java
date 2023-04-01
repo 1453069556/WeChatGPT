@@ -16,12 +16,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
-import java.text.Format;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeFormatterBuilder;
-import java.util.UUID;
 
 @Component
 public class WeChatUtils {
@@ -79,6 +76,7 @@ public class WeChatUtils {
             WxMediaUploadResult wxMediaUploadResult = wxMpService.getMaterialService().mediaUpload(WxConsts.XmlMsgType.IMAGE, qrcode);
             WxMpKefuMessage kefuMessage = WxMpKefuMessage.IMAGE().toUser(fromUser).mediaId(wxMediaUploadResult.getMediaId()).build();
             wxMpService.getKefuService().sendKefuMessage(kefuMessage);
+            redisUtils.releaseChatLock(fromUser);
             return result;
         }
         return "";
