@@ -201,14 +201,15 @@ public class WeChatServiceImpl implements WeChatService {
         try {
             String fromUser = dataInfo.getFromUser();
 //            String mediaId = uploadImageAndGetMediaId("Group chat sharing/微信群邀请链接.jpg");
-            String filePath = "file:/app/chatProject-0.0.1-SNAPSHOT.jar!/BOOT-INF/classes!/wxResources/qrCode.jpg";
-            String mediaId = uploadImageAndGetMediaId(new File(new URL(filePath).toURI()));
+            URL url = WeChatServiceImpl.class.getClassLoader().getResource("wxResources/qrCode.jpg");
+            assert url != null;
+            String mediaId = uploadImageAndGetMediaId(new File(url.getFile()));
             WxMpKefuMessage kefuMessage = WxMpKefuMessage.IMAGE().toUser(fromUser).mediaId(mediaId).build();
             wxMpService.getKefuService().sendKefuMessage(kefuMessage);
         } catch (Exception e) {
             e.printStackTrace();
             log.debug(e.getMessage());
-            serverErrorKefuReplay(dataInfo.getFromUser());
+//            serverErrorKefuReplay(dataInfo.getFromUser());
         } finally {
             redisUtils.releaseChatLock(dataInfo.getFromUser());
         }
