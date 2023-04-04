@@ -2,8 +2,7 @@ logging:
   level:
     root: INFO
 openai:
-#  token: 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
-  token: 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
+  token: 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
   temperature: 0.8
   presence_penalty: 0
   frequency_penalty: 0
@@ -49,8 +48,8 @@ wx:
     aes-key: axovhm2nIJZDRPzx2ZcQ9bnsZdraKa37jFr81Dc9Xhc
 redislock:
   chatExpireSeconds: 60
-  timeExpireSeconds: 3600
-  timeMaxCount: 20
+  timeExpireSeconds: 18000
+  timeMaxCount: 15
   chatTimeOut: 600
 spring:
   redis:
