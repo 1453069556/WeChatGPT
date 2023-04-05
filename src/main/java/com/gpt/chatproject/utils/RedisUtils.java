@@ -1,5 +1,6 @@
 package com.gpt.chatproject.utils;
 
+import com.gpt.chatproject.enums.ChatType;
 import com.gpt.chatproject.vo.WxRedisCatchVo;
 import com.theokanning.openai.completion.chat.ChatMessage;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,15 +45,15 @@ public class RedisUtils {
     /**
      * 尝试获取时长频率锁
      *
-     * @param key
+     * @param key key
      * @return
      */
-    public boolean tryTimeLock(String key) {
+    public boolean tryTimeLock(String key, long delta) {
         String lockKey = TIME_LOCK_PREFIX + key;
         Object timeLock = redisTemplate.opsForValue().get(lockKey);
         if (ObjectUtils.isEmpty(timeLock)) {
             // 首次设定为1
-            redisTemplate.opsForValue().increment(lockKey, 1);
+            redisTemplate.opsForValue().increment(lockKey, delta);
             // 首次设定超时时间
             redisTemplate.expire(lockKey, TIME_EXPIRE_SECONDS, TimeUnit.SECONDS);
         } else {
@@ -60,7 +61,7 @@ public class RedisUtils {
                 return false;
             }
             // 增长1
-            redisTemplate.opsForValue().increment(lockKey, 1);
+            redisTemplate.opsForValue().increment(lockKey, delta);
         }
         return true;
     }
@@ -120,6 +121,7 @@ public class RedisUtils {
 
     /**
      * 上下文缓存
+     * 默认聊天状态为【默认】
      *
      * @param fromUser
      * @param role
@@ -143,6 +145,33 @@ public class RedisUtils {
             messages.add(new ChatMessage(role, content));
             newWxRedisCatchVo.setChatCatch(messages);
             newWxRedisCatchVo.setChatCount(newWxRedisCatchVo.getChatCount() + 1);
+            redisTemplate.opsForValue().set(fromUser, newWxRedisCatchVo, CHAT_TIME_OUT, TimeUnit.SECONDS);
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    /**
+     * 更改当前缓存聊天状态
+     *
+     * @param fromUser
+     * @param chatType
+     * @return
+     */
+    public boolean updateChatCatchType(String fromUser, ChatType chatType) {
+        try {
+            WxRedisCatchVo wxRedisCatchVo = (WxRedisCatchVo) redisTemplate.opsForValue().get(fromUser);
+            if (!ObjectUtils.isEmpty(wxRedisCatchVo)) {
+                wxRedisCatchVo.setChatType(chatType);
+                redisTemplate.opsForValue().set(fromUser, wxRedisCatchVo, CHAT_TIME_OUT, TimeUnit.SECONDS);
+                return true;
+            }
+            // 查询出来为空，说明首次聊天，新建记录
+            WxRedisCatchVo newWxRedisCatchVo = new WxRedisCatchVo(CHAT_MAX_CATCH, chatType);
+            ArrayList<ChatMessage> messages = new ArrayList<>();
+            newWxRedisCatchVo.setChatCatch(messages);
             redisTemplate.opsForValue().set(fromUser, newWxRedisCatchVo, CHAT_TIME_OUT, TimeUnit.SECONDS);
             return true;
         } catch (Exception e) {

@@ -17,7 +17,7 @@ public class MyStringUtils {
     private static final Charset charset = StandardCharsets.UTF_8;
     private static final CharsetDecoder decoder = charset.newDecoder();
 
-    public static List<String> splitString(String input, int maxByteSize) {
+    public List<String> splitString(String input, int maxByteSize) {
         byte[] bytes = input.getBytes(charset);
         int length = bytes.length;
         int numOfChunks = (int) Math.ceil((double) length / maxByteSize);

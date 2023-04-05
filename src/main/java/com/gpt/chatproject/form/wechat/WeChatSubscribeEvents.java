@@ -1,4 +1,4 @@
-package com.gpt.chatproject.form.Wechat;
+package com.gpt.chatproject.form.wechat;
 
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;

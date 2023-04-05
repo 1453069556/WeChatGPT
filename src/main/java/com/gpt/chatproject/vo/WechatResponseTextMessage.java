@@ -2,7 +2,7 @@ package com.gpt.chatproject.vo;
 
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
-import com.gpt.chatproject.form.Wechat.WechatTextMessage;
+import com.gpt.chatproject.form.wechat.WechatTextMessage;
 import lombok.*;
 import org.springframework.stereotype.Component;
 

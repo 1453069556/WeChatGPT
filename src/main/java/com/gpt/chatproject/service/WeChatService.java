@@ -1,6 +1,5 @@
 package com.gpt.chatproject.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import me.chanjar.weixin.common.error.WxErrorException;
 import me.chanjar.weixin.mp.bean.message.WxMpXmlMessage;
 import org.springframework.stereotype.Service;
@@ -10,7 +9,7 @@ public interface WeChatService {
     /**
      * 过滤条件
      *
-     * @param wxMpXmlMessage
+     * @param wxMpXmlMessage wxMpXmlMessage
      * @throws WxErrorException
      */
     String shouldFilterMessage(WxMpXmlMessage wxMpXmlMessage) throws Exception;
@@ -40,7 +39,13 @@ public interface WeChatService {
     /**
      * 微信群分享
      *
-     * @param dataInfo
+     * @param dataInfo dataInfo
      */
     void chatGroupShare(WxMpXmlMessage dataInfo);
+
+    /**
+     * 图片事件
+     * @param wxImageMessage
+     */
+    void imageEvent(WxMpXmlMessage wxImageMessage) throws WxErrorException;
 }
