@@ -167,9 +167,13 @@ public class WeChatServiceImpl implements WeChatService {
 
     @Override
     public void imageEvent(WxMpXmlMessage wxImageMessage) throws WxErrorException {
-        WxMpKefuMessage imageMessage = WxMpKefuMessage.TEXT().toUser(wxImageMessage.getFromUser())
-                .content("小C图片聊天互动正在学习中噢，如需绘图请进入绘图模式。").build();
-        wxMpService.getKefuService().sendKefuMessage(imageMessage);
+        try{
+            WxMpKefuMessage imageMessage = WxMpKefuMessage.TEXT().toUser(wxImageMessage.getFromUser())
+                    .content("小C图片聊天互动正在学习中噢，如需绘图请进入绘图模式。").build();
+            wxMpService.getKefuService().sendKefuMessage(imageMessage);
+        }finally {
+            redisUtils.releaseChatLock(wxImageMessage.getFromUser());
+        }
     }
 
 }

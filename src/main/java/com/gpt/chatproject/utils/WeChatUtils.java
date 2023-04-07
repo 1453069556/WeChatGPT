@@ -233,7 +233,7 @@ public class WeChatUtils {
             messages.add(actualChatMessage);
             return gptUtils.askGpt(messages, aCatch.getChatType());
         }
-        // 不为为空说明已有缓存，此次请求在其他方法已经加入缓存，无需再次添加
+        // 不为空说明已有缓存，此次请求在其他方法已经加入缓存，无需再次添加
         messages = aCatch.getChatCatch();
         return gptUtils.askGpt(messages, aCatch.getChatType());
     }

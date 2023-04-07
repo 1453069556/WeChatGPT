@@ -3,6 +3,7 @@ package com.gpt.chatproject.utils;
 import com.gpt.chatproject.enums.ChatType;
 import com.gpt.chatproject.vo.WxRedisCatchVo;
 import com.theokanning.openai.completion.chat.ChatMessage;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -14,6 +15,7 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 @Component
+@Log4j2
 public class RedisUtils {
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
@@ -148,6 +150,7 @@ public class RedisUtils {
             redisTemplate.opsForValue().set(fromUser, newWxRedisCatchVo, CHAT_TIME_OUT, TimeUnit.SECONDS);
             return true;
         } catch (Exception e) {
+            log.debug(e.getMessage());
             e.printStackTrace();
         }
         return false;
@@ -175,6 +178,7 @@ public class RedisUtils {
             redisTemplate.opsForValue().set(fromUser, newWxRedisCatchVo, CHAT_TIME_OUT, TimeUnit.SECONDS);
             return true;
         } catch (Exception e) {
+            log.debug(e.getMessage());
             e.printStackTrace();
         }
         return false;
