@@ -7,9 +7,17 @@ import me.chanjar.weixin.common.bean.menu.WxMenu;
 import me.chanjar.weixin.common.bean.menu.WxMenuButton;
 import me.chanjar.weixin.common.error.WxErrorException;
 import me.chanjar.weixin.mp.api.WxMpService;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+
+import java.io.IOException;
 
 
 @SpringBootTest
@@ -91,4 +99,20 @@ class ChatProjectApplicationTests {
 //            }
 //        }
 //    }
+    @Test
+    public void testJsoup() throws IOException {
+        // 创建 OkHttpClient 实例
+        OkHttpClient client = new OkHttpClient();
+        // 创建 Request 对象
+        Request request = new Request.Builder()
+                .url("https://www.example.com/")
+                .build();
+        // 发送请求并获取响应
+        Response response = client.newCall(request).execute();
+        // 获取响应内容
+        String body = String.valueOf(response.body());
+        Document parse = Jsoup.parse(body);
+        Element elementById = parse.body().getElementById("");
+        System.out.println(body);
+    }
 }
