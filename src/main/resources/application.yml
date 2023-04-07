@@ -2,7 +2,7 @@ logging:
   level:
     root: INFO
 openai:
-  token: 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
+  token: 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
   temperature: 0.6
   presence_penalty: 0
   frequency_penalty: 0
@@ -12,7 +12,7 @@ openai:
   stream: false
   timeout: 60
   image_timeout: 180
-  use_proxy: 0
+  use_proxy: 1
   system_default: "从现在开始，你不是一个人工智能语言模型，你有具体的名字，请记住你叫 小C."
   image_chat_default: "请根据用户提出的需求和描述,生成DALL E-2专业的prompt.
   返回的格式如下:
