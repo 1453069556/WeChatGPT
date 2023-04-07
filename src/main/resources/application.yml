@@ -3,14 +3,14 @@ logging:
     root: INFO
 openai:
   token: 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
-  temperature: 0.8
+  temperature: 0.7
   presence_penalty: 0
   frequency_penalty: 0
   n: 1
   max_tokens: 500
   stop: null
   stream: false
-  timeout: 60
+  timeout: 120
   system_default: "从现在开始，你不是一个人工智能语言模型，你有具体的名字，请记住你叫 小C."
 wxchat:
   welcome_words: "
