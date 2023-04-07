@@ -49,7 +49,7 @@ wx:
 redislock:
   chatExpireSeconds: 60
   timeExpireSeconds: 18000
-  timeMaxCount: 15
+  timeMaxCount: 13
   chatTimeOut: 600
 spring:
   redis:
