@@ -28,6 +28,21 @@ openai:
   "
 dall:
   n: 1
+midjourney:
+  authorization: MTA4MTgwOTAzNzY1NTU1NjA5Ng.G052C-.KLdcVi-WToPmruyC19z0R6UDz4JDNGakVqXZ7g
+  applicationId: 936929561302675456
+  guild_id: 1093749340285173810
+  channelId: 1093749643051020378
+  messages_limit: 20
+  queue:
+    check_count: 20
+    check_delay: 30
+    command:
+      name: midjourney-check-command
+      max_thread: 3
+      max_command_length: 20
+    result:
+      name: midjourney-send-result
 wxchat:
   welcome_words: "
   Hi! 欢迎使用小C！\n\n
@@ -87,3 +102,8 @@ spring:
     url: jdbc:mysql://35.225.210.233:3306/wechat_schema?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC
     username: root
     password: f}TBj;0]MvUXQ7L5
+  rabbitmq:
+    host: 104.197.64.191
+    port: 5672
+    username: admin
+    password: zhixinyun2023

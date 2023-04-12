@@ -46,7 +46,7 @@ public class GptUtils {
     @Value("${openai.system_default}")
     private String SYSTEM_DEFAULT;
     @Value("${openai.image_chat_default}")
-    private String IMAGE_CHAT_DEFAULT;
+    private String IMAGE_CHAT_DALL_DEFAULT;
     @Value("${openai.use_proxy}")
     private Integer USE_PROXY;
     final static String PROXY_HOST_NAME = "127.0.0.1";
@@ -81,8 +81,9 @@ public class GptUtils {
             case NORMAL:
                 messages.add(0, new ChatMessage(GptRoleType.SYSTEM.getRole(), SYSTEM_DEFAULT));
                 break;
-            case IMAGE:
-                messages.add(0, new ChatMessage(GptRoleType.SYSTEM.getRole(), IMAGE_CHAT_DEFAULT));
+            case IMAGE_DALL:
+            case IMAGE_MIDJOURNEY:
+                messages.add(0, new ChatMessage(GptRoleType.SYSTEM.getRole(), IMAGE_CHAT_DALL_DEFAULT));
                 break;
         }
         // 设置请求参数

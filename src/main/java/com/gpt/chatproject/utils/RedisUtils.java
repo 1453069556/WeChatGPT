@@ -39,6 +39,14 @@ public class RedisUtils {
     private Integer CHAT_TIME_OUT;
 
 
+//    public boolean countIrc(){
+////        redisTemplate.
+//    }
+    /**
+     * 获取剩余时间
+     * @param key key
+     * @return
+     */
     public long getExpireByKey(String key) {
         String lockKey = TIME_LOCK_PREFIX + key;
         return redisTemplate.getExpire(lockKey);

@@ -80,10 +80,18 @@ public class WeChatHandler {
                     case NORMAL:
                         weChatService.textEvent(wxMessage);
                         break;
-                    case IMAGE:
+                    case IMAGE_MIDJOURNEY:
                         // 触发了图片prompt指令,生成图片
                         if (wxMessage.getContent().startsWith("/image")) {
-                            aiImageService.imageCreate(wxMessage);
+                            aiImageService.imageMidjourneyMqVoCreate(wxMessage);
+                            break;
+                        }
+                        weChatService.textEvent(wxMessage);
+                        break;
+                    case IMAGE_DALL:
+                        // 触发了图片prompt指令,生成图片
+                        if (wxMessage.getContent().startsWith("/image")) {
+                            aiImageService.imageDallCreate(wxMessage);
                             break;
                         }
                         weChatService.textEvent(wxMessage);
@@ -124,8 +132,11 @@ public class WeChatHandler {
             try {
                 WxRedisCatchVo aCatch = Optional.ofNullable(redisUtils.getCatch(wxMessage.getFromUser())).orElse(new WxRedisCatchVo(TIME_MAX_COUNT));
                 switch (aCatch.getChatType()) {
-                    case IMAGE:
-                        aiImageService.imageVariation(wxMessage);
+                    case IMAGE_MIDJOURNEY:
+                        aiImageService.imageMidjourneyMqVoCreate(wxMessage);
+                        break;
+                    case IMAGE_DALL:
+                        aiImageService.imageDallVariation(wxMessage);
                         break;
                     case NORMAL:
                         weChatService.imageEvent(wxMessage);
@@ -148,12 +159,21 @@ public class WeChatHandler {
     public WxMpMessageHandler asyncButtonEvent() {
         return (wxMessage, context, wxMpService, sessionManager) -> {
             try {
+                boolean updateResult;
                 switch (wxMessage.getEventKey()) {
                     case "JOIN_GROUP_POST":
                         weChatService.chatGroupShare(wxMessage);
                         break;
-                    case "AI_IMAGE_CHAT":
-                        boolean updateResult = redisUtils.updateChatCatchType(wxMessage.getFromUser(), ChatType.IMAGE);
+                    case "AI_IMAGE_CHAT_DALL":
+                        updateResult = redisUtils.updateChatCatchType(wxMessage.getFromUser(), ChatType.IMAGE_DALL);
+                        if (updateResult) {
+                            wxMpService.getKefuService().sendKefuMessage(WxMpKefuMessage.TEXT().toUser(wxMessage.getFromUser()).content(UPDATE_SUCCESS).build());
+                        } else {
+                            wxMpService.getKefuService().sendKefuMessage(WxMpKefuMessage.TEXT().toUser(wxMessage.getFromUser()).content(UPDATE_FAILS).build());
+                        }
+                        break;
+                    case "AI_IMAGE_CHAT_MIDJOURNEY":
+                        updateResult = redisUtils.updateChatCatchType(wxMessage.getFromUser(), ChatType.IMAGE_MIDJOURNEY);
                         if (updateResult) {
                             wxMpService.getKefuService().sendKefuMessage(WxMpKefuMessage.TEXT().toUser(wxMessage.getFromUser()).content(UPDATE_SUCCESS).build());
                         } else {
@@ -163,7 +183,7 @@ public class WeChatHandler {
                     case "RESET_CHAT_TYPE":
                         if (redisUtils.updateChatCatchType(wxMessage.getFromUser(), ChatType.NORMAL)) {
                             wxMpService.getKefuService().sendKefuMessage(WxMpKefuMessage.TEXT().toUser(wxMessage.getFromUser()).content(RESET_CHAT_SUCCESS).build());
-                        }else {
+                        } else {
                             wxMpService.getKefuService().sendKefuMessage(WxMpKefuMessage.TEXT().toUser(wxMessage.getFromUser()).content(UPDATE_FAILS).build());
                         }
                         break;

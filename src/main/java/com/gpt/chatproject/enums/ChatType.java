@@ -4,7 +4,8 @@ import lombok.Getter;
 
 @Getter
 public enum ChatType {
-    IMAGE("image"),
+    IMAGE_DALL("image_dall"),
+    IMAGE_MIDJOURNEY("image_midjourney"),
     SPOKEN("spoken"),
     NORMAL("normal");
 

@@ -1,5 +1,8 @@
 package com.gpt.chatproject.utils;
 
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 import org.springframework.stereotype.Component;
 
 import javax.imageio.ImageIO;
@@ -7,12 +10,48 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.nio.file.Files;
 import java.util.Base64;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 @Component
 public class FileUtils {
+    /**
+     * 下载图片文件并存入ConcurrentHashMap
+     */
+    public File downloadImage(String imageUrl) throws IOException {
+        OkHttpClient client = new OkHttpClient.Builder()
+                .proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress("127.0.0.1", 10810)))
+                .connectTimeout(10, TimeUnit.SECONDS)
+                .readTimeout(60, TimeUnit.SECONDS)
+                .build();
+        Request request = new Request.Builder()
+                .url(imageUrl)
+                .build();
+        File outFile = null;
+        try (Response response = client.newCall(request).execute()) {
+            if (!response.isSuccessful()) {
+                throw new IOException("Unexpected code " + response);
+            }
+            assert response.body() != null;
+            InputStream inputStream = response.body().byteStream();
+            BufferedImage image = ImageIO.read(inputStream);
+            outFile = File.createTempFile("MidjourneyTempPic-", ".jpg");
+            ImageIO.write(image, "jpg", outFile);
+            return outFile;
+        } catch (Exception e) {
+            // 下载失败，删除已经下载但下载失败的图片，并抛出异常
+            if (outFile != null) {
+                Files.deleteIfExists(outFile.toPath());
+            }
+            throw new RuntimeException("Failed to download image: " + imageUrl, e);
+        }
+    }
+
     /**
      * 根据BASE64获取文件
      *
@@ -41,7 +80,7 @@ public class FileUtils {
     public File jpgToPng(File jpgImage) {
         try {
             BufferedImage image = ImageIO.read(jpgImage);
-            File pngImage = File.createTempFile("jpgToPng-",".png");
+            File pngImage = File.createTempFile("jpgToPng-", ".png");
             ImageIO.write(image, "png", pngImage);
             Files.deleteIfExists(jpgImage.toPath());
             return pngImage;

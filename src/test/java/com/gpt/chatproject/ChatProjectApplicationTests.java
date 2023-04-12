@@ -1,23 +1,14 @@
 package com.gpt.chatproject;
 
-import com.gpt.chatproject.dao.FansDao;
 import com.gpt.chatproject.utils.RedisUtils;
 import me.chanjar.weixin.common.api.WxConsts;
 import me.chanjar.weixin.common.bean.menu.WxMenu;
 import me.chanjar.weixin.common.bean.menu.WxMenuButton;
 import me.chanjar.weixin.common.error.WxErrorException;
 import me.chanjar.weixin.mp.api.WxMpService;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-
-import java.io.IOException;
 
 
 @SpringBootTest
@@ -26,8 +17,6 @@ class ChatProjectApplicationTests {
     private WxMpService wxService;
     @Autowired
     private RedisUtils redisUtils;
-    @Autowired
-    private FansDao fansDao;
 
     @Test
     public void getMenu() throws WxErrorException {
@@ -49,12 +38,19 @@ class ChatProjectApplicationTests {
         // 绘图菜单
         WxMenuButton FunctionBox = new WxMenuButton();
         FunctionBox.setName("小C功能箱");
-        // 绘图菜单-进入绘图聊天模式
+        // 绘图菜单-进入dall绘图聊天模式
         WxMenuButton FunctionBox2 = new WxMenuButton();
         FunctionBox2.setType(WxConsts.MenuButtonType.CLICK);
-        FunctionBox2.setName("小C画廊");
-        FunctionBox2.setKey("AI_IMAGE_CHAT");
+        FunctionBox2.setName("小C画廊-DALL");
+        FunctionBox2.setKey("AI_IMAGE_CHAT_DALL");
         FunctionBox.getSubButtons().add(FunctionBox2);
+        // 绘图菜单-进入Midjourney绘图聊天模式
+        WxMenuButton FunctionBox3 = new WxMenuButton();
+        FunctionBox3.setType(WxConsts.MenuButtonType.CLICK);
+        FunctionBox3.setName("小C画廊-Midjourney");
+        FunctionBox3.setKey("AI_IMAGE_CHAT_MIDJOURNEY");
+        FunctionBox.getSubButtons().add(FunctionBox3);
+
         // 菜单添加并提交
         menu.getButtons().add(menuButton);
         menu.getButtons().add(FunctionBox);
@@ -62,7 +58,7 @@ class ChatProjectApplicationTests {
         this.wxService.getMenuService().menuCreate(menu);
     }
 
-//    @Autowired
+    //    @Autowired
 //    private DallUtils dallUtils;
 //
 //    @Test
@@ -99,20 +95,52 @@ class ChatProjectApplicationTests {
 //            }
 //        }
 //    }
-    @Test
-    public void testJsoup() throws IOException {
-        // 创建 OkHttpClient 实例
-        OkHttpClient client = new OkHttpClient();
-        // 创建 Request 对象
-        Request request = new Request.Builder()
-                .url("https://www.example.com/")
-                .build();
-        // 发送请求并获取响应
-        Response response = client.newCall(request).execute();
-        // 获取响应内容
-        String body = String.valueOf(response.body());
-        Document parse = Jsoup.parse(body);
-        Element elementById = parse.body().getElementById("");
-        System.out.println(body);
-    }
+//    @Autowired
+//    private MidjourneyUtils midjourneyUtils;
+
+//    @Test
+//    public void testJsoup() throws IOException, InterruptedException {
+//        for (int i = 0; i < 4; i++) {
+//            Thread.sleep(2000);
+//            String authorization = "MTA4MTgwOTAzNzY1NTU1NjA5Ng.G052C-.KLdcVi-WToPmruyC19z0R6UDz4JDNGakVqXZ7g";
+//            String applicationId = "936929561302675456";
+//            String guildId = "1093749340285173810";
+//            String channelId = "1093749643051020378";
+//            long messageId = (long) (Math.random() * 999999999L);
+//            // 创建 OkHttpClient 实例
+//            DiscordInteractionVo command = MidjourneyUtils.getCommand(applicationId, guildId, channelId, "cat", messageId);
+//            boolean sendOk = midjourneyUtils.sendCommand(authorization, command);
+//            if (sendOk) {
+//                //TODO
+//                if (i == 1){
+//                    MidjourneyMqVo midjourneyCatchVo1 = new MidjourneyMqVo("oKV5h5x1mFdgv3cuUmzMzXn56o8Y", messageId);
+//                    redisUtils.enqueue(QueueType.MIDJOURNEY, midjourneyCatchVo1);
+//                }else {
+//                    MidjourneyMqVo midjourneyCatchVo2 = new MidjourneyMqVo("oKV5h573LHrMldsy1VnoIHLJBMWE", messageId);
+//                    redisUtils.enqueue(QueueType.MIDJOURNEY, midjourneyCatchVo2);
+//                }
+//            }
+//
+//        }
+//    }
+//    @Value("${midjourney.queue.command.name}")
+//    private String MQ_COMMAND_NAME;
+//
+//    @Autowired
+//    private RabbitTemplate rabbitTemplate;
+//    @Test
+//    public void testMq() throws IOException {
+//        String authorization = "MTA4MTgwOTAzNzY1NTU1NjA5Ng.G052C-.KLdcVi-WToPmruyC19z0R6UDz4JDNGakVqXZ7g";
+//        String applicationId = "936929561302675456";
+//        String guildId = "1093749340285173810";
+//        String channelId = "1093749643051020378";
+//        long messageId = (long) (Math.random() * 999999999L);
+//        DiscordInteractionVo command = MidjourneyUtils.getCommand(applicationId, guildId, channelId, "cat", messageId);
+//        boolean isSend = midjourneyUtils.sendCommand(authorization,command);
+//        if (isSend){
+//            rabbitTemplate.convertAndSend(MQ_COMMAND_NAME, new MidjourneyMqVo("oKV5h5x1mFdgv3cuUmzMzXn56o8Y", messageId));
+//        }else {
+//            System.out.println("发送失败");
+//        }
+//    }
 }

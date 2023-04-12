@@ -38,9 +38,6 @@ import java.util.List;
 public class WeChatUtils {
     @Autowired
     private WxMpService wxService;
-
-    @Autowired
-    private MyStringUtils myStringUtils;
     @Autowired
     private GptUtils gptUtils;
     @Autowired
@@ -111,7 +108,7 @@ public class WeChatUtils {
     /**
      * 上传图片文件并获取media_id
      *
-     * @param image
+     * @param image image
      * @return
      * @throws Exception
      */
@@ -246,7 +243,7 @@ public class WeChatUtils {
      * @return
      */
     private ArrayList<WxMpKefuMessage> getWxMpKefuMessage(String responseMessages, String fromUserName) {
-        List<String> contents = myStringUtils.splitString(responseMessages, MAX_REPLAY_TOKENS);
+        List<String> contents = MyStringUtils.splitString(responseMessages, MAX_REPLAY_TOKENS);
         ArrayList<WxMpKefuMessage> kefuMessages = new ArrayList<>();
         for (String content : contents) {
             kefuMessages.add(WxMpKefuMessage.TEXT().toUser(fromUserName).content(content).build());
