@@ -1,7 +1,6 @@
 package com.gpt.chatproject.utils;
 
 import com.gpt.chatproject.enums.HttpEnum;
-import com.gpt.chatproject.interceptor.HttpInterceptor;
 import okhttp3.*;
 import org.jetbrains.annotations.NotNull;
 
@@ -55,7 +54,7 @@ public class HttpUtils {
         Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress("127.0.0.1", 10810));
         OkHttpClient client = new OkHttpClient.Builder()
                 .readTimeout(20, TimeUnit.SECONDS)
-                .addInterceptor(new HttpInterceptor())
+//                .addInterceptor(new HttpInterceptor())
 //                .proxy(proxy)
                 .build();
         try (Response response = client.newCall(request).execute()) {
