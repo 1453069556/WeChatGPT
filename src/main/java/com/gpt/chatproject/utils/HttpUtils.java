@@ -1,8 +1,10 @@
 package com.gpt.chatproject.utils;
 
 import com.gpt.chatproject.enums.HttpEnum;
+import com.gpt.chatproject.interceptor.HttpInterceptor;
 import okhttp3.*;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -13,6 +15,9 @@ import java.util.concurrent.TimeUnit;
 
 public class HttpUtils {
     private static final MediaType JSON_MEDIA_TYPE = MediaType.parse("application/json; charset=utf-8");
+
+    @Value("${openai.use_proxy}")
+    private static Integer USE_PROXY;
 
     /**
      * 发送GET请求
@@ -52,11 +57,17 @@ public class HttpUtils {
     @NotNull
     private static String getString(Request request) {
         Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress("127.0.0.1", 10810));
-        OkHttpClient client = new OkHttpClient.Builder()
-                .readTimeout(20, TimeUnit.SECONDS)
-//                .addInterceptor(new HttpInterceptor())
-//                .proxy(proxy)
-                .build();
+        OkHttpClient client;
+        if (USE_PROXY == 0) {
+            client = new OkHttpClient.Builder()
+                    .readTimeout(20, TimeUnit.SECONDS).build();
+        } else {
+            client = new OkHttpClient.Builder()
+                    .readTimeout(20, TimeUnit.SECONDS)
+                    .addInterceptor(new HttpInterceptor())
+                    .proxy(proxy)
+                    .build();
+        }
         try (Response response = client.newCall(request).execute()) {
             if (!response.isSuccessful()) {
                 throw new IOException("Unexpected code " + response);

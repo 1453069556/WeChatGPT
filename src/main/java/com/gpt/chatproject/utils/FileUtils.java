@@ -16,6 +16,8 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.net.URL;
 import java.nio.file.Files;
 import java.util.Base64;
@@ -27,6 +29,8 @@ import java.util.concurrent.TimeUnit;
 @Component
 public class FileUtils {
 
+    @Value("${openai.use_proxy}")
+    private static Integer USE_PROXY;
     @Value("${aliyun.access_key_id}")
     private String ACCESS_KEY_ID;
     @Value("${aliyun.access_key_secret}")
@@ -38,6 +42,7 @@ public class FileUtils {
 
     /**
      * 上传文件并获取url
+     *
      * @param file 文件
      * @return
      */
@@ -70,11 +75,19 @@ public class FileUtils {
      */
     public CompletableFuture<File> downloadImageAsync(String imageUrl) {
         return CompletableFuture.supplyAsync(() -> {
-            OkHttpClient client = new OkHttpClient.Builder()
-//                    .proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress("127.0.0.1", 10810)))
-                    .connectTimeout(60, TimeUnit.SECONDS)
-                    .readTimeout(60, TimeUnit.SECONDS)
-                    .build();
+            OkHttpClient client;
+            if (USE_PROXY == 0) {
+                client = new OkHttpClient.Builder()
+                        .connectTimeout(60, TimeUnit.SECONDS)
+                        .readTimeout(60, TimeUnit.SECONDS)
+                        .build();
+            } else {
+                client = new OkHttpClient.Builder()
+                        .proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress("127.0.0.1", 10810)))
+                        .connectTimeout(60, TimeUnit.SECONDS)
+                        .readTimeout(60, TimeUnit.SECONDS)
+                        .build();
+            }
             Request request = new Request.Builder()
                     .url(imageUrl)
                     .build();

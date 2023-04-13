@@ -113,7 +113,6 @@ public class WeChatServiceImpl implements WeChatService {
             weChatUtils.sendKefuMessages(fromUser, actualChatMessage);
         } catch (Exception e) {
             log.debug(e.getMessage());
-            e.printStackTrace();
             weChatUtils.serverErrorKefuReplay(wechatTextMessage.getFromUser());
         } finally {
             redisUtils.releaseChatLock(wechatTextMessage.getFromUser());
