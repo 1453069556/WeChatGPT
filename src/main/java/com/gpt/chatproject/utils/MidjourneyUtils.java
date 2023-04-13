@@ -3,45 +3,15 @@ package com.gpt.chatproject.utils;
 import com.gpt.chatproject.enums.HttpEnum;
 import com.gpt.chatproject.vo.DiscordInteractionVo;
 import com.gpt.chatproject.vo.DiscordMessageVo;
-import com.gpt.chatproject.vo.MidjourneyMqVo;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-@Component
 public class MidjourneyUtils {
     // 获取消息列表
     // https://discord.com/api/v9/channels/{channel_id}/messages?limit=100&before=1234567890&after=1234567800
-    @Autowired
-    private RabbitTemplate rabbitTemplate;
-    @Value("${midjourney.queue.command.name}")
-    private String MQ_COMMAND_NAME;
-    @Value("${midjourney.authorization}")
-    private String AUTHORIZATION;
-    @Value("${midjourney.applicationId}")
-    private String APPLICATION;
-    @Value("${midjourney.guild_id}")
-    private String GUILD_ID;
-    @Value("${midjourney.channelId}")
-    private String CHANNEL_ID;
-
-    public boolean addMqTask(String fromUser, String prompt) throws IOException {
-        long messageId = (long) (Math.random() * 999999999L);
-        DiscordInteractionVo command = MidjourneyUtils.getCommand(APPLICATION, GUILD_ID, CHANNEL_ID, prompt, messageId);
-        boolean isSend = sendCommand(AUTHORIZATION, command);
-        if (isSend) {
-            rabbitTemplate.convertAndSend(MQ_COMMAND_NAME, new MidjourneyMqVo(fromUser, messageId));
-            return true;
-        }
-        return false;
-    }
 
     /**
      * 发送指令给 discord
@@ -49,14 +19,13 @@ public class MidjourneyUtils {
      * @param authorization        session
      * @param discordInteractionVo json体
      */
-    public boolean sendCommand(String authorization, DiscordInteractionVo discordInteractionVo) throws IOException {
+    public static void sendCommand(String authorization, DiscordInteractionVo discordInteractionVo) throws IOException {
         String sendUrl = "https://discord.com/api/v9/interactions";
         String promptJson = JsonUtils.toJson(discordInteractionVo);
         HashMap<HttpEnum, String> header = new HashMap<>();
         header.put(HttpEnum.HEADER_NAME, "authorization");
         header.put(HttpEnum.HEADER_VALUE, authorization);
-        String result = HttpUtils.postJson(header, sendUrl, promptJson);
-        return !StringUtils.isNotBlank(result);
+        HttpUtils.postJson(header, sendUrl, promptJson);
     }
 
     /**
@@ -66,7 +35,7 @@ public class MidjourneyUtils {
      * @param channelId     channelId
      * @return String
      */
-    public String getMessages(String authorization, String channelId, Integer limit) throws IOException {
+    public static String getMessages(String authorization, String channelId, Integer limit) {
         String getUrl = String.format("https://discord.com/api/v9/channels/%s/messages", channelId);
         HashMap<HttpEnum, String> header = new HashMap<>();
         header.put(HttpEnum.HEADER_NAME, "authorization");
@@ -84,7 +53,7 @@ public class MidjourneyUtils {
      * @param messageId messageId
      * @return 实体
      */
-    public DiscordMessageVo getMessageByMessageId(String messages, long messageId) {
+    public static DiscordMessageVo getMessageByMessageId(String messages, long messageId) {
         DiscordMessageVo[] discordMessageVo = JsonUtils.fromJsonArray(messages, DiscordMessageVo.class);
         assert discordMessageVo != null;
         return matchMessages(discordMessageVo, messageId);
@@ -97,7 +66,7 @@ public class MidjourneyUtils {
      * @param messageId         消息ID
      * @return 消息实体
      */
-    public DiscordMessageVo matchMessages(DiscordMessageVo[] discordMessageVos, long messageId) {
+    public static DiscordMessageVo matchMessages(DiscordMessageVo[] discordMessageVos, long messageId) {
         for (DiscordMessageVo discordMessageVo : discordMessageVos) {
             if (discordMessageVo.getContent().contains(String.format("--seed %09d", messageId))) {
                 return discordMessageVo;

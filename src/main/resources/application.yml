@@ -26,6 +26,14 @@ openai:
   你应该回复：好的，这是优化后的prompt, 可以向我提出意见我来继续优化。
   复制以下prompt代码发送即可：/image Film still of a llama dunking a basketball, low angle, extreme long shot, indoors, dramatic backlighting.
   "
+aliyun:
+  access_key_id: LTAI5tA2tf4MXbRJHg9z5NQq
+  access_key_secret: S6CyPTrtqK3Lb2ZG69jWREXFXE2tQO
+  wechat:
+    end_point: https://oss-us-west-1.aliyuncs.com
+  midjourney:
+    end_point: https://oss-us-west-1.aliyuncs.com
+    bucket_name: mid-user-image
 dall:
   n: 1
 midjourney:
@@ -34,15 +42,15 @@ midjourney:
   guild_id: 1093749340285173810
   channelId: 1093749643051020378
   messages_limit: 20
-  queue:
-    check_count: 20
-    check_delay: 30
-    command:
-      name: midjourney-check-command
-      max_thread: 3
-      max_command_length: 20
-    result:
-      name: midjourney-send-result
+queue:
+  check_count: 30
+  check_delay: 20
+  command:
+    name: midjourney-check-command
+    max_thread: 3
+    max_command_length: 20
+  result:
+    name: midjourney-send-result
 wxchat:
   welcome_words: "
   Hi! 欢迎使用小C！\n\n

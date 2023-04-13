@@ -4,11 +4,13 @@ import com.gpt.chatproject.enums.ChatType;
 import com.gpt.chatproject.service.AiImageService;
 import com.gpt.chatproject.service.WeChatService;
 import com.gpt.chatproject.utils.RedisUtils;
+import com.gpt.chatproject.vo.MidjourneyVariationVo;
 import com.gpt.chatproject.vo.WxRedisCatchVo;
 import me.chanjar.weixin.common.error.WxErrorException;
 import me.chanjar.weixin.mp.api.WxMpMessageHandler;
 import me.chanjar.weixin.mp.bean.kefu.WxMpKefuMessage;
 import me.chanjar.weixin.mp.bean.message.WxMpXmlOutMessage;
+import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -82,7 +84,12 @@ public class WeChatHandler {
                         break;
                     case IMAGE_MIDJOURNEY:
                         // 触发了图片prompt指令,生成图片
-                        if (wxMessage.getContent().startsWith("/image")) {
+                        MidjourneyVariationVo midjourneyVariationCatch = redisUtils.getMidjourneyVariationCatch(wxMessage.getFromUser());
+                        if (wxMessage.getContent().startsWith("/image")&&
+                                !ObjectUtils.isEmpty(midjourneyVariationCatch)) {
+                            aiImageService.imageMidjourneyMqVariation(wxMessage);
+                            break;
+                        } else if (wxMessage.getContent().startsWith("/image")) {
                             aiImageService.imageMidjourneyMqVoCreate(wxMessage);
                             break;
                         }
@@ -133,7 +140,7 @@ public class WeChatHandler {
                 WxRedisCatchVo aCatch = Optional.ofNullable(redisUtils.getCatch(wxMessage.getFromUser())).orElse(new WxRedisCatchVo(TIME_MAX_COUNT));
                 switch (aCatch.getChatType()) {
                     case IMAGE_MIDJOURNEY:
-                        aiImageService.imageMidjourneyMqVoCreate(wxMessage);
+                        aiImageService.imageMidjourneyMqVariation(wxMessage);
                         break;
                     case IMAGE_DALL:
                         aiImageService.imageDallVariation(wxMessage);

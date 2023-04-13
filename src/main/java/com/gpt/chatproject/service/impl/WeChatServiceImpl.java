@@ -101,7 +101,7 @@ public class WeChatServiceImpl implements WeChatService {
     /**
      * 异步回复文本消息
      *
-     * @param wechatTextMessage
+     * @param wechatTextMessage wechatTextMessage
      */
     @Override
     public void textEvent(WxMpXmlMessage wechatTextMessage) {
@@ -123,7 +123,7 @@ public class WeChatServiceImpl implements WeChatService {
     /**
      * 异步回复语音事件
      *
-     * @param voiceEvents
+     * @param voiceEvents voiceEvents
      */
     @Override
     public void voiceEvent(WxMpXmlMessage voiceEvents) {
@@ -148,7 +148,7 @@ public class WeChatServiceImpl implements WeChatService {
     /**
      * 微信群分享
      *
-     * @param dataInfo
+     * @param dataInfo dataInfo
      */
     @Override
     public void chatGroupShare(WxMpXmlMessage dataInfo) {

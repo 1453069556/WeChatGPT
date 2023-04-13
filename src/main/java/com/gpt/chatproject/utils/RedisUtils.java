@@ -1,6 +1,8 @@
 package com.gpt.chatproject.utils;
 
 import com.gpt.chatproject.enums.ChatType;
+import com.gpt.chatproject.enums.RedisKeyEnum;
+import com.gpt.chatproject.vo.MidjourneyVariationVo;
 import com.gpt.chatproject.vo.WxRedisCatchVo;
 import com.theokanning.openai.completion.chat.ChatMessage;
 import lombok.extern.log4j.Log4j2;
@@ -39,11 +41,59 @@ public class RedisUtils {
     private Integer CHAT_TIME_OUT;
 
 
-//    public boolean countIrc(){
-////        redisTemplate.
-//    }
+    /**
+     * 60秒的缓存服务供MidjourneyVariationCatch
+     *
+     * @param fromUser              fromUser
+     * @param midjourneyVariationVo midjourneyVariationVo
+     */
+    public void updateMidjourneyVariationCatch(String fromUser, MidjourneyVariationVo midjourneyVariationVo) {
+        String Prefix = "Midjourney-";
+        redisTemplate.opsForValue().set(Prefix + fromUser, midjourneyVariationVo, 60, TimeUnit.SECONDS);
+    }
+
+    public MidjourneyVariationVo getMidjourneyVariationCatch(String fromUser) {
+        String Prefix = "Midjourney-";
+        return (MidjourneyVariationVo) redisTemplate.opsForValue().get(Prefix + fromUser);
+    }
+
+    /**
+     * 按key自增并检查
+     *
+     * @param redisKeyEnum key
+     * @return
+     */
+    public boolean countIncr(RedisKeyEnum redisKeyEnum, long max) {
+        Object result = redisTemplate.opsForValue().get(redisKeyEnum.getType());
+        if (!ObjectUtils.isEmpty(result)) {
+            long i = Long.parseLong(result.toString());
+            if (i >= max) {
+                return false;
+            }
+        }
+        redisTemplate.opsForValue().increment(redisKeyEnum.getType());
+        return true;
+    }
+
+    /**
+     * 按key自减
+     *
+     * @param redisKeyEnum key
+     * @return
+     */
+    public void countDecr(RedisKeyEnum redisKeyEnum) {
+        Object result = redisTemplate.opsForValue().get(redisKeyEnum.getType());
+        if (!ObjectUtils.isEmpty(result)) {
+            long i = Long.parseLong(result.toString());
+            if (i > 0) {
+                redisTemplate.opsForValue().decrement(redisKeyEnum.getType());
+            }
+        }
+    }
+
     /**
      * 获取剩余时间
+     *
      * @param key key
      * @return
      */

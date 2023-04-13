@@ -123,7 +123,7 @@ class ChatProjectApplicationTests {
 //
 //        }
 //    }
-//    @Value("${midjourney.queue.command.name}")
+//    @Value("${queue.command.name}")
 //    private String MQ_COMMAND_NAME;
 //
 //    @Autowired
@@ -142,5 +142,12 @@ class ChatProjectApplicationTests {
 //        }else {
 //            System.out.println("发送失败");
 //        }
+//    }
+//    @Autowired
+//    private FileUtils fileUtils;
+//    @Test
+//    public void testUpload(){
+//        String s = fileUtils.uploadAndGetUrl(new File("C:\\Users\\Ms Tong\\Desktop\\c075780e2b51e68a3f1b8e85712cef33_1.jpg"));
+//        System.out.println(s);
 //    }
 }

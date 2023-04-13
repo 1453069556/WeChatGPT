@@ -3,26 +3,17 @@ package com.gpt.chatproject.utils;
 import com.gpt.chatproject.enums.HttpEnum;
 import com.gpt.chatproject.interceptor.HttpInterceptor;
 import okhttp3.*;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.util.Map;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeUnit;
 
 public class HttpUtils {
-    private static final Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress("127.0.0.1", 10810));
-    private static final OkHttpClient client = new OkHttpClient.Builder()
-            .readTimeout(20, TimeUnit.SECONDS)
-            .addInterceptor(new HttpInterceptor())
-            .proxy(proxy).build();
     private static final MediaType JSON_MEDIA_TYPE = MediaType.parse("application/json; charset=utf-8");
-
-    /**
-     * 单例模式
-     */
-    private HttpUtils() {
-    }
 
     /**
      * 发送GET请求
@@ -32,18 +23,13 @@ public class HttpUtils {
      * @return 响应结果
      * @throws IOException 网络请求异常
      */
-    public static String get(Map<HttpEnum, String> header, String url, Map<String, String> params) throws IOException {
+    public static String get(Map<HttpEnum, String> header, String url, Map<String, String> params) {
         String fullUrl = buildUrl(url, params);
         Request request = new Request.Builder()
                 .url(fullUrl)
                 .header(header.get(HttpEnum.HEADER_NAME), header.get(HttpEnum.HEADER_VALUE))
                 .build();
-        Response response = client.newCall(request).execute();
-        if (!response.isSuccessful()) {
-            throw new IOException("Unexpected code " + response);
-        }
-        assert response.body() != null;
-        return response.body().string();
+        return getString(request);
     }
 
     /**
@@ -54,19 +40,32 @@ public class HttpUtils {
      * @return 响应结果
      * @throws IOException 网络请求异常
      */
-    public static String postJson(Map<HttpEnum, String> header, String url, String json) throws IOException {
+    public static String postJson(Map<HttpEnum, String> header, String url, String json) {
         RequestBody requestBody = RequestBody.create(JSON_MEDIA_TYPE, json);
         Request request = new Request.Builder()
                 .url(url)
                 .header(header.get(HttpEnum.HEADER_NAME), header.get(HttpEnum.HEADER_VALUE))
                 .post(requestBody)
                 .build();
-        Response response = client.newCall(request).execute();
-        if (!response.isSuccessful()) {
-            throw new IOException("Unexpected code " + response);
+        return getString(request);
+    }
+
+    @NotNull
+    private static String getString(Request request) {
+        Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress("127.0.0.1", 10810));
+        OkHttpClient client = new OkHttpClient.Builder()
+                .readTimeout(20, TimeUnit.SECONDS)
+                .addInterceptor(new HttpInterceptor())
+                .proxy(proxy).build();
+        try (Response response = client.newCall(request).execute()) {
+            if (!response.isSuccessful()) {
+                throw new IOException("Unexpected code " + response);
+            }
+            assert response.body() != null;
+            return response.body().string();
+        } catch (IOException e) {
+            throw new CompletionException(e);
         }
-        assert response.body() != null;
-        return response.body().string();
     }
 
     /**

@@ -56,6 +56,12 @@ public class WeChatUtils {
     private Integer MAX_REPLAY_TOKENS;
     @Value("${wxchat.server_error_replay}")
     private String SERVER_ERROR_REPLAY;
+    @Value("${aliyun.access_key_id}")
+    private String ACCESS_KEY_ID;
+    @Value("${aliyun.access_key_secret}")
+    private String ACCESS_KEY_SECRET;
+    @Value("${aliyun.wechat.end_point}")
+    private String END_POINT;
 
     /**
      * 根据fromUser获取渠道二维码
@@ -82,9 +88,9 @@ public class WeChatUtils {
      * @throws Exception
      */
     public String uploadImageAndGetMediaId(String alyDataName) throws Exception {
-        String accessKeyId = "LTAI5tA2tf4MXbRJHg9z5NQq";
-        String accessKeySecret = "S6CyPTrtqK3Lb2ZG69jWREXFXE2tQO";
-        String endpoint = "https://oss-us-west-1.aliyuncs.com";
+        String accessKeyId = ACCESS_KEY_ID;
+        String accessKeySecret = ACCESS_KEY_SECRET;
+        String endpoint = END_POINT;
         OSS ossClient = new OSSClientBuilder().build(endpoint, accessKeyId, accessKeySecret);
         try {
             ossClient = new OSSClientBuilder().build(endpoint, accessKeyId, accessKeySecret);

@@ -13,13 +13,13 @@ import java.util.Map;
 @Configuration
 public class RabbitMqConfig {
 
-    @Value("${midjourney.queue.command.max_thread}")
+    @Value("${queue.command.max_thread}")
     private Integer MAX_THREAD;
-    @Value("${midjourney.queue.command.max_command_length}")
+    @Value("${queue.command.max_command_length}")
     private Integer MAX_COMMAND_LENGTH;
 
     @Bean
-    public Queue midjourneyCommandQueue(@Value("${midjourney.queue.command.name}") String queueName) {
+    public Queue midjourneyCommandQueue(@Value("${queue.command.name}") String queueName) {
         final boolean durable = false;
         final boolean exclusive = false;
         final boolean autoDelete = false;
@@ -39,7 +39,7 @@ public class RabbitMqConfig {
     }
 
     @Bean
-    public Queue midjourneyResultQueue(@Value("${midjourney.queue.result.name}") String queueName) {
+    public Queue midjourneyResultQueue(@Value("${queue.result.name}") String queueName) {
         final boolean durable = false;
         final boolean exclusive = false;
         final boolean autoDelete = false;
@@ -52,11 +52,11 @@ public class RabbitMqConfig {
      *
      * @param connectionFactory connectionFactory
      */
-    @Bean
+    @Bean("customContainerFactory")
     public SimpleRabbitListenerContainerFactory rabbitListenerContainerFactory(ConnectionFactory connectionFactory) {
         SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
         factory.setConnectionFactory(connectionFactory);
-        factory.setMaxConcurrentConsumers(MAX_THREAD); // 最多3个线程同时消费
+        factory.setMaxConcurrentConsumers(MAX_THREAD); // 最多线程同时消费
         return factory;
     }
 

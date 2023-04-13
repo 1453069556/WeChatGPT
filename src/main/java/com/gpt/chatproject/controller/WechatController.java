@@ -41,7 +41,6 @@ public class WechatController {
         return echostr;
     }
 
-    // 被关注和取关事件
     @PostMapping()
     public String weChatPost(HttpServletRequest request) throws Exception {
         ServletInputStream inputStream = request.getInputStream();
