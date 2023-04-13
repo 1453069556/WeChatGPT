@@ -14,9 +14,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Files;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 @Component
@@ -59,23 +57,16 @@ public class MidjourneyMqListener {
             }
             if (!messageVo.getContent().contains("(Waiting to start)") && !StringUtils.isNotBlank(percentage)) {
                 DiscordMessageVo.ReferencedMessageDTO.AttachmentsDTO attachmentsDTO = messageVo.getAttachments().get(0);
-                CompletableFuture<File> futureFile = fileUtils.downloadImageAsync(attachmentsDTO.getUrl());
-                futureFile.thenAccept(file -> {
-                    // 处理文件下载和存储后的操作
-                    try {
-                        String mediaId = weChatUtils.uploadImageAndGetMediaId(file);
-                        weChatUtils.sendKefuImageMessage(fromUser, mediaId);
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    } finally {
-                        if (file != null) {
-                            try {
-                                Files.deleteIfExists(file.toPath());
-                            } catch (IOException ignored) {
-                            }
-                        }
-                    }
-                });
+                File file = fileUtils.downloadImageAsync(attachmentsDTO.getUrl());
+                // 处理文件下载和存储后的操作
+                try {
+                    String mediaId = weChatUtils.uploadImageAndGetMediaId(file);
+                    weChatUtils.sendKefuImageMessage(fromUser, mediaId);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                } finally {
+                    Files.deleteIfExists(file.toPath());
+                }
                 return;
             }
             // 延时后进入下次for循环

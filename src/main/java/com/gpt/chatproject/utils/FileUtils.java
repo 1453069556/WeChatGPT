@@ -16,14 +16,11 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.InetSocketAddress;
-import java.net.Proxy;
 import java.net.URL;
 import java.nio.file.Files;
 import java.util.Base64;
 import java.util.Date;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 @Component
@@ -71,49 +68,40 @@ public class FileUtils {
     }
 
     /**
-     * 下载图片文件并存入ConcurrentHashMap
+     * 下载图片文件
      */
-    public CompletableFuture<File> downloadImageAsync(String imageUrl) {
-        return CompletableFuture.supplyAsync(() -> {
-            OkHttpClient client;
-            if (USE_PROXY == 0) {
-                client = new OkHttpClient.Builder()
-                        .connectTimeout(60, TimeUnit.SECONDS)
-                        .readTimeout(60, TimeUnit.SECONDS)
-                        .build();
-            } else {
-                client = new OkHttpClient.Builder()
-                        .proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress("127.0.0.1", 10810)))
-                        .connectTimeout(60, TimeUnit.SECONDS)
-                        .readTimeout(60, TimeUnit.SECONDS)
-                        .build();
+    public File downloadImageAsync(String imageUrl) {
+        OkHttpClient client;
+        client = new OkHttpClient.Builder()
+//                .proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress("127.0.0.1", 10810)))
+                .connectTimeout(60, TimeUnit.SECONDS)
+                .readTimeout(60, TimeUnit.SECONDS)
+                .build();
+        Request request = new Request.Builder()
+                .url(imageUrl)
+                .build();
+        File outFile = null;
+        try (Response response = client.newCall(request).execute()) {
+            if (!response.isSuccessful()) {
+                throw new IOException("Unexpected code " + response);
             }
-            Request request = new Request.Builder()
-                    .url(imageUrl)
-                    .build();
-            File outFile = null;
-            try (Response response = client.newCall(request).execute()) {
-                if (!response.isSuccessful()) {
-                    throw new IOException("Unexpected code " + response);
+            assert response.body() != null;
+            InputStream inputStream = response.body().byteStream();
+            BufferedImage image = ImageIO.read(inputStream);
+            outFile = File.createTempFile("MidjourneyTempPic-", ".jpg");
+            ImageIO.write(image, "jpg", outFile);
+            return outFile;
+        } catch (Exception e) {
+            // 下载失败，删除已经下载但下载失败的图片，并抛出异常
+            if (outFile != null) {
+                try {
+                    Files.deleteIfExists(outFile.toPath());
+                } catch (IOException ex) {
+                    // 忽略删除文件失败的异常
                 }
-                assert response.body() != null;
-                InputStream inputStream = response.body().byteStream();
-                BufferedImage image = ImageIO.read(inputStream);
-                outFile = File.createTempFile("MidjourneyTempPic-", ".jpg");
-                ImageIO.write(image, "jpg", outFile);
-                return outFile;
-            } catch (Exception e) {
-                // 下载失败，删除已经下载但下载失败的图片，并抛出异常
-                if (outFile != null) {
-                    try {
-                        Files.deleteIfExists(outFile.toPath());
-                    } catch (IOException ex) {
-                        // 忽略删除文件失败的异常
-                    }
-                }
-                throw new RuntimeException("Failed to download image: " + imageUrl, e);
             }
-        });
+            throw new RuntimeException("Failed to download image: " + imageUrl, e);
+        }
     }
 
     /**
