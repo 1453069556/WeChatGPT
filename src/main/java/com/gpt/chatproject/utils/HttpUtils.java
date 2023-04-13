@@ -56,7 +56,8 @@ public class HttpUtils {
         OkHttpClient client = new OkHttpClient.Builder()
                 .readTimeout(20, TimeUnit.SECONDS)
                 .addInterceptor(new HttpInterceptor())
-                .proxy(proxy).build();
+//                .proxy(proxy)
+                .build();
         try (Response response = client.newCall(request).execute()) {
             if (!response.isSuccessful()) {
                 throw new IOException("Unexpected code " + response);
