@@ -56,7 +56,7 @@ public class AiImageServiceImpl implements AiImageService {
             }
             if (redisUtils.countCheck(RedisKeyEnum.MQ_QUEUE_COUNT, MAX_COMMAND_LENGTH)) {
                 MidjourneyRedisVo midjourneyRedisVo = redisUtils.getMidjourneyRedisCatch(fromUser);
-                if (ObjectUtils.isEmpty(midjourneyRedisVo)) {
+                if (midjourneyRedisVo == null) {
                     midjourneyRedisVo = new MidjourneyRedisVo(fromUser);
                 }
                 String fromMediaId = wxImageMessage.getMediaId();
@@ -110,7 +110,7 @@ public class AiImageServiceImpl implements AiImageService {
             if (redisUtils.countCheck(RedisKeyEnum.MQ_QUEUE_COUNT, MAX_COMMAND_LENGTH)) {
                 String custom = wxMessage.getContent();
                 midjourneyRedisVo = redisUtils.getMidjourneyRedisCatch(fromUser);
-                if (ObjectUtils.isEmpty(midjourneyRedisVo)) {
+                if (midjourneyRedisVo == null) {
                     weChatUtils.sendKefuTextMessage(fromUser, "指令超时，可以重新绘图噢~");
                     return;
                 }
