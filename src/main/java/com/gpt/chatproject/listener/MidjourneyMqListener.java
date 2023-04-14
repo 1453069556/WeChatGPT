@@ -19,7 +19,6 @@ import org.springframework.util.ObjectUtils;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 @Component
@@ -77,15 +76,21 @@ public class MidjourneyMqListener {
                             weChatUtils.sendKefuTextMessage(fromUser, sendOkMessage);
                         }
                         MidjourneyRedisVo midjourneyRedisVo = new MidjourneyRedisVo(fromUser);
-                        // 如果midCatch不为null，则将midCatch的属性值拷贝到midjourneyRedisVo中
-                        Optional.ofNullable(midCatch).ifPresent(vo -> BeanUtils.copyProperties(vo, midjourneyRedisVo));
+                        if (!ObjectUtils.isEmpty(midCatch)) {
+                            BeanUtils.copyProperties(midCatch, midjourneyRedisVo);
+                        }
                         midjourneyRedisVo.setMessageId(messageId);
                         midjourneyRedisVo.setDiscordMessageId(messageVo.getId());
-                        // 如果midCatch不为null，则获取midCatch中attachmentsIds的属性值
-                        List<String> attachmentsIds = Optional.ofNullable(midCatch).map(MidjourneyRedisVo::getAttachmentsIds)
-                                .orElse(new ArrayList<>());
-                        attachmentsIds.add(messageVo.getAttachments().get(0).getId());
+                        List<String> attachmentsIds = new ArrayList<>();
+                        // 判断attachmentsIds缓存是否需重新生成
+                        if (ObjectUtils.isEmpty(midCatch)) {
+                            attachmentsIds.add(messageVo.getAttachments().get(0).getId());
+                        } else {
+                            attachmentsIds = midCatch.getAttachmentsIds();
+                            attachmentsIds.add(messageVo.getAttachments().get(0).getId());
+                        }
                         midjourneyRedisVo.setAttachmentsIds(attachmentsIds);
+                        // 如果customs为空代表接收到大图，不做指令存储
                         List<String> customs = getCustoms(messageVo);
                         if (!ObjectUtils.isEmpty(customs)) {
                             midjourneyRedisVo.setCustoms(customs);
