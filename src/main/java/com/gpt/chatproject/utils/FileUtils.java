@@ -8,6 +8,8 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
 
 import javax.imageio.ImageIO;
@@ -70,6 +72,7 @@ public class FileUtils {
     /**
      * 下载图片文件
      */
+    @Retryable(value = {Exception.class}, maxAttempts = 3, backoff = @Backoff(delay = 1000))
     public File downloadImageAsync(String imageUrl) {
         OkHttpClient client;
         client = new OkHttpClient.Builder()

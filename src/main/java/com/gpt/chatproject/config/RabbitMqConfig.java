@@ -56,6 +56,8 @@ public class RabbitMqConfig {
     public SimpleRabbitListenerContainerFactory rabbitListenerContainerFactory(ConnectionFactory connectionFactory) {
         SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
         factory.setConnectionFactory(connectionFactory);
+        factory.setPrefetchCount(1);
+        factory.setConcurrentConsumers(MAX_THREAD);
         factory.setMaxConcurrentConsumers(MAX_THREAD); // 最多线程同时消费
         return factory;
     }
