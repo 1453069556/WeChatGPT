@@ -50,7 +50,7 @@ public class AiImageServiceImpl implements AiImageService {
         File imageFile = null;
         String fromUser = wxImageMessage.getFromUser();
         try {
-            if (!redisUtils.tryAiPicLock(fromUser)) {
+            if (redisUtils.aiPicIsLock(fromUser)) {
                 weChatUtils.sendKefuTextMessage(fromUser, PIC_PROC_RESPONSE);
                 return;
             }
@@ -79,7 +79,9 @@ public class AiImageServiceImpl implements AiImageService {
                 // 更新检查是否齐全
                 if (midjourneyVariationVoIsAlready(midjourneyRedisVo)) {
                     String prompt = midjourneyRedisVo.getUrl() + " " + midjourneyRedisVo.getPrompt();
-                    mqUtils.addMidjourneyMqTask(fromUser, prompt);
+                    if (redisUtils.tryAiPicLock(fromUser)) {
+                        mqUtils.addMidjourneyMqTask(fromUser, prompt);
+                    }
                     weChatUtils.sendKefuTextMessage(fromUser, AI_PRC_RESPONSE);
                 }
             } else {
@@ -101,7 +103,7 @@ public class AiImageServiceImpl implements AiImageService {
         MidjourneyRedisVo midjourneyRedisVo = null;
         String fromUser = wxMessage.getFromUser();
         try {
-            if (!redisUtils.tryAiPicLock(fromUser)) {
+            if (redisUtils.aiPicIsLock(fromUser)) {
                 weChatUtils.sendKefuTextMessage(fromUser, PIC_PROC_RESPONSE);
                 return;
             }
@@ -120,8 +122,10 @@ public class AiImageServiceImpl implements AiImageService {
                     if (!ObjectUtils.isEmpty(midjourneyRedisVo)) {
                         redisUtils.midjourneyRedisCatch(midjourneyRedisVo);
                     }
-                    mqUtils.addMidjourneyCustomMqTask(fromUser, midjourneyRedisVo.getMessageId(),
-                            midjourneyRedisVo.getDiscordMessageId(), custom);
+                    if (redisUtils.tryAiPicLock(fromUser)) {
+                        mqUtils.addMidjourneyCustomMqTask(fromUser, midjourneyRedisVo.getMessageId(),
+                                midjourneyRedisVo.getDiscordMessageId(), custom);
+                    }
                 } else {
                     weChatUtils.sendKefuTextMessage(fromUser, "您已经发送过此指令或指令有误，请核对~");
                 }
@@ -150,14 +154,16 @@ public class AiImageServiceImpl implements AiImageService {
     public void imageMidjourneyCreate(WxMpXmlMessage wxImageMessage) throws WxErrorException {
         String fromUser = wxImageMessage.getFromUser();
         try {
-            if (!redisUtils.tryAiPicLock(fromUser)) {
+            if (redisUtils.aiPicIsLock(fromUser)) {
                 weChatUtils.sendKefuTextMessage(fromUser, PIC_PROC_RESPONSE);
                 return;
             }
             if (redisUtils.countCheck(RedisKeyEnum.MQ_QUEUE_COUNT, MAX_COMMAND_LENGTH)) {
                 weChatUtils.sendKefuTextMessage(fromUser, AI_PRC_RESPONSE);
                 String prompt = wxImageMessage.getContent().replaceFirst("/imagine", "");
-                mqUtils.addMidjourneyMqTask(wxImageMessage.getFromUser(), prompt);
+                if (redisUtils.tryAiPicLock(fromUser)) {
+                    mqUtils.addMidjourneyMqTask(wxImageMessage.getFromUser(), prompt);
+                }
             } else {
                 weChatUtils.sendKefuTextMessage(wxImageMessage.getFromUser(), PIC_BUSY_RESPONSE);
             }

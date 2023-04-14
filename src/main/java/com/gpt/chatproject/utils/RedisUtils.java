@@ -6,6 +6,7 @@ import com.gpt.chatproject.vo.MidjourneyRedisVo;
 import com.gpt.chatproject.vo.WxRedisCatchVo;
 import com.theokanning.openai.completion.chat.ChatMessage;
 import lombok.extern.log4j.Log4j2;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -184,6 +185,17 @@ public class RedisUtils {
             return true;
         }
         return false;
+    }
+
+    /**
+     * 是否被锁
+     * @param key
+     * @return
+     */
+    public boolean aiPicIsLock(String key){
+        String lockKey = PIC_LOCK_PREFIX + key;
+        String lock = (String) redisTemplate.opsForValue().get(lockKey);
+        return StringUtils.isNotBlank(lock);
     }
 
     /**
