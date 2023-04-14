@@ -16,6 +16,17 @@ public class MyStringUtils {
     private static final Charset charset = StandardCharsets.UTF_8;
     private static final CharsetDecoder decoder = charset.newDecoder();
 
+    private static final String HREF_BUTTON_PREFIX = "<a href=\"weixin://bizmsgmenu?msgmenucontent=";
+    private static final String HREF_BUTTON_MID = "&msgmenuid=1\">";
+    private static final String HREF_BUTTON_SUFFIX = "</a>";
+
+    public static String generateMidjourneyHrefButton(String top, String mid, String bottom) {
+        return top + HREF_BUTTON_PREFIX + mid + HREF_BUTTON_MID + bottom + HREF_BUTTON_SUFFIX;
+    }
+
+    /**
+     * 基于指定长度分割字符串
+     */
     public static List<String> splitString(String input, int maxByteSize) {
         byte[] bytes = input.getBytes(charset);
         int length = bytes.length;
@@ -39,6 +50,7 @@ public class MyStringUtils {
 
     /**
      * 正则匹配
+     *
      * @param regex 正则表达式
      * @param input 需过滤的字符串
      * @return true代表匹配成功

@@ -1,6 +1,12 @@
 package com.gpt.chatproject;
 
+import com.gpt.chatproject.config.MidjourneyConfig;
+import com.gpt.chatproject.listener.MidjourneyMqListener;
+import com.gpt.chatproject.utils.JsonUtils;
+import com.gpt.chatproject.utils.MidjourneyUtils;
 import com.gpt.chatproject.utils.RedisUtils;
+import com.gpt.chatproject.utils.WeChatUtils;
+import com.gpt.chatproject.vo.DiscordHttpMessageVo;
 import me.chanjar.weixin.common.api.WxConsts;
 import me.chanjar.weixin.common.bean.menu.WxMenu;
 import me.chanjar.weixin.common.bean.menu.WxMenuButton;
@@ -58,7 +64,37 @@ class ChatProjectApplicationTests {
         this.wxService.getMenuService().menuCreate(menu);
     }
 
-    //    @Autowired
+    @Autowired
+    private WeChatUtils weChatUtils;
+
+    @Test
+    public void testSentHref() throws WxErrorException {
+        String authorization = midConfig.getAuthorization();
+        String channelId = midConfig.getChannelId();
+        String messages = MidjourneyUtils.getMessages(authorization, channelId, 50);
+        DiscordHttpMessageVo[] midjourneyMqVos = JsonUtils.fromJsonArray(messages, DiscordHttpMessageVo.class);
+        assert midjourneyMqVos != null;
+        String hrefButton = MidjourneyMqListener.getSendOkMessage(midjourneyMqVos[0]);
+        weChatUtils.sendKefuTextMessage("oKV5h5x1mFdgv3cuUmzMzXn56o8Y",hrefButton);
+    }
+
+    @Autowired
+    private MidjourneyConfig midConfig;
+
+//    @Test
+//    public void testCustom() {
+//        String customId = "MJ::JOB::variation::1::6bee8179-80f7-454d-83b7-1dbb89dc4d03";
+//        String messageId = "";
+//        DiscordHttpCustomVo customVo = MidjourneyUtils.getCustomVo(midConfig.getApplicationId(),
+//                midConfig.getGuildId(), midConfig.getChannelId(), messageId, customId);
+//        MidjourneyUtils.sendCustomCommand(midConfig.getAuthorization(), customVo);
+//
+////        String messages = MidjourneyUtils.getMessages(midConfig.getAuthorization(),
+////                midConfig.getChannelId(),
+////                midConfig.getMessagesLimit());
+//        System.out.println(customVo);
+//    }
+//    @Autowired
 //    private DallUtils dallUtils;
 //
 //    @Test
@@ -108,7 +144,7 @@ class ChatProjectApplicationTests {
 //            String channelId = "1093749643051020378";
 //            long messageId = (long) (Math.random() * 999999999L);
 //            // 创建 OkHttpClient 实例
-//            DiscordInteractionVo command = MidjourneyUtils.getCommand(applicationId, guildId, channelId, "cat", messageId);
+//            DiscordHttpInteractionVo command = MidjourneyUtils.getCommand(applicationId, guildId, channelId, "cat", messageId);
 //            boolean sendOk = midjourneyUtils.sendCommand(authorization, command);
 //            if (sendOk) {
 //                //TODO
@@ -135,7 +171,7 @@ class ChatProjectApplicationTests {
 //        String guildId = "1093749340285173810";
 //        String channelId = "1093749643051020378";
 //        long messageId = (long) (Math.random() * 999999999L);
-//        DiscordInteractionVo command = MidjourneyUtils.getCommand(applicationId, guildId, channelId, "cat", messageId);
+//        DiscordHttpInteractionVo command = MidjourneyUtils.getCommand(applicationId, guildId, channelId, "cat", messageId);
 //        boolean isSend = midjourneyUtils.sendCommand(authorization,command);
 //        if (isSend){
 //            rabbitTemplate.convertAndSend(MQ_COMMAND_NAME, new MidjourneyMqVo("oKV5h5x1mFdgv3cuUmzMzXn56o8Y", messageId));

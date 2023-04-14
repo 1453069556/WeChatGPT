@@ -5,7 +5,7 @@ import com.aliyun.oss.OSSClientBuilder;
 import com.aliyun.oss.model.OSSObject;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
-import com.gpt.chatproject.vo.WechatResponseTextMessage;
+import com.gpt.chatproject.form.wechat.WechatResponseTextMessage;
 import com.gpt.chatproject.vo.WxRedisCatchVo;
 import com.theokanning.openai.completion.chat.ChatMessage;
 import lombok.extern.slf4j.Slf4j;
@@ -46,6 +46,8 @@ public class WeChatUtils {
     private XmlMapper xmlMapper;
     @Autowired
     private RedisUtils redisUtils;
+    @Autowired
+    private FileUtils fileUtils;
     @Value("${wxchat.chat_frequency_response}")
     private String CHAT_FREQUENCY_RESPONSE;
 
@@ -179,7 +181,6 @@ public class WeChatUtils {
 
     /**
      * 发送客服文本消息
-     *
      * @param toUser  接收方
      * @param content 发送内容
      * @return 是否成功发送
@@ -192,7 +193,6 @@ public class WeChatUtils {
 
     /**
      * 发送客服图片消息
-     *
      * @param toUser  接收方
      * @param mediaId 图片mediaId
      * @return 是否成功发送
@@ -202,10 +202,47 @@ public class WeChatUtils {
         WxMpKefuMessage wxMpKefuMessage = WxMpKefuMessage.IMAGE().toUser(toUser).mediaId(mediaId).build();
         return wxMpService.getKefuService().sendKefuMessage(wxMpKefuMessage);
     }
+    /**
+     * 发送客服图片消息
+     * @param toUser  接收方
+     * @param url 图片url
+     * @return 是否成功发送
+     */
+    public boolean sendKefuImageMessageByUrl(String toUser, String url) throws IOException, WxErrorException {
+        File file = fileUtils.downloadImageAsync(url);
+        // 处理文件下载和存储后的操作
+        try {
+            String mediaId = uploadImageAndGetMediaId(file);
+            WxMpKefuMessage wxMpKefuMessage = WxMpKefuMessage.IMAGE().toUser(toUser).mediaId(mediaId).build();
+            return wxMpService.getKefuService().sendKefuMessage(wxMpKefuMessage);
+        } catch (Exception e) {
+            sendKefuTextMessage(toUser,"图片发送失败了,请联系管理员~");
+            throw new RuntimeException(e);
+        } finally {
+            Files.deleteIfExists(file.toPath());
+        }
+    }
 
     /**
+     * 发送客服图片消息
+     * @param toUser  接收方
+     * @param url 图片url
+     * @return 是否成功发送
+     */
+    public String getIMediaIdByUrl(String toUser, String url) throws IOException, WxErrorException {
+        File file = fileUtils.downloadImageAsync(url);
+        // 处理文件下载和存储后的操作
+        try {
+            return uploadImageAndGetMediaId(file);
+        } catch (Exception e) {
+            sendKefuTextMessage(toUser,"图片发送失败了,请联系管理员~");
+            throw new RuntimeException(e);
+        } finally {
+            Files.deleteIfExists(file.toPath());
+        }
+    }
+    /**
      * 发送客服消息公用方法
-     *
      * @param fromUser
      * @param chatMessage
      * @throws WxErrorException

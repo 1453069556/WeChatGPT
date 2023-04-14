@@ -5,9 +5,10 @@ import com.gpt.chatproject.enums.DallSizeType;
 import com.gpt.chatproject.enums.RedisKeyEnum;
 import com.gpt.chatproject.service.AiImageService;
 import com.gpt.chatproject.utils.*;
-import com.gpt.chatproject.vo.MidjourneyVariationVo;
+import com.gpt.chatproject.vo.MidjourneyRedisVo;
 import com.theokanning.openai.image.Image;
 import lombok.extern.log4j.Log4j2;
+import me.chanjar.weixin.common.error.WxErrorException;
 import me.chanjar.weixin.mp.bean.message.WxMpXmlMessage;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -33,90 +34,157 @@ public class AiImageServiceImpl implements AiImageService {
     private FileUtils fileUtils;
     @Autowired
     private MqUtils mqUtils;
-    @Value("${queue.command.max_command_length}")
-    private Integer MAX_COMMAND_LENGTH;
     @Value("${dall.n}")
     private Integer N;
+    @Value("${wxchat.ai_pic_response}")
+    private String AI_PRC_RESPONSE;
+    @Value("${wxchat.pic_busy_response}")
+    private String PIC_BUSY_RESPONSE;
+    @Value("${wxchat.pic_proc_response}")
+    private String PIC_PROC_RESPONSE;
+
+    @Value("${queue.command.max_command_length}")
+    private Integer MAX_COMMAND_LENGTH;
 
     @Override
-    public void imageMidjourneyMqVariation(WxMpXmlMessage wxImageMessage) throws Exception {
+    public void imageMidjourneyVariation(WxMpXmlMessage wxImageMessage) throws Exception {
         File imageFile = null;
+        String fromUser = wxImageMessage.getFromUser();
+        if (!redisUtils.tryAiPicLock(fromUser)){
+            weChatUtils.sendKefuTextMessage(fromUser, PIC_PROC_RESPONSE);
+            redisUtils.releaseChatLock(fromUser);
+            return;
+        }
         try {
-            String fromUser = wxImageMessage.getFromUser();
-            if (redisUtils.countIncr(RedisKeyEnum.MQ_QUEUE_COUNT, MAX_COMMAND_LENGTH)) {
-                MidjourneyVariationVo midjourneyVariationVo = redisUtils.getMidjourneyVariationCatch(fromUser);
-                if (ObjectUtils.isEmpty(midjourneyVariationVo)) {
-                    midjourneyVariationVo = new MidjourneyVariationVo(fromUser);
+            if (redisUtils.countCheck(RedisKeyEnum.MQ_QUEUE_COUNT, MAX_COMMAND_LENGTH)) {
+                MidjourneyRedisVo midjourneyRedisVo = redisUtils.getMidjourneyRedisCatch(fromUser);
+                if (ObjectUtils.isEmpty(midjourneyRedisVo)) {
+                    midjourneyRedisVo = new MidjourneyRedisVo(fromUser);
                 }
                 String fromMediaId = wxImageMessage.getMediaId();
                 // 如果传入的是图片
                 if (StringUtils.isNotBlank(fromMediaId)) {
                     imageFile = weChatUtils.getFileByMediaId(fromMediaId);
                     String url = fileUtils.uploadAndGetUrl(imageFile);
-                    midjourneyVariationVo.setUrl(url);
-                    redisUtils.updateMidjourneyVariationCatch(fromUser, midjourneyVariationVo);
-                    weChatUtils.sendKefuTextMessage(fromUser, "小C已收到您的图片(一分钟内有效)，请在一分钟传入prompt(切记加上/image前缀，否则无效噢)~");
+                    midjourneyRedisVo.setUrl(url);
+                    redisUtils.midjourneyRedisCatch(midjourneyRedisVo);
+                    weChatUtils.sendKefuTextMessage(fromUser,
+                            "小C已收到您的图片(5分钟内有效)，请传入对此图片修饰的prompt。\n\n" +
+                                    "prompt切记加上前缀\n/modifier \n否则无效噢~");
                 }
                 // 如果传入的是prompt
                 String contentPrompt = wxImageMessage.getContent();
                 if (StringUtils.isNotBlank(contentPrompt)) {
-                    midjourneyVariationVo.setPrompt(contentPrompt.replaceFirst("/image", ""));
-                    redisUtils.updateMidjourneyVariationCatch(fromUser, midjourneyVariationVo);
+                    midjourneyRedisVo.setPrompt(contentPrompt.replaceFirst("/modifier", ""));
+                    redisUtils.midjourneyRedisCatch(midjourneyRedisVo);
                 }
                 // 更新检查是否齐全
-                if (midjourneyVariationVoIsAlready(midjourneyVariationVo)) {
-                    String prompt = midjourneyVariationVo.getUrl() + " " + midjourneyVariationVo.getPrompt();
-                    mqUtils.addMqTask(fromUser, prompt);
-                    weChatUtils.sendKefuTextMessage(fromUser, "小C已接收到您的图片以及prompt,正在绘图请稍后~");
+                if (midjourneyVariationVoIsAlready(midjourneyRedisVo)) {
+                    String prompt = midjourneyRedisVo.getUrl() + " " + midjourneyRedisVo.getPrompt();
+                    mqUtils.addMidjourneyMqTask(fromUser, prompt);
+                    weChatUtils.sendKefuTextMessage(fromUser, AI_PRC_RESPONSE);
                 }
             } else {
-                weChatUtils.sendKefuTextMessage(fromUser, "当前功能过于火爆请稍后再试~");
+                weChatUtils.sendKefuTextMessage(wxImageMessage.getFromUser(), PIC_BUSY_RESPONSE);
             }
         } catch (Exception e) {
+            weChatUtils.sendKefuTextMessage(wxImageMessage.getFromUser(), PIC_BUSY_RESPONSE);
             throw new RuntimeException(e);
         } finally {
             if (imageFile != null && imageFile.exists()) {
                 Files.deleteIfExists(imageFile.toPath());
             }
-            redisUtils.releaseChatLock(wxImageMessage.getFromUser());
+            redisUtils.releaseChatLock(fromUser);
+        }
+    }
+
+    @Override
+    public void imageMidjourneyCustom(WxMpXmlMessage wxMessage) throws WxErrorException {
+        MidjourneyRedisVo midjourneyRedisVo = null;
+        String fromUser = wxMessage.getFromUser();
+        if (!redisUtils.tryAiPicLock(fromUser)){
+            weChatUtils.sendKefuTextMessage(fromUser, PIC_PROC_RESPONSE);
+            redisUtils.releaseChatLock(fromUser);
+            return;
+        }
+        try {
+            if (redisUtils.countCheck(RedisKeyEnum.MQ_QUEUE_COUNT, MAX_COMMAND_LENGTH)) {
+                String custom = wxMessage.getContent();
+                midjourneyRedisVo = redisUtils.getMidjourneyRedisCatch(fromUser);
+                if (ObjectUtils.isEmpty(midjourneyRedisVo)) {
+                    weChatUtils.sendKefuTextMessage(fromUser, "指令超时，可以重新绘图噢~");
+                    return;
+                }
+                List<String> customs = midjourneyRedisVo.getCustoms();
+                // 如果从列表中清除成功
+                if (!ObjectUtils.isEmpty(customs) && customs.contains(custom)) {
+                    customs.remove(custom);
+                    weChatUtils.sendKefuTextMessage(fromUser, AI_PRC_RESPONSE);
+                    if (!ObjectUtils.isEmpty(midjourneyRedisVo)) {
+                        redisUtils.midjourneyRedisCatch(midjourneyRedisVo);
+                    }
+                    mqUtils.addMidjourneyCustomMqTask(fromUser, midjourneyRedisVo.getMessageId(),
+                            midjourneyRedisVo.getDiscordMessageId(), custom);
+                } else {
+                    weChatUtils.sendKefuTextMessage(fromUser, "您已经发送过此指令或指令有误，请核对~");
+                }
+            } else {
+                weChatUtils.sendKefuTextMessage(wxMessage.getFromUser(), PIC_BUSY_RESPONSE);
+            }
+        } catch (WxErrorException e) {
+            weChatUtils.sendKefuTextMessage(wxMessage.getFromUser(), PIC_BUSY_RESPONSE);
+            throw new RuntimeException(e);
+        } finally {
+            redisUtils.releaseChatLock(fromUser);
         }
     }
 
     /**
      * 判断midjourney图生图参数是否齐全
      *
-     * @param midjourneyVariationVo midjourneyVariationVo
+     * @param midjourneyRedisVo midjourneyRedisVo
      * @return
      */
-    public boolean midjourneyVariationVoIsAlready(MidjourneyVariationVo midjourneyVariationVo) {
-        return StringUtils.isNotBlank(midjourneyVariationVo.getUrl()) && StringUtils.isNotBlank(midjourneyVariationVo.getPrompt());
+    public boolean midjourneyVariationVoIsAlready(MidjourneyRedisVo midjourneyRedisVo) {
+        return StringUtils.isNotBlank(midjourneyRedisVo.getUrl()) && StringUtils.isNotBlank(midjourneyRedisVo.getPrompt());
     }
 
     @Override
-    public void imageMidjourneyMqVoCreate(WxMpXmlMessage wxImageMessage) {
+    public void imageMidjourneyCreate(WxMpXmlMessage wxImageMessage) throws WxErrorException {
         String fromUser = wxImageMessage.getFromUser();
+        if (!redisUtils.tryAiPicLock(fromUser)){
+            weChatUtils.sendKefuTextMessage(fromUser, PIC_PROC_RESPONSE);
+            redisUtils.releaseChatLock(fromUser);
+            return;
+        }
         try {
-            if (redisUtils.countIncr(RedisKeyEnum.MQ_QUEUE_COUNT, MAX_COMMAND_LENGTH)) {
-                weChatUtils.sendKefuTextMessage(fromUser, "小C已接收到您的prompt,正在绘图请稍后...");
-                String prompt = wxImageMessage.getContent().replaceFirst("/image", "");
-                mqUtils.addMqTask(wxImageMessage.getFromUser(), prompt);
+            if (redisUtils.countCheck(RedisKeyEnum.MQ_QUEUE_COUNT, MAX_COMMAND_LENGTH)) {
+                weChatUtils.sendKefuTextMessage(fromUser, AI_PRC_RESPONSE);
+                String prompt = wxImageMessage.getContent().replaceFirst("/imagine", "");
+                mqUtils.addMidjourneyMqTask(wxImageMessage.getFromUser(), prompt);
             } else {
-                weChatUtils.sendKefuTextMessage(fromUser, "当前功能过于火爆请稍后再试~");
+                weChatUtils.sendKefuTextMessage(wxImageMessage.getFromUser(), PIC_BUSY_RESPONSE);
             }
         } catch (Exception e) {
+            weChatUtils.sendKefuTextMessage(wxImageMessage.getFromUser(), PIC_BUSY_RESPONSE);
             throw new RuntimeException(e);
         } finally {
-            redisUtils.releaseChatLock(wxImageMessage.getFromUser());
+            redisUtils.releaseChatLock(fromUser);
         }
     }
 
     @Override
-    public void imageDallVariation(WxMpXmlMessage wxImageMessage) throws IOException {
+    public void imageDallVariation(WxMpXmlMessage wxImageMessage) throws IOException, WxErrorException {
         File pngImage = null;
         File fileByBase64 = null;
         String fromUser = wxImageMessage.getFromUser();
+        if (!redisUtils.tryAiPicLock(fromUser)){
+            weChatUtils.sendKefuTextMessage(fromUser, PIC_PROC_RESPONSE);
+            redisUtils.releaseChatLock(fromUser);
+            return;
+        }
         try {
-            weChatUtils.sendKefuTextMessage(fromUser, "小C已接收到您的图片,正在绘图请稍后...");
+            weChatUtils.sendKefuTextMessage(fromUser, AI_PRC_RESPONSE);
             String fromMediaId = wxImageMessage.getMediaId();
             // jpg转png,getFileByMediaId获取到的是jpg
             File imageByMediaId = weChatUtils.getFileByMediaId(fromMediaId);
@@ -131,7 +199,8 @@ public class AiImageServiceImpl implements AiImageService {
             weChatUtils.serverErrorKefuReplay(fromUser);
             e.printStackTrace();
         } finally {
-            redisUtils.releaseChatLock(wxImageMessage.getFromUser());
+            redisUtils.releasePicLock(fromUser);
+            redisUtils.releaseChatLock(fromUser);
             if (pngImage != null) {
                 Files.deleteIfExists(pngImage.toPath());
             }
@@ -142,12 +211,17 @@ public class AiImageServiceImpl implements AiImageService {
     }
 
     @Override
-    public void imageDallCreate(WxMpXmlMessage wxImageMessage) throws IOException {
+    public void imageDallCreate(WxMpXmlMessage wxImageMessage) throws IOException, WxErrorException {
         File fileByBase64 = null;
         String fromUser = wxImageMessage.getFromUser();
+        if (!redisUtils.tryAiPicLock(fromUser)){
+            weChatUtils.sendKefuTextMessage(fromUser, PIC_PROC_RESPONSE);
+            redisUtils.releaseChatLock(fromUser);
+            return;
+        }
         try {
-            weChatUtils.sendKefuTextMessage(fromUser, "小C已接收到您的prompt,正在绘图请稍后...");
-            List<Image> images = defaultDallCreate(wxImageMessage.getContent().replaceFirst("/image", ""));
+            weChatUtils.sendKefuTextMessage(fromUser, AI_PRC_RESPONSE);
+            List<Image> images = defaultDallCreate(wxImageMessage.getContent().replaceFirst("/imagine", ""));
             for (Image image : images) {
                 fileByBase64 = fileUtils.getFileByBase64(image.getB64Json(), ".jpg");
                 String uploadMediaId = weChatUtils.uploadImageAndGetMediaId(fileByBase64);
@@ -156,7 +230,8 @@ public class AiImageServiceImpl implements AiImageService {
         } catch (Exception e) {
             throw new RuntimeException(e);
         } finally {
-            redisUtils.releaseChatLock(wxImageMessage.getFromUser());
+            redisUtils.releasePicLock(fromUser);
+            redisUtils.releaseChatLock(fromUser);
             if (fileByBase64 != null) {
                 Files.deleteIfExists(fileByBase64.toPath());
             }

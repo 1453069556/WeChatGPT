@@ -1,31 +1,54 @@
 package com.gpt.chatproject.utils;
 
-import com.gpt.chatproject.vo.DiscordInteractionVo;
+import com.gpt.chatproject.config.MidjourneyConfig;
+import com.gpt.chatproject.enums.RedisKeyEnum;
+import com.gpt.chatproject.vo.DiscordHttpCustomVo;
+import com.gpt.chatproject.vo.DiscordHttpInteractionVo;
 import com.gpt.chatproject.vo.MidjourneyMqVo;
+import me.chanjar.weixin.common.error.WxErrorException;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+
 @Component
 public class MqUtils {
     @Autowired
     private RabbitTemplate rabbitTemplate;
+    @Autowired
+    private WeChatUtils weChatUtils;
+    @Autowired
+    private RedisUtils redisUtils;
+    @Autowired
+    private MidjourneyConfig midConfig;
     @Value("${queue.command.name}")
     private String MQ_COMMAND_NAME;
-    @Value("${midjourney.authorization}")
-    private String AUTHORIZATION;
-    @Value("${midjourney.applicationId}")
-    private String APPLICATION;
-    @Value("${midjourney.guild_id}")
-    private String GUILD_ID;
-    @Value("${midjourney.channelId}")
-    private String CHANNEL_ID;
-    public void addMqTask(String fromUser, String prompt) throws IOException {
-        long messageId = (long) (Math.random() * 999999999L);
-        DiscordInteractionVo command = MidjourneyUtils.getCommand(APPLICATION, GUILD_ID, CHANNEL_ID, prompt, messageId);
-        MidjourneyUtils.sendCommand(AUTHORIZATION, command);
-        rabbitTemplate.convertAndSend(MQ_COMMAND_NAME, new MidjourneyMqVo(fromUser, messageId));
+    @Value("${queue.command.max_command_length}")
+    private Integer MAX_COMMAND_LENGTH;
+
+    public void addMidjourneyMqTask(String fromUser, String prompt) throws IOException, WxErrorException {
+        if (redisUtils.countIncr(RedisKeyEnum.MQ_QUEUE_COUNT, MAX_COMMAND_LENGTH)) {
+            long messageId = (long) (Math.random() * 999999999L);
+            DiscordHttpInteractionVo command = MidjourneyUtils.getCommandVo(midConfig.getApplicationId(),
+                    midConfig.getGuildId(), midConfig.getChannelId(), prompt, messageId);
+            MidjourneyUtils.sendCommand(midConfig.getAuthorization(), command);
+            rabbitTemplate.convertAndSend(MQ_COMMAND_NAME, new MidjourneyMqVo(fromUser, messageId));
+        } else {
+            weChatUtils.sendKefuTextMessage(fromUser, "当前功能过于火爆请稍后再试~");
+        }
     }
+
+    public void addMidjourneyCustomMqTask(String fromUser, long messageId, String discordMessageId, String custom) throws WxErrorException {
+        if (redisUtils.countIncr(RedisKeyEnum.MQ_QUEUE_COUNT, MAX_COMMAND_LENGTH)) {
+            DiscordHttpCustomVo command = MidjourneyUtils.getCustomVo(midConfig.getApplicationId(),
+                    midConfig.getGuildId(), midConfig.getChannelId(), discordMessageId, custom);
+            MidjourneyUtils.sendCustomCommand(midConfig.getAuthorization(), command);
+            rabbitTemplate.convertAndSend(MQ_COMMAND_NAME, new MidjourneyMqVo(fromUser, messageId));
+        } else {
+            weChatUtils.sendKefuTextMessage(fromUser, "当前功能过于火爆请稍后再试~");
+        }
+    }
+
 }

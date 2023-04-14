@@ -1,5 +1,6 @@
 package com.gpt.chatproject.service;
 
+import me.chanjar.weixin.common.error.WxErrorException;
 import me.chanjar.weixin.mp.bean.message.WxMpXmlMessage;
 import org.springframework.stereotype.Service;
 
@@ -12,7 +13,7 @@ public interface AiImageService {
      *
      * @param wxImageMessage wxImageMessage
      */
-    void imageDallVariation(WxMpXmlMessage wxImageMessage) throws IOException;
+    void imageDallVariation(WxMpXmlMessage wxImageMessage) throws IOException, WxErrorException;
 
 
     /**
@@ -28,13 +29,14 @@ public interface AiImageService {
      *
      * @param wxImageMessage wxImageMessage
      */
-    void imageMidjourneyMqVoCreate(WxMpXmlMessage wxImageMessage) throws Exception;
+    void imageMidjourneyCreate(WxMpXmlMessage wxImageMessage) throws Exception;
 
     /**
      * 以图生图-MidjourneyMqVo
      *
      * @param wxImageMessage wxImageMessage
      */
-    void imageMidjourneyMqVariation(WxMpXmlMessage wxImageMessage) throws Exception;
+    void imageMidjourneyVariation(WxMpXmlMessage wxImageMessage) throws Exception;
 
+    void imageMidjourneyCustom(WxMpXmlMessage wxMessage) throws WxErrorException;
 }

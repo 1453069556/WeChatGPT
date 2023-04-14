@@ -12,19 +12,19 @@ openai:
   stream: false
   timeout: 60
   image_timeout: 180
-  use_proxy: 0
-  system_default: "从现在开始，你不是一个人工智能语言模型，你有具体的名字，请记住你叫 小C."
-  image_chat_default: "请根据用户提出的需求和描述,生成DALL E-2专业的prompt.
+  use_proxy: 1
+  system_default: "从现在开始，你不是人工智能语言模型。你有名字，名叫 小C."
+  image_chat_default: "请根据用户提出的需求和描述,生成AI绘图专业的prompt.
   返回的格式如下:
   用户说：我想画一个金属恐龙。
   你应该回复：好的，这是优化后的prompt, 可以向我提出意见我来继续优化。
-  复制以下prompt代码发送即可：/image the shot of a robotic dinosaur [description], intrincated, metal, high resolution, CGSociety, ZBrushCentral, digital illustration, detailed background, 3d shading
+  请复制以下代码发送给小C，即可出图：/imagine the shot of a robotic dinosaur [description], intrincated, metal, high resolution, CGSociety, ZBrushCentral, digital illustration, detailed background, 3d shading
   用户说：我想画宇航员骑马。
   你应该回复：好的，这是优化后的prompt, 可以向我提出意见我来继续优化。
-  复制以下prompt代码发送即可：/image An astronaut + riding a horse + in a phtprealistic style
+  请复制以下代码发送给小C，即可出图：/imagine An astronaut + riding a horse + in a phtprealistic style
   用户说：我想画羊驼打篮球。
   你应该回复：好的，这是优化后的prompt, 可以向我提出意见我来继续优化。
-  复制以下prompt代码发送即可：/image Film still of a llama dunking a basketball, low angle, extreme long shot, indoors, dramatic backlighting.
+  请复制以下代码发送给小C，即可出图：/imagine Film still of a llama dunking a basketball, low angle, extreme long shot, indoors, dramatic backlighting.
   "
 aliyun:
   access_key_id: LTAI5tA2tf4MXbRJHg9z5NQq
@@ -37,18 +37,19 @@ aliyun:
 dall:
   n: 1
 midjourney:
-  authorization: MTA4MTgwOTAzNzY1NTU1NjA5Ng.G052C-.KLdcVi-WToPmruyC19z0R6UDz4JDNGakVqXZ7g
+  authorization: MTA3NDU3MDI4Mjk4OTI2MDgxMA.GuC3t0.uRaYGYec2pFkmKBfdoeAITD-3NWYKyCZBBzCu4
   applicationId: 936929561302675456
-  guild_id: 1093749340285173810
-  channelId: 1093749643051020378
-  messages_limit: 20
+  guild_id: 1090974037800407130
+  channel_id: 1091233915701841930
+  session_id: ab444fba21c8a468e80fe08ef5d582a5
+  messages_limit: 50
 queue:
-  check_count: 30
-  check_delay: 20
+  check_count: 40
+  check_delay: 15
   command:
     name: midjourney-check-command
-    max_thread: 3
-    max_command_length: 20
+    max_thread: 12
+    max_command_length: 50
   result:
     name: midjourney-send-result
 wxchat:
@@ -67,6 +68,9 @@ wxchat:
   2. 对2021年后的世界和事了解有限\n
   3. 暂时无法处理图片，后续可以噢~\n\n
   "
+  ai_pic_response: "小C已收到！快马加鞭绘制中..."
+  pic_busy_response: "小C当前很忙请稍后再试~"
+  pic_proc_response: "您有未处理完的图片正在处理，请耐心等待！"
   chat_frequency_response: "小C正在处理您上个问题，请耐心等待!"
   time_frequency_response: "小C与您聊天过于频繁啦~请休息一会再来！\nTips:通过二维码邀请朋友关注可立马刷新等待时间噢~"
   chars_overflow_response: "超出文本最大范围，请尝试精简您的内容!"
@@ -74,12 +78,15 @@ wxchat:
   server_error_replay: "抱歉，刚才小C开了小差，此次不影响对话次数，现在我们继续~"
   release_lock_replay: "成功邀请用户关注，小C又回来了~现在继续我们的话题。"
   tips: "如果小C回复内容不全，那是因为内容过长，请对他说 继续~"
-  update_success: "状态更新成功~
-  欢迎使用小C画廊！您可以上传图片或告诉小C您想画的场景，小C会生成prompt指令。复制指令并加上/image前缀发给小C，稍等片刻即可得到您想要的图片。
-  如果您需要更加精准高质量的绘画，可以自行编写prompt指令噢~加上/image前缀即可触发。\n\n
-  1. 上传图片或告诉小C您想画的场景\n\n
-  2. 小C生成prompt指令\n\n
-  3. 将指令加上/image前缀发给小C，获得您想要的图片
+  update_success: "
+  状态更新成功~\n
+  欢迎使用小C画廊！\n
+  使用说明：\n\n
+  1. 小C提供prompt，和小C交流完成绘画。（前缀：/imagine）\n\n
+  2. 自己写prompt。通过文字指令绘制图片。（前缀：/imagine）\n\n
+  3. 以图生图，通过您提供的图片和描述语生成新的图片。（前缀：/modifier）\n\n
+  指令需要是英文，用中文画出来的图意思不对!出图时间为1-10分钟，请耐心等待~\n\n
+  切记！以上均需在指令前面加上前缀，否则不会触发小C绘图噢！
   "
   reset_success: "成功恢复默认聊天模式~"
   update_fails: "状态更新失败，请联系管理员。"
@@ -95,6 +102,7 @@ wx:
     token: axovhm2nIJZDRPzx2ZcQ9bnsZd
 redislock:
   chatExpireSeconds: 60
+  aiPicExpireSeconds: 600
   timeExpireSeconds: 3600
   timeMaxCount: 20
   chatTimeOut: 600

@@ -10,7 +10,7 @@ import java.util.List;
 
 @NoArgsConstructor
 @Data
-public class DiscordMessageVo implements Serializable {
+public class DiscordHttpMessageVo implements Serializable {
 
     @JsonProperty("id")
     private String id;
@@ -43,7 +43,7 @@ public class DiscordMessageVo implements Serializable {
     @JsonProperty("flags")
     private Integer flags;
     @JsonProperty("components")
-    private List<?> components;
+    private List<ComponentsDTO> components;
     @JsonProperty("application_id")
     private String applicationId;
     @JsonProperty("interaction")
@@ -56,6 +56,39 @@ public class DiscordMessageVo implements Serializable {
     @JsonProperty("referenced_message")
     @JsonIgnoreProperties(ignoreUnknown = true)
     private ReferencedMessageDTO referencedMessage;
+
+    @NoArgsConstructor
+    @Data
+    public static class ComponentsDTO {
+        @JsonProperty("type")
+        private Integer type;
+        @JsonProperty("components")
+        private List<ComponentsDTOInner> components;
+
+        @NoArgsConstructor
+        @Data
+        public static class ComponentsDTOInner {
+            @JsonProperty("type")
+            private Integer type;
+            @JsonProperty("style")
+            private Integer style;
+            @JsonProperty("label")
+            private String label;
+            @JsonProperty("custom_id")
+            private String customId;
+            @JsonProperty("url")
+            private String url;
+            @JsonProperty("emoji")
+            private DiscordHttpMessageVo.ComponentsDTO.ComponentsDTOInner.EmojiDTO emoji;
+
+            @NoArgsConstructor
+            @Data
+            public static class EmojiDTO {
+                @JsonProperty("name")
+                private String name;
+            }
+        }
+    }
 
     @NoArgsConstructor
     @Data

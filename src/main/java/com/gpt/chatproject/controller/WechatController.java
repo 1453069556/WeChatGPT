@@ -2,6 +2,7 @@ package com.gpt.chatproject.controller;
 
 import com.gpt.chatproject.handler.WeChatHandler;
 import com.gpt.chatproject.service.WeChatService;
+import com.gpt.chatproject.utils.RedisUtils;
 import me.chanjar.weixin.common.api.WxConsts;
 import me.chanjar.weixin.mp.api.WxMpMessageRouter;
 import me.chanjar.weixin.mp.api.WxMpService;
@@ -19,7 +20,8 @@ import javax.servlet.http.HttpServletRequest;
 @RequestMapping("/wechat")
 public class WechatController {
 
-
+    @Autowired
+    private RedisUtils redisUtils;
     @Autowired
     private WxMpService wxMpService;
 
@@ -75,6 +77,7 @@ public class WechatController {
                 .rule().async(true).msgType(WxConsts.XmlMsgType.IMAGE)
                 .handler(weChatHandler.getWeChatImageReplyHandler()).end();
         WxMpXmlOutMessage outMessage = messageRouter.route(wxMpXmlMessage);
+        redisUtils.resetCatchExpire(wxMpXmlMessage.getFromUser());
         if (outMessage == null) {
             //为null，返回空
             return "";

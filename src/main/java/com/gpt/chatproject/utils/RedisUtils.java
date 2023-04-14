@@ -2,7 +2,7 @@ package com.gpt.chatproject.utils;
 
 import com.gpt.chatproject.enums.ChatType;
 import com.gpt.chatproject.enums.RedisKeyEnum;
-import com.gpt.chatproject.vo.MidjourneyVariationVo;
+import com.gpt.chatproject.vo.MidjourneyRedisVo;
 import com.gpt.chatproject.vo.WxRedisCatchVo;
 import com.theokanning.openai.completion.chat.ChatMessage;
 import lombok.extern.log4j.Log4j2;
@@ -23,9 +23,13 @@ public class RedisUtils {
     private RedisTemplate<String, Object> redisTemplate;
     private static final String CHAT_LOCK_PREFIX = "chat_lock:";
     private static final String TIME_LOCK_PREFIX = "time_lock:";
+    private static final String PIC_LOCK_PREFIX = "pic_lock:";
     // 会话锁的过期时间，单位为秒
     @Value("${redislock.chatExpireSeconds}")
     private int CHAT_EXPIRE_SECONDS;
+
+    @Value("${redislock.aiPicExpireSeconds}")
+    private int PIC_EXPIRE_SECONDS;
 
     // 时长频率锁的过期时间，单位为秒
     @Value("${redislock.timeExpireSeconds}")
@@ -40,21 +44,19 @@ public class RedisUtils {
     @Value("${redislock.chatTimeOut}")
     private Integer CHAT_TIME_OUT;
 
-
     /**
-     * 60秒的缓存服务供MidjourneyVariationCatch
+     * 5分钟的缓存服务供MidjourneyRedisCatch
      *
-     * @param fromUser              fromUser
-     * @param midjourneyVariationVo midjourneyVariationVo
+     * @param midjourneyRedisVo midjourneyRedisVo
      */
-    public void updateMidjourneyVariationCatch(String fromUser, MidjourneyVariationVo midjourneyVariationVo) {
-        String Prefix = "Midjourney-";
-        redisTemplate.opsForValue().set(Prefix + fromUser, midjourneyVariationVo, 60, TimeUnit.SECONDS);
+    public void midjourneyRedisCatch(MidjourneyRedisVo midjourneyRedisVo) {
+        String Prefix = "MidjourneyRedisCatch:";
+        redisTemplate.opsForValue().set(Prefix + midjourneyRedisVo.getUserId(), midjourneyRedisVo, 5, TimeUnit.MINUTES);
     }
 
-    public MidjourneyVariationVo getMidjourneyVariationCatch(String fromUser) {
-        String Prefix = "Midjourney-";
-        return (MidjourneyVariationVo) redisTemplate.opsForValue().get(Prefix + fromUser);
+    public MidjourneyRedisVo getMidjourneyRedisCatch(String fromUser) {
+        String Prefix = "MidjourneyRedisCatch:";
+        return (MidjourneyRedisVo) redisTemplate.opsForValue().get(Prefix + fromUser);
     }
 
     /**
@@ -72,6 +74,22 @@ public class RedisUtils {
             }
         }
         redisTemplate.opsForValue().increment(redisKeyEnum.getType());
+        redisTemplate.expire(redisKeyEnum.getType(),1, TimeUnit.HOURS);
+        return true;
+    }
+
+    /**
+     * 按key检查
+     *
+     * @param redisKeyEnum key
+     * @return
+     */
+    public boolean countCheck(RedisKeyEnum redisKeyEnum, long max) {
+        Object result = redisTemplate.opsForValue().get(redisKeyEnum.getType());
+        if (!ObjectUtils.isEmpty(result)) {
+            long i = Long.parseLong(result.toString());
+            return i < max;
+        }
         return true;
     }
 
@@ -152,6 +170,32 @@ public class RedisUtils {
     }
 
     /**
+     * 尝试获取AI绘图锁
+     * @param key key
+     * @return
+     */
+    public boolean tryAiPicLock(String key){
+        String lockKey = PIC_LOCK_PREFIX + key;
+        // 尝试获取锁
+        boolean success = Boolean.TRUE.equals(redisTemplate.opsForValue().setIfAbsent(lockKey, UUID.randomUUID().toString()));
+        if (success) {
+            // 获取锁成功，设置锁的过期时间
+            redisTemplate.expire(lockKey, PIC_EXPIRE_SECONDS, TimeUnit.SECONDS);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * 释放绘图锁
+     * @param key key
+     * @return
+     */
+    public void releasePicLock(String key){
+        String lockKey = PIC_LOCK_PREFIX + key;
+        redisTemplate.delete(lockKey);
+    }
+    /**
      * 尝试获取会话锁
      *
      * @param key 锁的 key
@@ -160,7 +204,7 @@ public class RedisUtils {
     public boolean tryChatLock(String key) {
         String lockKey = CHAT_LOCK_PREFIX + key;
         // 尝试获取锁
-        boolean success = redisTemplate.opsForValue().setIfAbsent(lockKey, UUID.randomUUID().toString());
+        boolean success = Boolean.TRUE.equals(redisTemplate.opsForValue().setIfAbsent(lockKey, UUID.randomUUID().toString()));
         if (success) {
             // 获取锁成功，设置锁的过期时间
             redisTemplate.expire(lockKey, CHAT_EXPIRE_SECONDS, TimeUnit.SECONDS);
@@ -242,7 +286,21 @@ public class RedisUtils {
         return false;
     }
 
+    /**
+     * 获取聊天缓存
+     * @param fromUser
+     * @return
+     */
     public WxRedisCatchVo getCatch(String fromUser) {
         return (WxRedisCatchVo) redisTemplate.opsForValue().get(fromUser);
+    }
+
+    /**
+     * 刷新缓存过期时间
+     * @param fromUser
+     * @return
+     */
+    public void resetCatchExpire(String fromUser) {
+        redisTemplate.expire(fromUser,CHAT_TIME_OUT, TimeUnit.SECONDS);
     }
 }

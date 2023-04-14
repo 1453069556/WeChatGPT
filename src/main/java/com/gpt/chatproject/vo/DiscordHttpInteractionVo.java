@@ -13,7 +13,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class DiscordInteractionVo implements Serializable {
+public class DiscordHttpInteractionVo implements Serializable {
 
     private static final long serialVersionUID = 1L;
 

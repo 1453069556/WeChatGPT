@@ -4,13 +4,12 @@ import com.gpt.chatproject.enums.ChatType;
 import com.gpt.chatproject.service.AiImageService;
 import com.gpt.chatproject.service.WeChatService;
 import com.gpt.chatproject.utils.RedisUtils;
-import com.gpt.chatproject.vo.MidjourneyVariationVo;
+import com.gpt.chatproject.utils.WeChatUtils;
 import com.gpt.chatproject.vo.WxRedisCatchVo;
 import me.chanjar.weixin.common.error.WxErrorException;
 import me.chanjar.weixin.mp.api.WxMpMessageHandler;
 import me.chanjar.weixin.mp.bean.kefu.WxMpKefuMessage;
 import me.chanjar.weixin.mp.bean.message.WxMpXmlOutMessage;
-import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -23,6 +22,8 @@ public class WeChatHandler {
     @Autowired
     private WeChatService weChatService;
 
+    @Autowired
+    private WeChatUtils weChatUtils;
     @Autowired
     private RedisUtils redisUtils;
     @Autowired
@@ -76,36 +77,36 @@ public class WeChatHandler {
      */
     public WxMpMessageHandler getWeChatAsyncReplyHandler() {
         return (wxMessage, context, wxMpService, sessionManager) -> {
+            String fromUser = wxMessage.getFromUser();
             try {
-                WxRedisCatchVo aCatch = Optional.ofNullable(redisUtils.getCatch(wxMessage.getFromUser())).orElse(new WxRedisCatchVo(TIME_MAX_COUNT));
+                WxRedisCatchVo aCatch = Optional.ofNullable(redisUtils.getCatch(fromUser)).orElse(new WxRedisCatchVo(TIME_MAX_COUNT));
                 switch (aCatch.getChatType()) {
                     case NORMAL:
                         weChatService.textEvent(wxMessage);
                         break;
                     case IMAGE_MIDJOURNEY:
                         // 触发了图片prompt指令,生成图片
-                        MidjourneyVariationVo midjourneyVariationCatch = redisUtils.getMidjourneyVariationCatch(wxMessage.getFromUser());
-                        if (wxMessage.getContent().startsWith("/image")&&
-                                !ObjectUtils.isEmpty(midjourneyVariationCatch)) {
-                            aiImageService.imageMidjourneyMqVariation(wxMessage);
+                        if (wxMessage.getContent().startsWith("/modifier")) {
+                            aiImageService.imageMidjourneyVariation(wxMessage);
                             break;
-                        } else if (wxMessage.getContent().startsWith("/image")) {
-                            aiImageService.imageMidjourneyMqVoCreate(wxMessage);
+                        } else if (wxMessage.getContent().startsWith("/imagine")) {
+                            aiImageService.imageMidjourneyCreate(wxMessage);
+                            break;
+                        } else if (wxMessage.getContent().startsWith("MJ::JOB::")) {
+                            aiImageService.imageMidjourneyCustom(wxMessage);
                             break;
                         }
                         weChatService.textEvent(wxMessage);
                         break;
                     case IMAGE_DALL:
                         // 触发了图片prompt指令,生成图片
-                        if (wxMessage.getContent().startsWith("/image")) {
+                        if (wxMessage.getContent().startsWith("/imagine")) {
                             aiImageService.imageDallCreate(wxMessage);
                             break;
                         }
                         weChatService.textEvent(wxMessage);
                         break;
                 }
-            } catch (WxErrorException e) {
-                e.printStackTrace();
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -136,11 +137,12 @@ public class WeChatHandler {
      */
     public WxMpMessageHandler getWeChatImageReplyHandler() {
         return (wxMessage, context, wxMpService, sessionManager) -> {
+            String fromUser = wxMessage.getFromUser();
             try {
-                WxRedisCatchVo aCatch = Optional.ofNullable(redisUtils.getCatch(wxMessage.getFromUser())).orElse(new WxRedisCatchVo(TIME_MAX_COUNT));
+                WxRedisCatchVo aCatch = Optional.ofNullable(redisUtils.getCatch(fromUser)).orElse(new WxRedisCatchVo(TIME_MAX_COUNT));
                 switch (aCatch.getChatType()) {
                     case IMAGE_MIDJOURNEY:
-                        aiImageService.imageMidjourneyMqVariation(wxMessage);
+                        aiImageService.imageMidjourneyVariation(wxMessage);
                         break;
                     case IMAGE_DALL:
                         aiImageService.imageDallVariation(wxMessage);
@@ -149,8 +151,6 @@ public class WeChatHandler {
                         weChatService.imageEvent(wxMessage);
                         break;
                 }
-            } catch (WxErrorException e) {
-                e.printStackTrace();
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -172,16 +172,14 @@ public class WeChatHandler {
                         weChatService.chatGroupShare(wxMessage);
                         break;
                     case "AI_IMAGE_CHAT_DALL":
-                        updateResult = redisUtils.updateChatCatchType(wxMessage.getFromUser(), ChatType.IMAGE_DALL);
-                        if (updateResult) {
-                            wxMpService.getKefuService().sendKefuMessage(WxMpKefuMessage.TEXT().toUser(wxMessage.getFromUser()).content(UPDATE_SUCCESS).build());
-                        } else {
-                            wxMpService.getKefuService().sendKefuMessage(WxMpKefuMessage.TEXT().toUser(wxMessage.getFromUser()).content(UPDATE_FAILS).build());
-                        }
+//                        if (redisUtils.updateChatCatchType(wxMessage.getFromUser(), ChatType.IMAGE_DALL)) {
+//                            wxMpService.getKefuService().sendKefuMessage(WxMpKefuMessage.TEXT().toUser(wxMessage.getFromUser()).content(UPDATE_SUCCESS).build());
+//                        } else {
+                        wxMpService.getKefuService().sendKefuMessage(WxMpKefuMessage.TEXT().toUser(wxMessage.getFromUser()).content(UPDATE_FAILS).build());
+//                        }
                         break;
                     case "AI_IMAGE_CHAT_MIDJOURNEY":
-                        updateResult = redisUtils.updateChatCatchType(wxMessage.getFromUser(), ChatType.IMAGE_MIDJOURNEY);
-                        if (updateResult) {
+                        if (redisUtils.updateChatCatchType(wxMessage.getFromUser(), ChatType.IMAGE_MIDJOURNEY)) {
                             wxMpService.getKefuService().sendKefuMessage(WxMpKefuMessage.TEXT().toUser(wxMessage.getFromUser()).content(UPDATE_SUCCESS).build());
                         } else {
                             wxMpService.getKefuService().sendKefuMessage(WxMpKefuMessage.TEXT().toUser(wxMessage.getFromUser()).content(UPDATE_FAILS).build());

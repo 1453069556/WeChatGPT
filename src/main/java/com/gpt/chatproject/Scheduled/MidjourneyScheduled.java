@@ -1,8 +1,9 @@
 package com.gpt.chatproject.Scheduled;
 
+import com.gpt.chatproject.config.MidjourneyConfig;
 import com.gpt.chatproject.constant.MidjourneyConstant;
 import com.gpt.chatproject.utils.MidjourneyUtils;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -11,12 +12,8 @@ import org.springframework.stereotype.Component;
 @EnableScheduling
 @Component
 public class MidjourneyScheduled {
-    @Value("${midjourney.authorization}")
-    private String AUTHORIZATION;
-    @Value("${midjourney.channelId}")
-    private String CHANNEL_ID;
-    @Value("${midjourney.messages_limit}")
-    private Integer MESSAGES_LIMIT;
+    @Autowired
+    private MidjourneyConfig midjourneyConfig;
 
     /**
      * 定时更新消息列表
@@ -24,6 +21,8 @@ public class MidjourneyScheduled {
     @Scheduled(fixedDelay = 15000)
     @Async
     public void checkMessages() {
-        MidjourneyConstant.setMessages(MidjourneyUtils.getMessages(AUTHORIZATION, CHANNEL_ID, MESSAGES_LIMIT));
+        MidjourneyConstant.setMessages(MidjourneyUtils.getMessages(midjourneyConfig.getAuthorization(),
+                midjourneyConfig.getChannelId(),
+                midjourneyConfig.getMessagesLimit()));
     }
 }

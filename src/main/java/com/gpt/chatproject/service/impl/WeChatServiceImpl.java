@@ -7,7 +7,7 @@ import com.gpt.chatproject.enums.GptRoleType;
 import com.gpt.chatproject.service.WeChatService;
 import com.gpt.chatproject.utils.RedisUtils;
 import com.gpt.chatproject.utils.WeChatUtils;
-import com.gpt.chatproject.vo.WechatResponseTextMessage;
+import com.gpt.chatproject.form.wechat.WechatResponseTextMessage;
 import com.theokanning.openai.completion.chat.ChatMessage;
 import lombok.extern.log4j.Log4j2;
 import me.chanjar.weixin.common.api.WxConsts;
@@ -166,12 +166,18 @@ public class WeChatServiceImpl implements WeChatService {
 
     @Override
     public void imageEvent(WxMpXmlMessage wxImageMessage) throws WxErrorException {
+        String fromUser = wxImageMessage.getFromUser();
+        if (!redisUtils.tryAiPicLock(fromUser)){
+            weChatUtils.sendKefuTextMessage(fromUser, "您有未处理完的图片正在处理，请耐心等待！");
+            return;
+        }
         try{
-            WxMpKefuMessage imageMessage = WxMpKefuMessage.TEXT().toUser(wxImageMessage.getFromUser())
+            WxMpKefuMessage imageMessage = WxMpKefuMessage.TEXT().toUser(fromUser)
                     .content("小C图片聊天互动正在学习中噢，如需绘图请进入绘图模式。").build();
             wxMpService.getKefuService().sendKefuMessage(imageMessage);
         }finally {
-            redisUtils.releaseChatLock(wxImageMessage.getFromUser());
+            redisUtils.releasePicLock(fromUser);
+            redisUtils.releaseChatLock(fromUser);
         }
     }
 
