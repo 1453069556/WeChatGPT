@@ -54,7 +54,7 @@ public class HttpUtils {
         Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress("127.0.0.1", 10810));
         OkHttpClient client;
             client = new OkHttpClient.Builder()
-                    .proxy(proxy)
+//                    .proxy(proxy)
                     .readTimeout(20, TimeUnit.SECONDS).build();
         try (Response response = client.newCall(request).execute()) {
             if (!response.isSuccessful()) {

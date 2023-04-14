@@ -12,7 +12,7 @@ openai:
   stream: false
   timeout: 60
   image_timeout: 180
-  use_proxy: 1
+  use_proxy: 0
   system_default: "从现在开始，你不是人工智能语言模型。你有名字，名叫 小C."
   image_chat_default: "请根据用户提出的需求和描述,生成AI绘图专业的prompt.
   返回的格式如下:
