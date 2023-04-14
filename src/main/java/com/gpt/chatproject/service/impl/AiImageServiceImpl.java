@@ -42,7 +42,6 @@ public class AiImageServiceImpl implements AiImageService {
     private String PIC_BUSY_RESPONSE;
     @Value("${wxchat.pic_proc_response}")
     private String PIC_PROC_RESPONSE;
-
     @Value("${queue.command.max_command_length}")
     private Integer MAX_COMMAND_LENGTH;
 
@@ -50,12 +49,11 @@ public class AiImageServiceImpl implements AiImageService {
     public void imageMidjourneyVariation(WxMpXmlMessage wxImageMessage) throws Exception {
         File imageFile = null;
         String fromUser = wxImageMessage.getFromUser();
-        if (!redisUtils.tryAiPicLock(fromUser)){
-            weChatUtils.sendKefuTextMessage(fromUser, PIC_PROC_RESPONSE);
-            redisUtils.releaseChatLock(fromUser);
-            return;
-        }
         try {
+            if (!redisUtils.tryAiPicLock(fromUser)) {
+                weChatUtils.sendKefuTextMessage(fromUser, PIC_PROC_RESPONSE);
+                return;
+            }
             if (redisUtils.countCheck(RedisKeyEnum.MQ_QUEUE_COUNT, MAX_COMMAND_LENGTH)) {
                 MidjourneyRedisVo midjourneyRedisVo = redisUtils.getMidjourneyRedisCatch(fromUser);
                 if (ObjectUtils.isEmpty(midjourneyRedisVo)) {
@@ -102,12 +100,11 @@ public class AiImageServiceImpl implements AiImageService {
     public void imageMidjourneyCustom(WxMpXmlMessage wxMessage) throws WxErrorException {
         MidjourneyRedisVo midjourneyRedisVo = null;
         String fromUser = wxMessage.getFromUser();
-        if (!redisUtils.tryAiPicLock(fromUser)){
-            weChatUtils.sendKefuTextMessage(fromUser, PIC_PROC_RESPONSE);
-            redisUtils.releaseChatLock(fromUser);
-            return;
-        }
         try {
+            if (!redisUtils.tryAiPicLock(fromUser)) {
+                weChatUtils.sendKefuTextMessage(fromUser, PIC_PROC_RESPONSE);
+                return;
+            }
             if (redisUtils.countCheck(RedisKeyEnum.MQ_QUEUE_COUNT, MAX_COMMAND_LENGTH)) {
                 String custom = wxMessage.getContent();
                 midjourneyRedisVo = redisUtils.getMidjourneyRedisCatch(fromUser);
@@ -152,12 +149,11 @@ public class AiImageServiceImpl implements AiImageService {
     @Override
     public void imageMidjourneyCreate(WxMpXmlMessage wxImageMessage) throws WxErrorException {
         String fromUser = wxImageMessage.getFromUser();
-        if (!redisUtils.tryAiPicLock(fromUser)){
-            weChatUtils.sendKefuTextMessage(fromUser, PIC_PROC_RESPONSE);
-            redisUtils.releaseChatLock(fromUser);
-            return;
-        }
         try {
+            if (!redisUtils.tryAiPicLock(fromUser)) {
+                weChatUtils.sendKefuTextMessage(fromUser, PIC_PROC_RESPONSE);
+                return;
+            }
             if (redisUtils.countCheck(RedisKeyEnum.MQ_QUEUE_COUNT, MAX_COMMAND_LENGTH)) {
                 weChatUtils.sendKefuTextMessage(fromUser, AI_PRC_RESPONSE);
                 String prompt = wxImageMessage.getContent().replaceFirst("/imagine", "");
@@ -178,12 +174,11 @@ public class AiImageServiceImpl implements AiImageService {
         File pngImage = null;
         File fileByBase64 = null;
         String fromUser = wxImageMessage.getFromUser();
-        if (!redisUtils.tryAiPicLock(fromUser)){
-            weChatUtils.sendKefuTextMessage(fromUser, PIC_PROC_RESPONSE);
-            redisUtils.releaseChatLock(fromUser);
-            return;
-        }
         try {
+            if (!redisUtils.tryAiPicLock(fromUser)) {
+                weChatUtils.sendKefuTextMessage(fromUser, PIC_PROC_RESPONSE);
+                return;
+            }
             weChatUtils.sendKefuTextMessage(fromUser, AI_PRC_RESPONSE);
             String fromMediaId = wxImageMessage.getMediaId();
             // jpg转png,getFileByMediaId获取到的是jpg
@@ -214,12 +209,11 @@ public class AiImageServiceImpl implements AiImageService {
     public void imageDallCreate(WxMpXmlMessage wxImageMessage) throws IOException, WxErrorException {
         File fileByBase64 = null;
         String fromUser = wxImageMessage.getFromUser();
-        if (!redisUtils.tryAiPicLock(fromUser)){
-            weChatUtils.sendKefuTextMessage(fromUser, PIC_PROC_RESPONSE);
-            redisUtils.releaseChatLock(fromUser);
-            return;
-        }
         try {
+            if (!redisUtils.tryAiPicLock(fromUser)) {
+                weChatUtils.sendKefuTextMessage(fromUser, PIC_PROC_RESPONSE);
+                return;
+            }
             weChatUtils.sendKefuTextMessage(fromUser, AI_PRC_RESPONSE);
             List<Image> images = defaultDallCreate(wxImageMessage.getContent().replaceFirst("/imagine", ""));
             for (Image image : images) {

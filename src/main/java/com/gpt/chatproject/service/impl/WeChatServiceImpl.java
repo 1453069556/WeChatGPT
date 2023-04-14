@@ -169,6 +169,7 @@ public class WeChatServiceImpl implements WeChatService {
         String fromUser = wxImageMessage.getFromUser();
         if (!redisUtils.tryAiPicLock(fromUser)){
             weChatUtils.sendKefuTextMessage(fromUser, "您有未处理完的图片正在处理，请耐心等待！");
+            redisUtils.releaseChatLock(fromUser);
             return;
         }
         try{
