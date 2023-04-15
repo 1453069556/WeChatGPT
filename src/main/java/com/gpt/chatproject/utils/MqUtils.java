@@ -1,7 +1,7 @@
 package com.gpt.chatproject.utils;
 
 import com.gpt.chatproject.config.MidjourneyConfig;
-import com.gpt.chatproject.enums.RedisKeyEnum;
+import com.gpt.chatproject.constant.ConsumerCounterTotal;
 import com.gpt.chatproject.vo.DiscordHttpCustomVo;
 import com.gpt.chatproject.vo.DiscordHttpInteractionVo;
 import com.gpt.chatproject.vo.MidjourneyMqVo;
@@ -20,8 +20,6 @@ public class MqUtils {
     @Autowired
     private WeChatUtils weChatUtils;
     @Autowired
-    private RedisUtils redisUtils;
-    @Autowired
     private MidjourneyConfig midConfig;
     @Value("${queue.command.name}")
     private String MQ_COMMAND_NAME;
@@ -29,7 +27,8 @@ public class MqUtils {
     private Integer MAX_COMMAND_LENGTH;
 
     public void addMidjourneyMqTask(String fromUser, String prompt) throws IOException, WxErrorException {
-        if (redisUtils.countIncr(RedisKeyEnum.MQ_QUEUE_COUNT, MAX_COMMAND_LENGTH)) {
+        if (ConsumerCounterTotal.get() < MAX_COMMAND_LENGTH) {
+            ConsumerCounterTotal.incrementAndGet();
             long messageId = (long) (Math.random() * 999999999L);
             DiscordHttpInteractionVo command = MidjourneyUtils.getCommandVo(midConfig.getApplicationId(),
                     midConfig.getGuildId(), midConfig.getChannelId(), prompt, messageId);
@@ -41,7 +40,8 @@ public class MqUtils {
     }
 
     public void addMidjourneyCustomMqTask(String fromUser, long messageId, String discordMessageId, String custom) throws WxErrorException {
-        if (redisUtils.countIncr(RedisKeyEnum.MQ_QUEUE_COUNT, MAX_COMMAND_LENGTH)) {
+        if (ConsumerCounterTotal.get() < MAX_COMMAND_LENGTH) {
+            ConsumerCounterTotal.incrementAndGet();
             DiscordHttpCustomVo command = MidjourneyUtils.getCustomVo(midConfig.getApplicationId(),
                     midConfig.getGuildId(), midConfig.getChannelId(), discordMessageId, custom);
             MidjourneyUtils.sendCustomCommand(midConfig.getAuthorization(), command);

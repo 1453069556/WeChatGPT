@@ -1,7 +1,6 @@
 package com.gpt.chatproject.utils;
 
 import com.gpt.chatproject.enums.ChatType;
-import com.gpt.chatproject.enums.RedisKeyEnum;
 import com.gpt.chatproject.vo.MidjourneyRedisVo;
 import com.gpt.chatproject.vo.WxRedisCatchVo;
 import com.theokanning.openai.completion.chat.ChatMessage;
@@ -58,56 +57,6 @@ public class RedisUtils {
     public MidjourneyRedisVo getMidjourneyRedisCatch(String fromUser) {
         String Prefix = "MidjourneyRedisCatch:";
         return (MidjourneyRedisVo) redisTemplate.opsForValue().get(Prefix + fromUser);
-    }
-
-    /**
-     * 按key自增并检查
-     *
-     * @param redisKeyEnum key
-     * @return
-     */
-    public boolean countIncr(RedisKeyEnum redisKeyEnum, long max) {
-        Object result = redisTemplate.opsForValue().get(redisKeyEnum.getType());
-        if (!ObjectUtils.isEmpty(result)) {
-            long i = Long.parseLong(result.toString());
-            if (i >= max) {
-                return false;
-            }
-        }
-        redisTemplate.opsForValue().increment(redisKeyEnum.getType());
-        redisTemplate.expire(redisKeyEnum.getType(),1, TimeUnit.HOURS);
-        return true;
-    }
-
-    /**
-     * 按key检查
-     *
-     * @param redisKeyEnum key
-     * @return
-     */
-    public boolean countCheck(RedisKeyEnum redisKeyEnum, long max) {
-        Object result = redisTemplate.opsForValue().get(redisKeyEnum.getType());
-        if (!ObjectUtils.isEmpty(result)) {
-            long i = Long.parseLong(result.toString());
-            return i < max;
-        }
-        return true;
-    }
-
-    /**
-     * 按key自减
-     *
-     * @param redisKeyEnum key
-     * @return
-     */
-    public void countDecr(RedisKeyEnum redisKeyEnum) {
-        Object result = redisTemplate.opsForValue().get(redisKeyEnum.getType());
-        if (!ObjectUtils.isEmpty(result)) {
-            long i = Long.parseLong(result.toString());
-            if (i > 0) {
-                redisTemplate.opsForValue().decrement(redisKeyEnum.getType());
-            }
-        }
     }
 
     /**

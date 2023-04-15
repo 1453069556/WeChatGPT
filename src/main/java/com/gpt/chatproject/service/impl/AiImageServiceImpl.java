@@ -1,8 +1,8 @@
 package com.gpt.chatproject.service.impl;
 
+import com.gpt.chatproject.constant.ConsumerCounterTotal;
 import com.gpt.chatproject.enums.DallResponseType;
 import com.gpt.chatproject.enums.DallSizeType;
-import com.gpt.chatproject.enums.RedisKeyEnum;
 import com.gpt.chatproject.service.AiImageService;
 import com.gpt.chatproject.utils.*;
 import com.gpt.chatproject.vo.MidjourneyRedisVo;
@@ -54,7 +54,7 @@ public class AiImageServiceImpl implements AiImageService {
                 weChatUtils.sendKefuTextMessage(fromUser, PIC_PROC_RESPONSE);
                 return;
             }
-            if (redisUtils.countCheck(RedisKeyEnum.MQ_QUEUE_COUNT, MAX_COMMAND_LENGTH)) {
+            if (ConsumerCounterTotal.get() < MAX_COMMAND_LENGTH) {
                 MidjourneyRedisVo midjourneyRedisVo = redisUtils.getMidjourneyRedisCatch(fromUser);
                 if (midjourneyRedisVo == null) {
                     midjourneyRedisVo = new MidjourneyRedisVo(fromUser);
@@ -73,7 +73,9 @@ public class AiImageServiceImpl implements AiImageService {
                 // 如果传入的是prompt
                 String contentPrompt = wxImageMessage.getContent();
                 if (StringUtils.isNotBlank(contentPrompt)) {
-                    midjourneyRedisVo.setPrompt(contentPrompt.replaceFirst("/modifier", ""));
+                    midjourneyRedisVo.setPrompt(contentPrompt
+                            .replaceFirst("/modifier", "")
+                            .replaceAll("--", ""));
                     redisUtils.midjourneyRedisCatch(midjourneyRedisVo);
                 }
                 // 更新检查是否齐全
@@ -88,7 +90,8 @@ public class AiImageServiceImpl implements AiImageService {
                 weChatUtils.sendKefuTextMessage(wxImageMessage.getFromUser(), PIC_BUSY_RESPONSE);
             }
         } catch (Exception e) {
-            weChatUtils.sendKefuTextMessage(wxImageMessage.getFromUser(), PIC_BUSY_RESPONSE);
+            weChatUtils.serverErrorKefuReplay(fromUser);
+            redisUtils.releasePicLock(fromUser);
             throw new RuntimeException(e);
         } finally {
             if (imageFile != null && imageFile.exists()) {
@@ -107,7 +110,7 @@ public class AiImageServiceImpl implements AiImageService {
                 weChatUtils.sendKefuTextMessage(fromUser, PIC_PROC_RESPONSE);
                 return;
             }
-            if (redisUtils.countCheck(RedisKeyEnum.MQ_QUEUE_COUNT, MAX_COMMAND_LENGTH)) {
+            if (ConsumerCounterTotal.get() < MAX_COMMAND_LENGTH) {
                 String custom = wxMessage.getContent();
                 midjourneyRedisVo = redisUtils.getMidjourneyRedisCatch(fromUser);
                 if (midjourneyRedisVo == null) {
@@ -133,7 +136,8 @@ public class AiImageServiceImpl implements AiImageService {
                 weChatUtils.sendKefuTextMessage(wxMessage.getFromUser(), PIC_BUSY_RESPONSE);
             }
         } catch (WxErrorException e) {
-            weChatUtils.sendKefuTextMessage(wxMessage.getFromUser(), PIC_BUSY_RESPONSE);
+            weChatUtils.serverErrorKefuReplay(fromUser);
+            redisUtils.releasePicLock(fromUser);
             throw new RuntimeException(e);
         } finally {
             redisUtils.releaseChatLock(fromUser);
@@ -158,9 +162,11 @@ public class AiImageServiceImpl implements AiImageService {
                 weChatUtils.sendKefuTextMessage(fromUser, PIC_PROC_RESPONSE);
                 return;
             }
-            if (redisUtils.countCheck(RedisKeyEnum.MQ_QUEUE_COUNT, MAX_COMMAND_LENGTH)) {
+            if (ConsumerCounterTotal.get() < MAX_COMMAND_LENGTH) {
                 weChatUtils.sendKefuTextMessage(fromUser, AI_PRC_RESPONSE);
-                String prompt = wxImageMessage.getContent().replaceFirst("/imagine", "");
+                String prompt = wxImageMessage.getContent()
+                        .replaceFirst("/imagine", "")
+                        .replaceAll("--", "");
                 if (redisUtils.tryAiPicLock(fromUser)) {
                     mqUtils.addMidjourneyMqTask(wxImageMessage.getFromUser(), prompt);
                 }
@@ -168,7 +174,8 @@ public class AiImageServiceImpl implements AiImageService {
                 weChatUtils.sendKefuTextMessage(wxImageMessage.getFromUser(), PIC_BUSY_RESPONSE);
             }
         } catch (Exception e) {
-            weChatUtils.sendKefuTextMessage(wxImageMessage.getFromUser(), PIC_BUSY_RESPONSE);
+            weChatUtils.serverErrorKefuReplay(fromUser);
+            redisUtils.releasePicLock(fromUser);
             throw new RuntimeException(e);
         } finally {
             redisUtils.releaseChatLock(fromUser);
@@ -198,6 +205,7 @@ public class AiImageServiceImpl implements AiImageService {
             }
         } catch (Exception e) {
             weChatUtils.serverErrorKefuReplay(fromUser);
+            redisUtils.releasePicLock(fromUser);
             e.printStackTrace();
         } finally {
             redisUtils.releasePicLock(fromUser);
@@ -212,7 +220,7 @@ public class AiImageServiceImpl implements AiImageService {
     }
 
     @Override
-    public void imageDallCreate(WxMpXmlMessage wxImageMessage) throws IOException, WxErrorException {
+    public void imageDallCreate(WxMpXmlMessage wxImageMessage) throws IOException {
         File fileByBase64 = null;
         String fromUser = wxImageMessage.getFromUser();
         try {

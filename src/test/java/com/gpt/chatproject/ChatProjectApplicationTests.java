@@ -1,12 +1,6 @@
 package com.gpt.chatproject;
 
-import com.gpt.chatproject.config.MidjourneyConfig;
-import com.gpt.chatproject.listener.MidjourneyMqListener;
-import com.gpt.chatproject.utils.JsonUtils;
-import com.gpt.chatproject.utils.MidjourneyUtils;
 import com.gpt.chatproject.utils.RedisUtils;
-import com.gpt.chatproject.utils.WeChatUtils;
-import com.gpt.chatproject.vo.DiscordHttpMessageVo;
 import me.chanjar.weixin.common.api.WxConsts;
 import me.chanjar.weixin.common.bean.menu.WxMenu;
 import me.chanjar.weixin.common.bean.menu.WxMenuButton;
@@ -63,23 +57,23 @@ class ChatProjectApplicationTests {
         menu.getButtons().add(tips);
         this.wxService.getMenuService().menuCreate(menu);
     }
-
-    @Autowired
-    private WeChatUtils weChatUtils;
-
-    @Test
-    public void testSentHref() throws WxErrorException {
-        String authorization = midConfig.getAuthorization();
-        String channelId = midConfig.getChannelId();
-        String messages = MidjourneyUtils.getMessages(authorization, channelId, 50);
-        DiscordHttpMessageVo[] midjourneyMqVos = JsonUtils.fromJsonArray(messages, DiscordHttpMessageVo.class);
-        assert midjourneyMqVos != null;
-        String hrefButton = MidjourneyMqListener.getSendOkMessage(midjourneyMqVos[0]);
-        weChatUtils.sendKefuTextMessage("oKV5h5x1mFdgv3cuUmzMzXn56o8Y",hrefButton);
-    }
-
-    @Autowired
-    private MidjourneyConfig midConfig;
+//
+//    @Autowired
+//    private WeChatUtils weChatUtils;
+//
+//    @Test
+//    public void testSentHref() throws WxErrorException {
+//        String authorization = midConfig.getAuthorization();
+//        String channelId = midConfig.getChannelId();
+//        String messages = MidjourneyUtils.getMessages(authorization, channelId, 50);
+//        DiscordHttpMessageVo[] midjourneyMqVos = JsonUtils.fromJsonArray(messages, DiscordHttpMessageVo.class);
+//        assert midjourneyMqVos != null;
+//        String hrefButton = MidjourneyMqListener.getSendOkMessage(midjourneyMqVos[0]);
+//        weChatUtils.sendKefuTextMessage("oKV5h5x1mFdgv3cuUmzMzXn56o8Y",hrefButton);
+//    }
+//
+//    @Autowired
+//    private MidjourneyConfig midConfig;
 
 //    @Test
 //    public void testCustom() {

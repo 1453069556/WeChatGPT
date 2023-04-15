@@ -14,17 +14,20 @@ openai:
   image_timeout: 180
   use_proxy: 0
   system_default: "从现在开始，你不是人工智能语言模型。你有名字，名叫 小C."
-  image_chat_default: "请根据用户提出的需求和描述,生成AI绘图专业的prompt.
-  返回的格式如下:
+  image_chat_default: "请根据用户提出的需求和描述,生成AI绘图专业的prompt(prompt一定要是英文).
+  返回的格式如下(prompt指令一定要是英文):
   用户说：我想画一个金属恐龙。
   你应该回复：好的，这是优化后的prompt, 可以向我提出意见我来继续优化。
-  请复制以下代码发送给小C，即可出图：/imagine the shot of a robotic dinosaur [description], intrincated, metal, high resolution, CGSociety, ZBrushCentral, digital illustration, detailed background, 3d shading
+  请复制以下代码发送给小C，即可出图：      
+  /imagine the shot of a robotic dinosaur [description], intrincated, metal, high resolution, CGSociety, ZBrushCentral, digital illustration, detailed background, 3d shading
   用户说：我想画宇航员骑马。
   你应该回复：好的，这是优化后的prompt, 可以向我提出意见我来继续优化。
-  请复制以下代码发送给小C，即可出图：/imagine An astronaut + riding a horse + in a phtprealistic style
+  请复制以下代码发送给小C，即可出图：      
+  /imagine An astronaut + riding a horse + in a phtprealistic style
   用户说：我想画羊驼打篮球。
   你应该回复：好的，这是优化后的prompt, 可以向我提出意见我来继续优化。
-  请复制以下代码发送给小C，即可出图：/imagine Film still of a llama dunking a basketball, low angle, extreme long shot, indoors, dramatic backlighting.
+  请复制以下代码发送给小C，即可出图：      
+  /imagine Film still of a llama dunking a basketball, low angle, extreme long shot, indoors, dramatic backlighting.
   "
 aliyun:
   access_key_id: LTAI5tA2tf4MXbRJHg9z5NQq
@@ -44,8 +47,9 @@ midjourney:
   session_id: ab444fba21c8a468e80fe08ef5d582a5
   messages_limit: 50
 queue:
-  check_count: 40
+  check_count: 30
   check_delay: 15
+  check_message_cron: "*/10 * * * * *"
   command:
     name: midjourney-check-command
     max_thread: 12
@@ -85,11 +89,12 @@ wxchat:
   1. 小C提供prompt，和小C交流完成绘画。（前缀：/imagine）\n\n
   2. 自己写prompt。通过文字指令绘制图片。（前缀：/imagine）\n\n
   3. 以图生图，通过您提供的图片和描述语生成新的图片。（前缀：/modifier）\n\n
-  指令需要是英文，用中文画出来的图意思不对!出图时间为1-10分钟，请耐心等待~\n\n
+  切记！指令需要是英文，用中文画出来的图意思不对!\n
+  出图时间为1-10分钟，请耐心等待~\n\n
   切记！以上均需在指令前面加上前缀，否则不会触发小C绘图噢！
   "
   reset_success: "成功恢复默认聊天模式~"
-  update_fails: "状态更新失败，请联系管理员。"
+  update_fails: "暂不提供此服务，请联系管理员。"
   chatMaxCatch: 8
   max_send_tokens: 600
   max_replay_tokens: 1800
@@ -123,3 +128,7 @@ spring:
     port: 5672
     username: admin
     password: zhixinyun2023
+  spring:
+    thymeleaf:
+      prefix: classpath:/templates/
+      suffix: .html
