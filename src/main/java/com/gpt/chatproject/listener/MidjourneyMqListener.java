@@ -1,6 +1,10 @@
 package com.gpt.chatproject.listener;
 
 import com.gpt.chatproject.Scheduled.MidjourneyScheduled;
+import com.gpt.chatproject.constant.ConsumerCounterRunning;
+import com.gpt.chatproject.constant.ConsumerCounterTotal;
+import com.gpt.chatproject.constant.MidjourneyConstant;
+import com.gpt.chatproject.utils.MidjourneyUtils;
 import com.gpt.chatproject.utils.MyStringUtils;
 import com.gpt.chatproject.utils.RedisUtils;
 import com.gpt.chatproject.utils.WeChatUtils;
@@ -8,13 +12,16 @@ import com.gpt.chatproject.vo.DiscordHttpMessageVo;
 import com.gpt.chatproject.vo.MidjourneyMqVo;
 import com.gpt.chatproject.vo.MidjourneyRedisVo;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Component
 @Slf4j
@@ -44,70 +51,72 @@ public class MidjourneyMqListener {
             int currentCheckCount = 0;
             // 获取redis缓存
             MidjourneyRedisVo midCatch = redisUtils.getMidjourneyRedisCatch(fromUser);
-//            while (currentCheckCount < CHECK_COUNT) {
-//                if (!StringUtils.isNotBlank(MidjourneyConstant.getMessages())) {
-//                    // 延时后跳出本次for循环
-//                    TimeUnit.SECONDS.sleep(10);
-//                }
-//                // 指令处理过程
-//                DiscordHttpMessageVo messageVo = MidjourneyUtils.getMessageByMessageId(MidjourneyConstant.getMessages(),
-//                        messageId, midCatch);
-//                if (messageVo == null || messageVo.getAttachments() == null
-//                        || messageVo.getAttachments().isEmpty()) {
-//                    // 延时后跳出本次for循环
-//                    TimeUnit.SECONDS.sleep(CHECK_DELAY);
-//                    currentCheckCount++;
-//                    continue;
-//                }
-//                String percentage = MyStringUtils.matchString("\\((100|[1-9]?[0-9])%\\)", messageVo.getContent());
-//                if (StringUtils.isNotBlank(percentage)) {
-//                    weChatUtils.sendKefuTextMessage(fromUser, String.format("当前绘制进度%s...", percentage));
-//                }
-//
-//                if (!messageVo.getContent().contains("(Waiting to start)") && !StringUtils.isNotBlank(percentage)) {
-//                    DiscordHttpMessageVo.ReferencedMessageDTO.AttachmentsDTO attachmentsDTO = messageVo.getAttachments().get(0);
-//                    String sendOkMessage = getSendOkMessage(messageVo);
-//                    String mediaId = weChatUtils.getIMediaIdByUrl(fromUser, attachmentsDTO.getUrl());
-//                    if (StringUtils.isBlank(mediaId)) {
-//                        return;
-//                    }
-//                    // 如果有文件代表需要发送指令列表
-//                    if (StringUtils.isNotBlank(sendOkMessage)) {
-//                        weChatUtils.sendKefuTextMessage(fromUser, sendOkMessage);
-//                    }
-//                    weChatUtils.sendKefuImageMessage(fromUser, mediaId);
-//                    MidjourneyRedisVo midjourneyRedisVo = new MidjourneyRedisVo(fromUser);
-//                    if (midCatch != null) {
-//                        BeanUtils.copyProperties(midCatch, midjourneyRedisVo);
-//                    }
-//                    midjourneyRedisVo.setMessageId(messageId);
-//                    midjourneyRedisVo.setDiscordMessageId(messageVo.getId());
-//                    List<String> attachmentsIds = new ArrayList<>();
-//                    // 判断attachmentsIds缓存是否需重新生成
-//                    if (ObjectUtils.isEmpty(midCatch)) {
-//                        attachmentsIds.add(messageVo.getAttachments().get(0).getId());
-//                    } else {
-//                        attachmentsIds = midCatch.getAttachmentsIds();
-//                        attachmentsIds.add(messageVo.getAttachments().get(0).getId());
-//                    }
-//                    midjourneyRedisVo.setAttachmentsIds(attachmentsIds);
-//                    // 如果customs为空代表接收到大图，不做指令存储
-//                    List<String> customs = getCustoms(messageVo);
-//                    if (customs != null) {
-//                        midjourneyRedisVo.setCustoms(customs);
-//                    }
-//                    redisUtils.midjourneyRedisCatch(midjourneyRedisVo);
-//                    return;
-//                }
-//                // 延时后进入下次for循环
-//                TimeUnit.SECONDS.sleep(CHECK_DELAY);
-//                currentCheckCount++;
-//            }
+            while (currentCheckCount < CHECK_COUNT) {
+                if (!StringUtils.isNotBlank(MidjourneyConstant.getMessages())) {
+                    // 延时后跳出本次for循环
+                    TimeUnit.SECONDS.sleep(10);
+                }
+                // 指令处理过程
+                DiscordHttpMessageVo messageVo = MidjourneyUtils.getMessageByMessageId(MidjourneyConstant.getMessages(),
+                        messageId, midCatch);
+                if (messageVo == null || messageVo.getAttachments() == null
+                        || messageVo.getAttachments().isEmpty()) {
+                    // 延时后跳出本次for循环
+                    TimeUnit.SECONDS.sleep(CHECK_DELAY);
+                    currentCheckCount++;
+                    continue;
+                }
+                String percentage = MyStringUtils.matchString("\\((100|[1-9]?[0-9])%\\)", messageVo.getContent());
+                if (StringUtils.isNotBlank(percentage)) {
+                    weChatUtils.sendKefuTextMessage(fromUser, String.format("当前绘制进度%s...", percentage));
+                }
+
+                if (!messageVo.getContent().contains("(Waiting to start)") && !StringUtils.isNotBlank(percentage)) {
+                    DiscordHttpMessageVo.ReferencedMessageDTO.AttachmentsDTO attachmentsDTO = messageVo.getAttachments().get(0);
+                    String sendOkMessage = getSendOkMessage(messageVo);
+                    String mediaId = weChatUtils.getIMediaIdByUrl(fromUser, attachmentsDTO.getUrl());
+                    if (StringUtils.isBlank(mediaId)) {
+                        return;
+                    }
+                    // 如果有文件代表需要发送指令列表
+                    if (StringUtils.isNotBlank(sendOkMessage)) {
+                        weChatUtils.sendKefuTextMessage(fromUser, sendOkMessage);
+                    }
+                    weChatUtils.sendKefuImageMessage(fromUser, mediaId);
+                    MidjourneyRedisVo midjourneyRedisVo = new MidjourneyRedisVo(fromUser);
+                    if (midCatch != null) {
+                        BeanUtils.copyProperties(midCatch, midjourneyRedisVo);
+                    }
+                    midjourneyRedisVo.setMessageId(messageId);
+                    midjourneyRedisVo.setDiscordMessageId(messageVo.getId());
+                    List<String> attachmentsIds = new ArrayList<>();
+                    // 判断attachmentsIds缓存是否需重新生成
+                    if (midCatch == null) {
+                        attachmentsIds.add(messageVo.getAttachments().get(0).getId());
+                    } else {
+                        attachmentsIds = midCatch.getAttachmentsIds();
+                        attachmentsIds.add(messageVo.getAttachments().get(0).getId());
+                    }
+                    midjourneyRedisVo.setAttachmentsIds(attachmentsIds);
+                    // 如果customs为空代表接收到大图，不做指令存储
+                    List<String> customs = getCustoms(messageVo);
+                    if (customs != null) {
+                        midjourneyRedisVo.setCustoms(customs);
+                    }
+                    redisUtils.midjourneyRedisCatch(midjourneyRedisVo);
+                    return;
+                }
+                // 延时后进入下次for循环
+                TimeUnit.SECONDS.sleep(CHECK_DELAY);
+                currentCheckCount++;
+            }
             weChatUtils.sendKefuTextMessage(fromUser, "绘图超时，请稍后再试");
         } catch (Exception e) {
             log.debug(e.getMessage());
             throw new RuntimeException(e);
         } finally {
+            ConsumerCounterRunning.decrementAndGet();
+            ConsumerCounterTotal.decrementAndGet();
             // 关闭check
             midjourneyScheduled.stopCheck();
             // 释放绘图锁

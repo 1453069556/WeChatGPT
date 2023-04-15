@@ -11,8 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
-
 @Component
 public class MqUtils {
     @Autowired
@@ -26,7 +24,7 @@ public class MqUtils {
     @Value("${queue.command.max_command_length}")
     private Integer MAX_COMMAND_LENGTH;
 
-    public void addMidjourneyMqTask(String fromUser, String prompt) throws IOException, WxErrorException {
+    public void addMidjourneyMqTask(String fromUser, String prompt) throws WxErrorException {
         if (ConsumerCounterTotal.get() < MAX_COMMAND_LENGTH) {
             ConsumerCounterTotal.incrementAndGet();
             long messageId = (long) (Math.random() * 999999999L);

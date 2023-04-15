@@ -15,10 +15,10 @@ public class HttpInterceptor implements Interceptor {
     public @NotNull Response intercept(Chain chain) throws IOException {
         Request request = chain.request();
         String url = request.url().toString(); // 获取请求的网址
-        log.debug("Request URL: " + url);
+        log.info("Request URL: " + url);
         Response response = chain.proceed(request);
         ResponseBody responseBody = response.peekBody(Long.MAX_VALUE); // 获取响应体
-        log.debug("Response Body: " + responseBody.string());
+        log.info("Response Body: " + responseBody.string());
         return response;
     }
 }
