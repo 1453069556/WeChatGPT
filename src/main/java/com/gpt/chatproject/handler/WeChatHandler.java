@@ -14,8 +14,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
-
 
 @Service
 public class WeChatHandler {
@@ -79,7 +77,7 @@ public class WeChatHandler {
         return (wxMessage, context, wxMpService, sessionManager) -> {
             String fromUser = wxMessage.getFromUser();
             try {
-                WxRedisCatchVo aCatch = Optional.ofNullable(redisUtils.getCatch(fromUser)).orElse(new WxRedisCatchVo(TIME_MAX_COUNT));
+                WxRedisCatchVo aCatch = redisUtils.getCatch(fromUser);
                 switch (aCatch.getChatType()) {
                     case NORMAL:
                         weChatService.textEvent(wxMessage);
@@ -139,7 +137,7 @@ public class WeChatHandler {
         return (wxMessage, context, wxMpService, sessionManager) -> {
             String fromUser = wxMessage.getFromUser();
             try {
-                WxRedisCatchVo aCatch = Optional.ofNullable(redisUtils.getCatch(fromUser)).orElse(new WxRedisCatchVo(TIME_MAX_COUNT));
+                WxRedisCatchVo aCatch = redisUtils.getCatch(fromUser);
                 switch (aCatch.getChatType()) {
                     case IMAGE_MIDJOURNEY:
                         aiImageService.imageMidjourneyVariation(wxMessage);

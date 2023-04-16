@@ -72,7 +72,7 @@ public class FileUtils {
     /**
      * 下载图片文件
      */
-    @Retryable(value = {Exception.class}, maxAttempts = 3, backoff = @Backoff(delay = 1000))
+    @Retryable(value = {Exception.class}, backoff = @Backoff(delay = 1000))
     public File downloadImageAsync(String imageUrl) {
         OkHttpClient client;
         client = new OkHttpClient.Builder()

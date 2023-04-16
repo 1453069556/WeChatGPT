@@ -253,7 +253,11 @@ public class RedisUtils {
      * @return
      */
     public WxRedisCatchVo getCatch(String fromUser) {
-        return (WxRedisCatchVo) redisTemplate.opsForValue().get(fromUser);
+        Object result = redisTemplate.opsForValue().get(fromUser);
+        if (result == null){
+            return new WxRedisCatchVo(CHAT_MAX_CATCH,ChatType.NORMAL);
+        }
+        return (WxRedisCatchVo) result;
     }
 
     /**
