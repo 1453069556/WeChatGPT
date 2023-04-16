@@ -4,10 +4,11 @@ import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.gpt.chatproject.dao.FansDao;
 import com.gpt.chatproject.entity.Fans;
 import com.gpt.chatproject.enums.GptRoleType;
+import com.gpt.chatproject.form.wechat.WechatResponseTextMessage;
 import com.gpt.chatproject.service.WeChatService;
 import com.gpt.chatproject.utils.RedisUtils;
 import com.gpt.chatproject.utils.WeChatUtils;
-import com.gpt.chatproject.form.wechat.WechatResponseTextMessage;
+import com.gpt.chatproject.vo.WxRedisCatchVo;
 import com.theokanning.openai.completion.chat.ChatMessage;
 import lombok.extern.log4j.Log4j2;
 import me.chanjar.weixin.common.api.WxConsts;
@@ -54,7 +55,20 @@ public class WeChatServiceImpl implements WeChatService {
                         wxMpXmlMessage.getToUser(), WxConsts.XmlMsgType.TEXT, CHARS_OVERFLOW_RESPONSE));
                 return result;
             }
-            return weChatUtils.getLock(fromUser, wxMpXmlMessage, 1);
+            WxRedisCatchVo aCatch = redisUtils.getCatch(fromUser);
+            String content = wxMpXmlMessage.getContent();
+            switch (aCatch.getChatType()) {
+                case IMAGE_MIDJOURNEY:
+                    if (content.startsWith("/modifier") || content.startsWith("/imagine") || content.startsWith("MJ::JOB::")) {
+                        return weChatUtils.getLock(fromUser, wxMpXmlMessage, 3);
+                    }
+                case IMAGE_DALL:
+                    if (content.startsWith("/imagine")) {
+                        return weChatUtils.getLock(fromUser, wxMpXmlMessage, 3);
+                    }
+                default:
+                    return weChatUtils.getLock(fromUser, wxMpXmlMessage, 1);
+            }
         }
         // 是语音消息才做以下处理
         if (WxConsts.XmlMsgType.VOICE.equals(msgType)) {
@@ -68,7 +82,14 @@ public class WeChatServiceImpl implements WeChatService {
         }
         // 是图片消息才做以下处理
         if (WxConsts.XmlMsgType.IMAGE.equals(msgType)) {
-            return weChatUtils.getLock(fromUser, wxMpXmlMessage, 2);
+            WxRedisCatchVo aCatch = redisUtils.getCatch(fromUser);
+            switch (aCatch.getChatType()){
+                case IMAGE_MIDJOURNEY:
+                case IMAGE_DALL:
+                    return weChatUtils.getLock(fromUser, wxMpXmlMessage, 3);
+                default:
+                    return weChatUtils.getLock(fromUser, wxMpXmlMessage, 1);
+            }
         }
         return "";
     }
@@ -112,8 +133,8 @@ public class WeChatServiceImpl implements WeChatService {
             redisUtils.catchChat(fromUser, GptRoleType.USER.getRole(), content);
             weChatUtils.sendKefuMessages(fromUser, actualChatMessage);
         } catch (Exception e) {
-            log.debug(e.getMessage());
             weChatUtils.serverErrorKefuReplay(wechatTextMessage.getFromUser());
+            throw new RuntimeException(e);
         } finally {
             redisUtils.releaseChatLock(wechatTextMessage.getFromUser());
         }
@@ -167,16 +188,16 @@ public class WeChatServiceImpl implements WeChatService {
     @Override
     public void imageEvent(WxMpXmlMessage wxImageMessage) throws WxErrorException {
         String fromUser = wxImageMessage.getFromUser();
-        if (!redisUtils.tryAiPicLock(fromUser)){
+        if (!redisUtils.tryAiPicLock(fromUser)) {
             weChatUtils.sendKefuTextMessage(fromUser, "您有未处理完的图片正在处理，请耐心等待！");
             redisUtils.releaseChatLock(fromUser);
             return;
         }
-        try{
+        try {
             WxMpKefuMessage imageMessage = WxMpKefuMessage.TEXT().toUser(fromUser)
                     .content("小C图片聊天互动正在学习中噢，如需绘图请进入绘图模式。").build();
             wxMpService.getKefuService().sendKefuMessage(imageMessage);
-        }finally {
+        } finally {
             redisUtils.releasePicLock(fromUser);
             redisUtils.releaseChatLock(fromUser);
         }
