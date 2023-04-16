@@ -1,5 +1,12 @@
 package com.gpt.chatproject;
 
+import com.github.binarywang.wxpay.bean.order.WxPayMpOrderResult;
+import com.github.binarywang.wxpay.bean.request.WxPayUnifiedOrderRequest;
+import com.github.binarywang.wxpay.constant.WxPayConstants;
+import com.github.binarywang.wxpay.exception.WxPayException;
+import com.github.binarywang.wxpay.service.WxPayService;
+import com.gpt.chatproject.utils.MyDateUtils;
+import com.gpt.chatproject.utils.MyStringUtils;
 import com.gpt.chatproject.utils.RedisUtils;
 import me.chanjar.weixin.common.api.WxConsts;
 import me.chanjar.weixin.common.bean.menu.WxMenu;
@@ -9,6 +16,8 @@ import me.chanjar.weixin.mp.api.WxMpService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+
+import java.util.Calendar;
 
 
 @SpringBootTest
@@ -180,4 +189,25 @@ class ChatProjectApplicationTests {
 //        String s = fileUtils.uploadAndGetUrl(new File("C:\\Users\\Ms Tong\\Desktop\\c075780e2b51e68a3f1b8e85712cef33_1.jpg"));
 //        System.out.println(s);
 //    }
+
+    @Autowired
+    private WxPayService wxPayService;
+
+    @Test
+    public void testOrder() throws WxPayException {
+
+        WxPayUnifiedOrderRequest orderRequest = new WxPayUnifiedOrderRequest();
+        orderRequest.setBody("主题");
+        orderRequest.setOutTradeNo("订单号");
+        orderRequest.setTotalFee(10);//分
+        orderRequest.setTradeType(WxPayConstants.TradeType.JSAPI);
+        orderRequest.setNotifyUrl("https://www.weixin.qq.com/wxpay/pay.php");
+        orderRequest.setOpenid("o0tN_51atgSUnMxqyWd1bON_uhkk");
+        orderRequest.setOutTradeNo(MyStringUtils.generateRandomString(32));
+        orderRequest.setSpbillCreateIp("127.0.0.1");
+        orderRequest.setTimeStart(MyDateUtils.getBeijingTime("yyyyMMddHHmmss"));
+        orderRequest.setTimeExpire(MyDateUtils.dateFormat(MyDateUtils.add(Calendar.MINUTE, 5), "yyyyMMddHHmmss"));
+        WxPayMpOrderResult order = wxPayService.createOrder(orderRequest);
+        System.out.println(order);
+    }
 }
