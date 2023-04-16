@@ -1,8 +1,6 @@
 package com.gpt.chatproject.listener;
 
 import com.gpt.chatproject.Scheduled.MidjourneyScheduled;
-import com.gpt.chatproject.constant.ConsumerCounterRunning;
-import com.gpt.chatproject.constant.ConsumerCounterTotal;
 import com.gpt.chatproject.constant.MidjourneyConstant;
 import com.gpt.chatproject.utils.MidjourneyUtils;
 import com.gpt.chatproject.utils.MyStringUtils;
@@ -52,7 +50,7 @@ public class MidjourneyMqListener {
             // 获取redis缓存
             MidjourneyRedisVo midCatch = redisUtils.getMidjourneyRedisCatch(fromUser);
             while (currentCheckCount < CHECK_COUNT) {
-                if (!StringUtils.isNotBlank(MidjourneyConstant.getMessages())) {
+                if (StringUtils.isBlank(MidjourneyConstant.getMessages())) {
                     // 延时后跳出本次for循环
                     TimeUnit.SECONDS.sleep(10);
                 }
@@ -115,8 +113,6 @@ public class MidjourneyMqListener {
             log.debug(e.getMessage());
             throw new RuntimeException(e);
         } finally {
-            ConsumerCounterRunning.decrementAndGet();
-            ConsumerCounterTotal.decrementAndGet();
             // 关闭check
             midjourneyScheduled.stopCheck();
             // 释放绘图锁

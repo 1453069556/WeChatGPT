@@ -2,9 +2,11 @@ package com.gpt.chatproject.Scheduled;
 
 import com.gpt.chatproject.config.MidjourneyConfig;
 import com.gpt.chatproject.constant.ConsumerCounterRunning;
+import com.gpt.chatproject.constant.ConsumerCounterTotal;
 import com.gpt.chatproject.constant.MidjourneyConstant;
 import com.gpt.chatproject.utils.MidjourneyUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.TaskScheduler;
@@ -40,9 +42,13 @@ public class MidjourneyScheduled {
                         // 使用 TaskScheduler 启动定时任务，并将任务引用保存在 future 变量中
                         future = taskScheduler.schedule(() -> {
                             log.info("startCheck任务执行中...");
-                            MidjourneyConstant.setMessages(MidjourneyUtils.getMessages(midjourneyConfig.getAuthorization(),
+                            System.out.println(ConsumerCounterRunning.get());
+                            String messages = MidjourneyUtils.getMessages(midjourneyConfig.getAuthorization(),
                                     midjourneyConfig.getChannelId(),
-                                    midjourneyConfig.getMessagesLimit()));
+                                    midjourneyConfig.getMessagesLimit());
+                            if (StringUtils.isNotBlank(messages)){
+                                MidjourneyConstant.setMessages(messages);
+                            }
                         }, new CronTrigger(cron)); // Cron 表达式
                     }
                 }
@@ -54,6 +60,7 @@ public class MidjourneyScheduled {
 
     // 停止定时任务的方法
     public void stopCheck() {
+        ConsumerCounterTotal.decrementAndGet();
         if (ConsumerCounterRunning.decrementAndGet() == 0) { // 减少消费者计数器的值，如果计数器为 0
             synchronized (this) { // 使用同步块确保线程安全
                 // 如果 future 不为 null，且任务尚未取消
