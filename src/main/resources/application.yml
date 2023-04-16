@@ -102,13 +102,13 @@ server:
   port: 80
 wx:
   mp:
-#    app-id: wx4e9eeae05d1b7f2d
-#    secret: 8eb52cc6acd18d9fb476170ce739654e
-#    token: axovhm2nIJZDRPzx2ZcQ9bnsZd
-    app-id: wxba4cf742c969fb56
-    secret: a5477d800eb2501068840fed99dafda1
+    app-id: wx4e9eeae05d1b7f2d
+    secret: 8eb52cc6acd18d9fb476170ce739654e
     token: axovhm2nIJZDRPzx2ZcQ9bnsZd
-    aes-key: axovhm2nIJZDRPzx2ZcQ9bnsZdraKa37jFr81Dc9Xhc
+#    app-id: wxba4cf742c969fb56
+#    secret: a5477d800eb2501068840fed99dafda1
+#    token: axovhm2nIJZDRPzx2ZcQ9bnsZd
+#    aes-key: axovhm2nIJZDRPzx2ZcQ9bnsZdraKa37jFr81Dc9Xhc
   pay:
     app-id: wxba4cf742c969fb56
     mch-id: 1639601254
