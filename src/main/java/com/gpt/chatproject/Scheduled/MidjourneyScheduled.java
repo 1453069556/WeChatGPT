@@ -33,20 +33,23 @@ public class MidjourneyScheduled {
      * 启动定时更新消息列表
      */
     public void startCheck() {
-        if (future == null) { // 如果定时任务尚未启动
-            synchronized (this) { // 使用同步块确保线程安全
-                if (future == null) { // 再次检查，以避免多个线程同时创建定时任务
-                    // 使用 TaskScheduler 启动定时任务，并将任务引用保存在 future 变量中
-                    future = taskScheduler.schedule(() -> {
-                        log.info("startCheck任务执行中...");
-                        MidjourneyConstant.setMessages(MidjourneyUtils.getMessages(midjourneyConfig.getAuthorization(),
-                                midjourneyConfig.getChannelId(),
-                                midjourneyConfig.getMessagesLimit()));
-                    }, new CronTrigger(cron)); // Cron 表达式
+        try {
+            if (future == null) { // 如果定时任务尚未启动
+                synchronized (this) { // 使用同步块确保线程安全
+                    if (future == null) { // 再次检查，以避免多个线程同时创建定时任务
+                        // 使用 TaskScheduler 启动定时任务，并将任务引用保存在 future 变量中
+                        future = taskScheduler.schedule(() -> {
+                            log.info("startCheck任务执行中...");
+                            MidjourneyConstant.setMessages(MidjourneyUtils.getMessages(midjourneyConfig.getAuthorization(),
+                                    midjourneyConfig.getChannelId(),
+                                    midjourneyConfig.getMessagesLimit()));
+                        }, new CronTrigger(cron)); // Cron 表达式
+                    }
                 }
             }
+        } finally {
+            ConsumerCounterRunning.incrementAndGet(); // 增加消费者计数器的值
         }
-        ConsumerCounterRunning.incrementAndGet(); // 增加消费者计数器的值
     }
 
     // 停止定时任务的方法
