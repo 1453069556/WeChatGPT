@@ -6,7 +6,6 @@ import com.gpt.chatproject.vo.DiscordHttpInteractionVo;
 import com.gpt.chatproject.vo.DiscordHttpMessageVo;
 import com.gpt.chatproject.vo.MidjourneyRedisVo;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.util.ObjectUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -64,13 +63,13 @@ public class MidjourneyUtils {
     /**
      * 根据messageId 获取消息内容
      *
-     * @param messages      messages
-     * @param messageId     messageId
+     * @param messages   messages
+     * @param messageId  messageId
      * @param midRedisVo attachmentsIds
      * @return 实体
      */
     public static DiscordHttpMessageVo getMessageByMessageId(String messages, long messageId, MidjourneyRedisVo midRedisVo) {
-        if (StringUtils.isBlank(messages)){
+        if (StringUtils.isBlank(messages)) {
             return null;
         }
         DiscordHttpMessageVo[] discordHttpMessageVo = JsonUtils.fromJsonArray(messages, DiscordHttpMessageVo.class);
@@ -81,8 +80,8 @@ public class MidjourneyUtils {
     /**
      * 过滤一条消息
      *
-     * @param messageVos    messageVos
-     * @param messageId     messageId
+     * @param messageVos messageVos
+     * @param messageId  messageId
      * @param midRedisVo attachmentsIds
      * @return DiscordHttpMessageVo
      */
@@ -90,11 +89,11 @@ public class MidjourneyUtils {
         for (DiscordHttpMessageVo messageVo : messageVos) {
             if (messageVo.getContent().contains(String.format("--seed %09d", messageId))) {
                 // 如果attachmentsIds为空则代表无需过滤attachmentsId
-                if (ObjectUtils.isEmpty(midRedisVo)){
+                if (midRedisVo == null || messageVo.getAttachments().isEmpty()) {
                     return messageVo;
                 }
                 List<DiscordHttpMessageVo.ReferencedMessageDTO.AttachmentsDTO> attachments = messageVo.getAttachments();
-                if (attachments.size() != 0 && !midRedisVo.getAttachmentsIds().contains(attachments.get(0).getId())) {
+                if (!midRedisVo.getAttachmentsIds().contains(attachments.get(0).getId())) {
                     return messageVo;
                 }
             }
