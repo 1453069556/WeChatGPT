@@ -89,7 +89,7 @@ public class MidjourneyUtils {
         for (DiscordHttpMessageVo messageVo : messageVos) {
             if (messageVo.getContent().contains(String.format("--seed %09d", messageId))) {
                 // 如果attachmentsIds为空则代表无需过滤attachmentsId
-                if (midRedisVo == null || messageVo.getAttachments().isEmpty()) {
+                if (midRedisVo == null || messageVo.getAttachments() == null) {
                     return messageVo;
                 }
                 List<DiscordHttpMessageVo.ReferencedMessageDTO.AttachmentsDTO> attachments = messageVo.getAttachments();
