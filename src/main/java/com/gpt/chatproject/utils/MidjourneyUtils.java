@@ -88,12 +88,17 @@ public class MidjourneyUtils {
     public static DiscordHttpMessageVo matchMessages(DiscordHttpMessageVo[] messageVos, long messageId, MidjourneyRedisVo midRedisVo) {
         for (DiscordHttpMessageVo messageVo : messageVos) {
             if (messageVo.getContent().contains(String.format("--seed %09d", messageId))) {
+                List<DiscordHttpMessageVo.ReferencedMessageDTO.AttachmentsDTO> attachments = messageVo.getAttachments();
                 // 如果attachmentsIds为空则代表无需过滤attachmentsId
-                if (midRedisVo == null || messageVo.getAttachments() == null) {
+                if (midRedisVo == null) {
                     return messageVo;
                 }
-                List<DiscordHttpMessageVo.ReferencedMessageDTO.AttachmentsDTO> attachments = messageVo.getAttachments();
-                if (!midRedisVo.getAttachmentsIds().contains(attachments.get(0).getId())) {
+                // 这个是处于提示回馈
+                if (messageVo.getEmbeds().size() > 0){
+                    return messageVo;
+                }
+                // 匹配上了
+                if (attachments.size() > 0 && !midRedisVo.getAttachmentsIds().contains(attachments.get(0).getId())) {
                     return messageVo;
                 }
             }

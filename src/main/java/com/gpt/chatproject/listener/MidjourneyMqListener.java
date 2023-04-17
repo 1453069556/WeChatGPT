@@ -10,6 +10,7 @@ import com.gpt.chatproject.vo.DiscordHttpMessageVo;
 import com.gpt.chatproject.vo.MidjourneyMqVo;
 import com.gpt.chatproject.vo.MidjourneyRedisVo;
 import lombok.extern.slf4j.Slf4j;
+import me.chanjar.weixin.common.error.WxErrorException;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.BeanUtils;
@@ -57,12 +58,17 @@ public class MidjourneyMqListener {
                 // 指令处理过程
                 DiscordHttpMessageVo messageVo = MidjourneyUtils.getMessageByMessageId(MidjourneyConstant.getMessages(),
                         messageId, midCatch);
+                // 这个是处于提示回馈
                 if (messageVo == null || messageVo.getAttachments() == null
                         || messageVo.getAttachments().isEmpty()) {
                     // 延时后跳出本次for循环
                     TimeUnit.SECONDS.sleep(CHECK_DELAY);
                     currentCheckCount++;
                     continue;
+                }
+                if (messageVo.getEmbeds().size() > 0){
+                    weChatUtils.sendKefuTextMessage(fromUser, "小C希望你换指令重试噢~");
+                    return;
                 }
                 String percentage = MyStringUtils.matchString("\\((100|[1-9]?[0-9])%\\)", messageVo.getContent());
                 if (StringUtils.isNotBlank(percentage)) {
@@ -109,6 +115,8 @@ public class MidjourneyMqListener {
                 currentCheckCount++;
             }
             weChatUtils.sendKefuTextMessage(fromUser, "绘图超时，请稍后再试");
+        } catch (WxErrorException wxErrorException) {
+            log.info(wxErrorException.getMessage());
         } catch (Exception e) {
             log.debug(e.getMessage());
             throw new RuntimeException(e);

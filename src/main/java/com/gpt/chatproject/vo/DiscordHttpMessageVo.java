@@ -25,7 +25,8 @@ public class DiscordHttpMessageVo implements Serializable {
     @JsonProperty("attachments")
     private List<ReferencedMessageDTO.AttachmentsDTO> attachments;
     @JsonProperty("embeds")
-    private List<EmbedsDTO> embeds;
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    private List<?> embeds;
     @JsonProperty("mentions")
     private List<MentionsDTO> mentions;
     @JsonProperty("mention_roles")
@@ -291,29 +292,29 @@ public class DiscordHttpMessageVo implements Serializable {
         }
     }
 
-    @NoArgsConstructor
-    @Data
-    public static class EmbedsDTO {
-        @JsonProperty("type")
-        private String type;
-        @JsonProperty("url")
-        private String url;
-        @JsonProperty("thumbnail")
-        private ThumbnailDTO thumbnail;
-
-        @NoArgsConstructor
-        @Data
-        public static class ThumbnailDTO {
-            @JsonProperty("url")
-            private String url;
-            @JsonProperty("proxy_url")
-            private String proxyUrl;
-            @JsonProperty("width")
-            private Integer width;
-            @JsonProperty("height")
-            private Integer height;
-        }
-    }
+//    @NoArgsConstructor
+//    @Data
+//    public static class EmbedsDTO {
+//        @JsonProperty("type")
+//        private String type;
+//        @JsonProperty("url")
+//        private String url;
+//        @JsonProperty("thumbnail")
+//        private ThumbnailDTO thumbnail;
+//
+//        @NoArgsConstructor
+//        @Data
+//        public static class ThumbnailDTO {
+//            @JsonProperty("url")
+//            private String url;
+//            @JsonProperty("proxy_url")
+//            private String proxyUrl;
+//            @JsonProperty("width")
+//            private Integer width;
+//            @JsonProperty("height")
+//            private Integer height;
+//        }
+//    }
 
     @NoArgsConstructor
     @Data
