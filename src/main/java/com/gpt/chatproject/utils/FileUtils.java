@@ -13,6 +13,8 @@ import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
 
 import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
+import javax.imageio.stream.ImageInputStream;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -22,6 +24,7 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.util.Base64;
 import java.util.Date;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -73,7 +76,7 @@ public class FileUtils {
      * 下载图片文件
      */
     @Retryable(value = {Exception.class}, backoff = @Backoff(delay = 1000))
-    public File downloadImageAsync(String imageUrl) {
+    public File downloadImageAsync(String imageUrl) throws IOException {
         OkHttpClient client;
         client = new OkHttpClient.Builder()
 //                .proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress("127.0.0.1", 10810)))
@@ -84,13 +87,30 @@ public class FileUtils {
                 .url(imageUrl)
                 .build();
         File outFile = null;
+        InputStream inputStream = null;
         try (Response response = client.newCall(request).execute()) {
             if (!response.isSuccessful()) {
                 throw new IOException("Unexpected code " + response);
             }
             assert response.body() != null;
-            InputStream inputStream = response.body().byteStream();
-            BufferedImage image = ImageIO.read(inputStream);
+            inputStream = response.body().byteStream();
+            BufferedImage image;
+            if ("image/webp".equals(Objects.requireNonNull(response.body().contentType()).toString())) {
+                ImageInputStream iis = null;
+                try {
+                    //WebP ImageReader instance
+                    iis = ImageIO.createImageInputStream(inputStream);
+                    ImageReader reader = ImageIO.getImageReaders(iis).next();
+                    reader.setInput(iis);
+                    image = reader.read(0);
+                } finally {
+                    if (iis != null) {
+                        iis.close();
+                    }
+                }
+            } else {
+                image = ImageIO.read(inputStream);
+            }
             outFile = File.createTempFile("MidjourneyTempPic-", ".jpg");
             ImageIO.write(image, "jpg", outFile);
             return outFile;
@@ -102,6 +122,9 @@ public class FileUtils {
                 } catch (IOException ex) {
                     // 忽略删除文件失败的异常
                 }
+            }
+            if (inputStream != null) {
+                inputStream.close();
             }
             throw new RuntimeException("Failed to download image: " + imageUrl, e);
         }

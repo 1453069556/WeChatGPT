@@ -102,8 +102,8 @@ public class AiImageServiceImpl implements AiImageService {
     }
 
     @Override
-    public void imageMidjourneyCustom(WxMpXmlMessage wxMessage) throws WxErrorException {
-        MidjourneyRedisVo midjourneyRedisVo = null;
+    public void imageMidjourneyCustom(WxMpXmlMessage wxMessage) {
+        MidjourneyRedisVo midjourneyRedisVo;
         String fromUser = wxMessage.getFromUser();
         try {
             if (redisUtils.aiPicIsLock(fromUser)) {

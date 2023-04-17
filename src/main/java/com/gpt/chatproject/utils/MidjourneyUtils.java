@@ -5,6 +5,7 @@ import com.gpt.chatproject.vo.DiscordHttpCustomVo;
 import com.gpt.chatproject.vo.DiscordHttpInteractionVo;
 import com.gpt.chatproject.vo.DiscordHttpMessageVo;
 import com.gpt.chatproject.vo.MidjourneyRedisVo;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.ObjectUtils;
 
 import java.util.ArrayList;
@@ -69,6 +70,9 @@ public class MidjourneyUtils {
      * @return 实体
      */
     public static DiscordHttpMessageVo getMessageByMessageId(String messages, long messageId, MidjourneyRedisVo midRedisVo) {
+        if (StringUtils.isBlank(messages)){
+            return null;
+        }
         DiscordHttpMessageVo[] discordHttpMessageVo = JsonUtils.fromJsonArray(messages, DiscordHttpMessageVo.class);
         assert discordHttpMessageVo != null;
         return matchMessages(discordHttpMessageVo, messageId, midRedisVo);
