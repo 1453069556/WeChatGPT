@@ -1,6 +1,5 @@
 package com.gpt.chatproject;
 
-import com.gpt.chatproject.dao.FansDao;
 import com.gpt.chatproject.utils.RedisUtils;
 import me.chanjar.weixin.common.api.WxConsts;
 import me.chanjar.weixin.common.bean.menu.WxMenu;
@@ -18,8 +17,7 @@ class ChatProjectApplicationTests {
     private WxMpService wxService;
     @Autowired
     private RedisUtils redisUtils;
-    @Autowired
-    private FansDao fansDao;
+
     @Test
     public void getMenu() throws WxErrorException {
         WxMenu menu = new WxMenu();

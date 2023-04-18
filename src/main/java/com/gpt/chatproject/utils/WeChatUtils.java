@@ -53,6 +53,7 @@ public class WeChatUtils {
 
     @Value("${wxchat.time_frequency_response}")
     private String TIME_FREQUENCY_RESPONSE;
+
     @Value("${wxchat.max_replay_tokens}")
     private Integer MAX_REPLAY_TOKENS;
     @Value("${wxchat.server_error_replay}")
