@@ -27,7 +27,9 @@ public class WXPayController {
         try {
             // 配置项
             WxOAuth2AccessToken accessToken = wxMpService.getOAuth2Service().getAccessToken(code);
-            WxJsapiSignature jsapiSignature = wxMpService.createJsapiSignature("https://tl30591383.zicp.fun/pay/authCallback?code=091mh1Ga1rJY7F03J1Ja1rVbqW1mh1G5&state=");
+
+            WxJsapiSignature jsapiSignature = wxMpService.createJsapiSignature(
+                    "https://tl30591383.zicp.fun/pay/authCallback?code=" + code + "&state=");
             String appId = jsapiSignature.getAppId();
             long timestamp = jsapiSignature.getTimestamp();
             String nonceStr = jsapiSignature.getNonceStr();

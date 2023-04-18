@@ -4,7 +4,7 @@ import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.gpt.chatproject.dao.FansDao;
 import com.gpt.chatproject.entity.Fans;
 import com.gpt.chatproject.enums.GptRoleType;
-import com.gpt.chatproject.form.wechat.WechatResponseTextMessage;
+import com.gpt.chatproject.form.Wechat.WechatResponseTextMessage;
 import com.gpt.chatproject.service.WeChatService;
 import com.gpt.chatproject.utils.RedisUtils;
 import com.gpt.chatproject.utils.WeChatUtils;

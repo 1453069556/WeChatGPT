@@ -18,6 +18,11 @@ public class WeChatAuthorizationController {
     @Autowired
     private ResourceLoader resourceLoader;
 
+    @GetMapping("/error")
+    public String error() {
+        return "";
+    }
+
     @GetMapping("/MP_verify_5d5F6p98IKpM9HGi.txt")
     public ResponseEntity<Resource> websiteAuthorization() throws IOException {
         Resource resource = resourceLoader.getResource("classpath:wxResources/MP_verify_5d5F6p98IKpM9HGi.txt");

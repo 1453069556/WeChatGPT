@@ -1,4 +1,4 @@
-package com.gpt.chatproject.form.wechat;
+package com.gpt.chatproject.form.Wechat;
 
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
@@ -6,11 +6,12 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@JacksonXmlRootElement(localName = "xml")
-public class WeChatSubscribeEvents {
+@JacksonXmlRootElement(localName  = "xml")
+public class WechatTextMessage{
 
     @JacksonXmlProperty(localName = "ToUserName")
     private String toUserName;
@@ -24,6 +25,10 @@ public class WeChatSubscribeEvents {
     @JacksonXmlProperty(localName = "MsgType")
     private String msgType;
 
-    @JacksonXmlProperty(localName = "Event")
-    private String event;
+    @JacksonXmlProperty(localName = "Content")
+    private String content;
+
+    @JacksonXmlProperty(localName = "MsgId")
+    private Long msgId;
+
 }
