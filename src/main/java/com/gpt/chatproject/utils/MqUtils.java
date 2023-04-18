@@ -18,34 +18,48 @@ public class MqUtils {
     @Autowired
     private WeChatUtils weChatUtils;
     @Autowired
+    private RedisUtils redisUtils;
+    @Autowired
     private MidjourneyConfig midConfig;
     @Value("${queue.command.name}")
     private String MQ_COMMAND_NAME;
     @Value("${queue.command.max_command_length}")
     private Integer MAX_COMMAND_LENGTH;
 
-    public void addMidjourneyMqTask(String fromUser, String prompt) throws WxErrorException {
-        if (ConsumerCounterTotal.get() < MAX_COMMAND_LENGTH) {
-            ConsumerCounterTotal.incrementAndGet();
-            long messageId = (long) (Math.random() * 999999999L);
-            DiscordHttpInteractionVo command = MidjourneyUtils.getCommandVo(midConfig.getApplicationId(),
-                    midConfig.getGuildId(), midConfig.getChannelId(), prompt, messageId);
-            MidjourneyUtils.sendCommand(midConfig.getAuthorization(), command);
-            rabbitTemplate.convertAndSend(MQ_COMMAND_NAME, new MidjourneyMqVo(fromUser, messageId));
-        } else {
-            weChatUtils.sendKefuTextMessage(fromUser, "当前功能过于火爆请稍后再试~");
+    public void addMidjourneyMqTask(String fromUser, String prompt) {
+        try {
+            if (ConsumerCounterTotal.get() < MAX_COMMAND_LENGTH) {
+                ConsumerCounterTotal.incrementAndGet();
+                long messageId = (long) (Math.random() * 999999999L);
+                DiscordHttpInteractionVo command = MidjourneyUtils.getCommandVo(midConfig.getApplicationId(),
+                        midConfig.getGuildId(), midConfig.getChannelId(), prompt, messageId);
+                MidjourneyUtils.sendCommand(midConfig.getAuthorization(), command);
+                rabbitTemplate.convertAndSend(MQ_COMMAND_NAME, new MidjourneyMqVo(fromUser, messageId));
+            } else {
+                redisUtils.releasePicLock(fromUser);
+                weChatUtils.sendKefuTextMessage(fromUser, "当前功能过于火爆请稍后再试~");
+            }
+        } catch (Exception e) {
+            redisUtils.releasePicLock(fromUser);
+            throw new RuntimeException(e);
         }
     }
 
     public void addMidjourneyCustomMqTask(String fromUser, long messageId, String discordMessageId, String custom) throws WxErrorException {
-        if (ConsumerCounterTotal.get() < MAX_COMMAND_LENGTH) {
-            ConsumerCounterTotal.incrementAndGet();
-            DiscordHttpCustomVo command = MidjourneyUtils.getCustomVo(midConfig.getApplicationId(),
-                    midConfig.getGuildId(), midConfig.getChannelId(), discordMessageId, custom);
-            MidjourneyUtils.sendCustomCommand(midConfig.getAuthorization(), command);
-            rabbitTemplate.convertAndSend(MQ_COMMAND_NAME, new MidjourneyMqVo(fromUser, messageId));
-        } else {
-            weChatUtils.sendKefuTextMessage(fromUser, "当前功能过于火爆请稍后再试~");
+        try {
+            if (ConsumerCounterTotal.get() < MAX_COMMAND_LENGTH) {
+                ConsumerCounterTotal.incrementAndGet();
+                DiscordHttpCustomVo command = MidjourneyUtils.getCustomVo(midConfig.getApplicationId(),
+                        midConfig.getGuildId(), midConfig.getChannelId(), discordMessageId, custom);
+                MidjourneyUtils.sendCustomCommand(midConfig.getAuthorization(), command);
+                rabbitTemplate.convertAndSend(MQ_COMMAND_NAME, new MidjourneyMqVo(fromUser, messageId));
+            } else {
+                redisUtils.releasePicLock(fromUser);
+                weChatUtils.sendKefuTextMessage(fromUser, "当前功能过于火爆请稍后再试~");
+            }
+        } catch (Exception e) {
+            redisUtils.releasePicLock(fromUser);
+            throw new RuntimeException(e);
         }
     }
 

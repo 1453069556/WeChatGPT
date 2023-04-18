@@ -10,7 +10,6 @@ import com.gpt.chatproject.vo.DiscordHttpMessageVo;
 import com.gpt.chatproject.vo.MidjourneyMqVo;
 import com.gpt.chatproject.vo.MidjourneyRedisVo;
 import lombok.extern.slf4j.Slf4j;
-import me.chanjar.weixin.common.error.WxErrorException;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.BeanUtils;
@@ -82,20 +81,21 @@ public class MidjourneyMqListener {
                     if (StringUtils.isBlank(mediaId)) {
                         return;
                     }
-                    // 如果有文件代表需要发送指令列表
-                    if (StringUtils.isNotBlank(sendOkMessage)) {
-                        weChatUtils.sendKefuTextMessage(fromUser, sendOkMessage);
-                    }
-                    weChatUtils.sendKefuImageMessage(fromUser, mediaId);
                     MidjourneyRedisVo midjourneyRedisVo = new MidjourneyRedisVo(fromUser);
                     if (midCatch != null) {
                         BeanUtils.copyProperties(midCatch, midjourneyRedisVo);
                     }
+                    // 如果有文件代表需要发送指令列表
+                    if (StringUtils.isNotBlank(sendOkMessage)) {
+                        weChatUtils.sendKefuTextMessage(fromUser, sendOkMessage);
+                        // TODO 这里判断是否需要更新discordId，因为大图类不需要修改id，否则会影响后面的迭代生成
+                        midjourneyRedisVo.setDiscordMessageId(messageVo.getId());
+                    }
+                    weChatUtils.sendKefuImageMessage(fromUser, mediaId);
                     midjourneyRedisVo.setMessageId(messageId);
-                    midjourneyRedisVo.setDiscordMessageId(messageVo.getId());
                     List<String> attachmentsIds = new ArrayList<>();
                     // 判断attachmentsIds缓存是否需重新生成
-                    if (midCatch == null) {
+                    if (midCatch == null || midCatch.getAttachmentsIds() == null) {
                         attachmentsIds.add(messageVo.getAttachments().get(0).getId());
                     } else {
                         attachmentsIds = midCatch.getAttachmentsIds();
@@ -115,11 +115,8 @@ public class MidjourneyMqListener {
                 currentCheckCount++;
             }
             weChatUtils.sendKefuTextMessage(fromUser, "绘图超时，请稍后再试");
-        } catch (WxErrorException wxErrorException) {
-            log.info(wxErrorException.getMessage());
         } catch (Exception e) {
-            log.debug(e.getMessage());
-            throw new RuntimeException(e);
+            log.info(e.getMessage());
         } finally {
             // 关闭check
             midjourneyScheduled.stopCheck();
