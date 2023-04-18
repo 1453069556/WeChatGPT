@@ -1,9 +1,10 @@
-package com.gpt.chatproject.vo;
+package com.gpt.chatproject.form.Wechat;
 
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
-import com.gpt.chatproject.form.Wechat.WechatTextMessage;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Data;
+import lombok.Setter;
 import org.springframework.stereotype.Component;
 
 import javax.validation.constraints.NotNull;

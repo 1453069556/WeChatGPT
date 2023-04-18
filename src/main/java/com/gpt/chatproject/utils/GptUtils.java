@@ -2,6 +2,7 @@ package com.gpt.chatproject.utils;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.gpt.chatproject.enums.ChatType;
 import com.gpt.chatproject.enums.GptRoleType;
 import com.theokanning.openai.OpenAiApi;
 import com.theokanning.openai.completion.chat.ChatCompletionRequest;
@@ -44,26 +45,47 @@ public class GptUtils {
     private boolean stream;
     @Value("${openai.system_default}")
     private String SYSTEM_DEFAULT;
-    @Value("${wxchat.server_error_replay}")
-    private String SERVER_ERROR_REPLAY;
+    @Value("${openai.image_chat_default}")
+    private String IMAGE_CHAT_DALL_DEFAULT;
+    @Value("${openai.use_proxy}")
+    private Integer USE_PROXY;
     final static String PROXY_HOST_NAME = "127.0.0.1";
     final static Integer PROXY_PORT = 10810;
 
 
-    private OpenAiApi initApi() {
+    public OpenAiApi initApi(long timeout) {
         // 设置代理
         ObjectMapper mapper = defaultObjectMapper();
         Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(PROXY_HOST_NAME, PROXY_PORT));
-        OkHttpClient client = defaultClient(TOKEN, Duration.ofSeconds(TIME_OUT)).newBuilder().proxy(proxy).build();
+        OkHttpClient client;
+        if (USE_PROXY == 0) {
+            client = defaultClient(TOKEN, Duration.ofSeconds(timeout)).newBuilder().build();
+        } else {
+            client = defaultClient(TOKEN, Duration.ofSeconds(timeout)).newBuilder().proxy(proxy).build();
+        }
         Retrofit retrofit = defaultRetrofit(client, mapper);
         return retrofit.create(OpenAiApi.class);
     }
 
-    // 与GPT对话
-    public ChatMessage askGpt(List<ChatMessage> messages) throws Exception {
+    /**
+     * 与GPT-3.5 turb对话
+     *
+     * @param messages 会话
+     * @return ChatMessage
+     * @throws Exception
+     */
+    public ChatMessage askGpt(List<ChatMessage> messages, ChatType chatType) throws Exception {
         // 创建 OpenAI 客户端
-        OpenAiService service = new OpenAiService(TOKEN, Duration.ofSeconds(TIME_OUT));
-        messages.add(0, new ChatMessage(GptRoleType.SYSTEM.getRole(), SYSTEM_DEFAULT));
+        OpenAiService service = new OpenAiService(initApi(TIME_OUT));
+        switch (chatType) {
+            case NORMAL:
+                messages.add(0, new ChatMessage(GptRoleType.SYSTEM.getRole(), SYSTEM_DEFAULT));
+                break;
+            case IMAGE_DALL:
+            case IMAGE_MIDJOURNEY:
+                messages.add(0, new ChatMessage(GptRoleType.SYSTEM.getRole(), IMAGE_CHAT_DALL_DEFAULT));
+                break;
+        }
         // 设置请求参数
         ChatCompletionRequest request = ChatCompletionRequest.builder()
                 .messages(messages)

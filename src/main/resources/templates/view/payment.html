@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>小C会员</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- import CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <style>
+        .container {
+            background-color: white;
+            height: 100vh;
+        }
+
+        .form {
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+        }
+    </style>
+    <!-- 引入jQuery和WeUI JS -->
+    <script src="https://res2.wx.qq.com/open/js/jweixin-1.6.0.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://res.wx.qq.com/t/wx_fed/weui.js/res/1.2.17/weui.min.js"></script>
+</head>
+
+<body>
+<div id="app">
+    <el-container class="container">
+        <el-row type="flex" justify="center" align="middle">
+            <el-col :span="24">
+                <el-form ref="form" :model="form" label-width="80px" class="form">
+                    <el-form-item label="商品名称">
+                        <span th:text="${product_name}">商品名称</span>
+                    </el-form-item>
+                    <el-form-item label="价格">
+                        <el-select v-model="form.price" placeholder="请选择价格">
+                            <el-option label="10元体验 - 3天无限制使用" value="10"></el-option>
+                            <el-option label="60元包月 - 30天无限制使用" value="60"></el-option>
+                        </el-select>
+                    </el-form-item>
+                    <el-form-item>
+                        <span>
+                            小C会员提供给比较刚需的同学，去除了时间限制，用来提高生产力。<br>
+                            Tips:小C免费功能可以继续使用。
+                        </span>
+                    </el-form-item>
+                    <el-form-item>
+                        <el-button type="primary" @click="showNotice">支付</el-button>
+                        <el-button @click="closeWindow">关闭窗口</el-button>
+                    </el-form-item>
+                </el-form>
+            </el-col>
+        </el-row>
+    </el-container>
+    <el-dialog :visible.sync="noticeVisible" title="温馨提示" width="60%">
+        <span>
+            开通结果以公众号通知为准，有疑问请联系小C客服~<br><br>
+            <span style="color: red; font-weight: bold;">虚拟产品付款之后不支持退款噢</span>，
+            如果您介意请使用免费版本。
+        </span>
+        <span slot="footer" class="dialog-footer">
+            <el-button @click="noticeVisible = false">拒绝</el-button>
+            <el-button type="primary" @click="agreeAndSubmit">同意并支付</el-button>
+        </span>
+    </el-dialog>
+</div>
+
+</body>
+<!-- import Vue before Element -->
+<script src="https://unpkg.com/vue@2/dist/vue.js"></script>
+<!-- import JavaScript -->
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<script th:inline="javascript">
+    let openid = [[${openid}]];
+    let appId = [[${appId}]];
+    let timestamp = [[${timestamp}]];
+    let nonceStr = [[${nonceStr}]];
+    let signature = [[${signature}]];
+
+    new Vue({
+        el: '#app',
+        data: function () {
+            return {
+                form: {
+                    name: '',
+                    price: '10'
+                },
+                noticeVisible: false,
+            };
+        },
+        methods: {
+            showNotice() {
+                this.noticeVisible = true;
+            },
+            agreeAndSubmit() {
+                this.noticeVisible = false;
+                this.callWechatPay(this.form.price);
+            },
+            closeWindow() {
+                if (typeof WeixinJSBridge == "undefined") {
+                    alert("请在微信客户端中打开该页面");
+                } else {
+                    WeixinJSBridge.invoke("closeWindow", {}, function (res) {
+                    });
+                }
+            },
+            callWechatPay(amount) {
+                wx.config({
+                    // debug: true,
+                    appId: appId,
+                    timestamp: timestamp,
+                    nonceStr: nonceStr,
+                    signature: signature,
+                    jsApiList: ['chooseWXPay']
+                });
+                $.ajax({
+                    url: "/pay/getWechatPayParams",
+                    method: "POST",
+                    data: {
+                        amount: amount,
+                        openid: openid
+                    },
+                    success: function (response) {
+                        wx.chooseWXPay({
+                            timestamp: response.timeStamp,
+                            nonceStr: response.nonceStr,
+                            package: response.packageValue,
+                            signType: response.signType,
+                            paySign: response.paySign,
+                            success: function (res) {
+                                weui.toast('支付成功', 3000);
+                            },
+                            fail: function (res) {
+                                weui.alert('支付失败');
+                            }
+                        });
+                    },
+                    error: function (err) {
+                        weui.alert('支付失败');
+                        console.log(err);
+                    }
+                });
+            }
+        }
+    });
+</script>
+</html>

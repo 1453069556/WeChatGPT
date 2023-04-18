@@ -2,29 +2,26 @@ package com.gpt.chatproject.controller;
 
 import com.gpt.chatproject.handler.WeChatHandler;
 import com.gpt.chatproject.service.WeChatService;
+import com.gpt.chatproject.utils.RedisUtils;
 import me.chanjar.weixin.common.api.WxConsts;
-import me.chanjar.weixin.common.error.WxErrorException;
 import me.chanjar.weixin.mp.api.WxMpMessageRouter;
 import me.chanjar.weixin.mp.api.WxMpService;
 import me.chanjar.weixin.mp.bean.message.WxMpXmlMessage;
 import me.chanjar.weixin.mp.bean.message.WxMpXmlOutMessage;
-import org.apache.catalina.connector.Response;
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
-import java.io.IOException;
 
 
 @RestController
 @RequestMapping("/wechat")
 public class WechatController {
 
-
+    @Autowired
+    private RedisUtils redisUtils;
     @Autowired
     private WxMpService wxMpService;
 
@@ -46,7 +43,6 @@ public class WechatController {
         return echostr;
     }
 
-    // 被关注和取关事件
     @PostMapping()
     public String weChatPost(HttpServletRequest request) throws Exception {
         ServletInputStream inputStream = request.getInputStream();
@@ -59,16 +55,10 @@ public class WechatController {
         }
         // 消息路由
         messageRouter
-                // 路由菜单按钮消息
+                // 路由异步按钮消息
                 .rule().async(true).msgType(WxConsts.XmlMsgType.EVENT)
                 .event(WxConsts.EventType.CLICK)
-                .eventKey("JOIN_GROUP_POST")
-                .handler(weChatHandler.getChatGroupShareHandler()).end()
-                // 路由TIPS按钮消息
-                .rule().async(false).msgType(WxConsts.XmlMsgType.EVENT)
-                .event(WxConsts.EventType.CLICK)
-                .eventKey("TIPS")
-                .handler(weChatHandler.getTipsButtonHandler()).end()
+                .handler(weChatHandler.asyncButtonEvent()).end()
                 // 路由用户关注事件，异步处理数据库
                 .rule().async(true).msgType(WxConsts.XmlMsgType.EVENT)
                 .event(WxConsts.EventType.SUBSCRIBE)
@@ -82,8 +72,12 @@ public class WechatController {
                 .handler(weChatHandler.getWeChatAsyncReplyHandler()).end()
                 // 路由语音消息
                 .rule().async(true).msgType(WxConsts.XmlMsgType.VOICE)
-                .handler(weChatHandler.getWeChatVoiceReplyHandler()).end();
+                .handler(weChatHandler.getWeChatVoiceReplyHandler()).end()
+                // 路由图片消息
+                .rule().async(true).msgType(WxConsts.XmlMsgType.IMAGE)
+                .handler(weChatHandler.getWeChatImageReplyHandler()).end();
         WxMpXmlOutMessage outMessage = messageRouter.route(wxMpXmlMessage);
+        redisUtils.resetCatchExpire(wxMpXmlMessage.getFromUser());
         if (outMessage == null) {
             //为null，返回空
             return "";

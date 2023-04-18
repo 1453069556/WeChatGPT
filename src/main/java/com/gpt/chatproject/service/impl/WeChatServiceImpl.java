@@ -1,23 +1,17 @@
 package com.gpt.chatproject.service.impl;
 
-import com.aliyun.oss.OSS;
-import com.aliyun.oss.OSSClientBuilder;
-import com.aliyun.oss.model.OSSObject;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.gpt.chatproject.dao.FansDao;
 import com.gpt.chatproject.entity.Fans;
 import com.gpt.chatproject.enums.GptRoleType;
+import com.gpt.chatproject.form.Wechat.WechatResponseTextMessage;
 import com.gpt.chatproject.service.WeChatService;
-import com.gpt.chatproject.utils.GptUtils;
-import com.gpt.chatproject.utils.MyStringUtils;
 import com.gpt.chatproject.utils.RedisUtils;
 import com.gpt.chatproject.utils.WeChatUtils;
-import com.gpt.chatproject.vo.WechatResponseTextMessage;
 import com.gpt.chatproject.vo.WxRedisCatchVo;
 import com.theokanning.openai.completion.chat.ChatMessage;
 import lombok.extern.log4j.Log4j2;
 import me.chanjar.weixin.common.api.WxConsts;
-import me.chanjar.weixin.common.bean.result.WxMediaUploadResult;
 import me.chanjar.weixin.common.error.WxErrorException;
 import me.chanjar.weixin.mp.api.WxMpService;
 import me.chanjar.weixin.mp.bean.kefu.WxMpKefuMessage;
@@ -28,47 +22,23 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 
-import java.io.File;
-import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-
 @Service
 @Log4j2
 public class WeChatServiceImpl implements WeChatService {
     @Autowired
-    private GptUtils gptUtils;
-
-    @Autowired
     private WxMpService wxMpService;
-
     @Autowired
     private RedisUtils redisUtils;
-
     @Autowired
     private XmlMapper xmlMapper;
-
-    @Autowired
-    private MyStringUtils myStringUtils;
-
     @Autowired
     private WeChatUtils weChatUtils;
-
     @Autowired
     private FansDao fansDao;
-
-    @Value("${wxchat.server_error_replay}")
-    private String SERVER_ERROR_REPLAY;
     @Value("${wxchat.release_lock_replay}")
     private String RELEASE_LOCK_REPLAY;
-
     @Value("${wxchat.max_send_tokens}")
     private Integer MAX_SEND_TOKENS;
-    @Value("${wxchat.max_replay_tokens}")
-    private Integer MAX_REPLAY_TOKENS;
-
     @Value("${wxchat.chars_overflow_response}")
     private String CHARS_OVERFLOW_RESPONSE;
 
@@ -85,7 +55,20 @@ public class WeChatServiceImpl implements WeChatService {
                         wxMpXmlMessage.getToUser(), WxConsts.XmlMsgType.TEXT, CHARS_OVERFLOW_RESPONSE));
                 return result;
             }
-            return weChatUtils.getLock(fromUser, wxMpXmlMessage);
+            WxRedisCatchVo aCatch = redisUtils.getCatch(fromUser);
+            String content = wxMpXmlMessage.getContent();
+            switch (aCatch.getChatType()) {
+                case IMAGE_MIDJOURNEY:
+                    if (content.startsWith("/modifier") || content.startsWith("/imagine") || content.startsWith("MJ::JOB::")) {
+                        return weChatUtils.getLock(fromUser, wxMpXmlMessage, 3);
+                    }
+                case IMAGE_DALL:
+                    if (content.startsWith("/imagine")) {
+                        return weChatUtils.getLock(fromUser, wxMpXmlMessage, 3);
+                    }
+                default:
+                    return weChatUtils.getLock(fromUser, wxMpXmlMessage, 1);
+            }
         }
         // 是语音消息才做以下处理
         if (WxConsts.XmlMsgType.VOICE.equals(msgType)) {
@@ -95,7 +78,18 @@ public class WeChatServiceImpl implements WeChatService {
                         wxMpXmlMessage.getToUser(), WxConsts.XmlMsgType.TEXT, CHARS_OVERFLOW_RESPONSE));
                 return result;
             }
-            return weChatUtils.getLock(fromUser, wxMpXmlMessage);
+            return weChatUtils.getLock(fromUser, wxMpXmlMessage, 1);
+        }
+        // 是图片消息才做以下处理
+        if (WxConsts.XmlMsgType.IMAGE.equals(msgType)) {
+            WxRedisCatchVo aCatch = redisUtils.getCatch(fromUser);
+            switch (aCatch.getChatType()){
+                case IMAGE_MIDJOURNEY:
+                case IMAGE_DALL:
+                    return weChatUtils.getLock(fromUser, wxMpXmlMessage, 3);
+                default:
+                    return weChatUtils.getLock(fromUser, wxMpXmlMessage, 1);
+            }
         }
         return "";
     }
@@ -120,8 +114,7 @@ public class WeChatServiceImpl implements WeChatService {
                 fansDao.saveFans(fans);
                 // 将邀请人的频率锁去除
                 redisUtils.releaseTimeLock(inviteder);
-                WxMpKefuMessage kefuMessage = WxMpKefuMessage.TEXT().toUser(inviteder).content(RELEASE_LOCK_REPLAY).build();
-                wxMpService.getKefuService().sendKefuMessage(kefuMessage);
+                weChatUtils.sendKefuTextMessage(inviteder, RELEASE_LOCK_REPLAY);
             }
         }
     }
@@ -129,7 +122,7 @@ public class WeChatServiceImpl implements WeChatService {
     /**
      * 异步回复文本消息
      *
-     * @param wechatTextMessage
+     * @param wechatTextMessage wechatTextMessage
      */
     @Override
     public void textEvent(WxMpXmlMessage wechatTextMessage) {
@@ -138,11 +131,10 @@ public class WeChatServiceImpl implements WeChatService {
             ChatMessage actualChatMessage = new ChatMessage(GptRoleType.USER.getRole(), content);
             String fromUser = wechatTextMessage.getFromUser();
             redisUtils.catchChat(fromUser, GptRoleType.USER.getRole(), content);
-            sendKefuMessages(fromUser, actualChatMessage);
+            weChatUtils.sendKefuMessages(fromUser, actualChatMessage);
         } catch (Exception e) {
-            log.debug(e.getMessage());
-            e.printStackTrace();
-            serverErrorKefuReplay(wechatTextMessage.getFromUser());
+            weChatUtils.serverErrorKefuReplay(wechatTextMessage.getFromUser());
+            throw new RuntimeException(e);
         } finally {
             redisUtils.releaseChatLock(wechatTextMessage.getFromUser());
         }
@@ -151,7 +143,7 @@ public class WeChatServiceImpl implements WeChatService {
     /**
      * 异步回复语音事件
      *
-     * @param voiceEvents
+     * @param voiceEvents voiceEvents
      */
     @Override
     public void voiceEvent(WxMpXmlMessage voiceEvents) {
@@ -163,46 +155,27 @@ public class WeChatServiceImpl implements WeChatService {
             redisUtils.catchChat(fromUser, GptRoleType.USER.getRole(), recognition);
             // 整理推送
             ChatMessage actualChatMessage = new ChatMessage(GptRoleType.USER.getRole(), recognition);
-            sendKefuMessages(fromUser, actualChatMessage);
+            weChatUtils.sendKefuMessages(fromUser, actualChatMessage);
         } catch (Exception e) {
             log.debug(e.getMessage());
             e.printStackTrace();
-            serverErrorKefuReplay(voiceEvents.getFromUser());
+            weChatUtils.serverErrorKefuReplay(voiceEvents.getFromUser());
         } finally {
             redisUtils.releaseChatLock(voiceEvents.getFromUser());
         }
     }
 
     /**
-     * 发送客服消息公用方法
-     *
-     * @param fromUser
-     * @param chatMessage
-     * @throws WxErrorException
-     */
-    private void sendKefuMessages(String fromUser, ChatMessage chatMessage) throws Exception {
-        ChatMessage responseMessages = getResponseMessages(chatMessage, fromUser);
-        ArrayList<WxMpKefuMessage> kefuMessages = getWxMpKefuMessage(responseMessages.getContent(), fromUser);
-        for (WxMpKefuMessage message : kefuMessages) {
-            boolean sendResult = wxMpService.getKefuService().sendKefuMessage(message);
-            if (sendResult) {
-                redisUtils.catchChat(fromUser, responseMessages.getRole(), responseMessages.getContent());
-            }
-        }
-    }
-
-    /**
      * 微信群分享
      *
-     * @param dataInfo
+     * @param dataInfo dataInfo
      */
     @Override
     public void chatGroupShare(WxMpXmlMessage dataInfo) {
         try {
             String fromUser = dataInfo.getFromUser();
-            String mediaId = uploadImageAndGetMediaId("Group chat sharing/微信群邀请链接.jpg");
-            WxMpKefuMessage kefuMessage = WxMpKefuMessage.IMAGE().toUser(fromUser).mediaId(mediaId).build();
-            wxMpService.getKefuService().sendKefuMessage(kefuMessage);
+            String mediaId = weChatUtils.uploadImageAndGetMediaId("Group chat sharing/微信群邀请链接.jpg");
+            weChatUtils.sendKefuImageMessage(fromUser, mediaId);
         } catch (Exception e) {
             e.printStackTrace();
             log.debug(e.getMessage());
@@ -212,91 +185,22 @@ public class WeChatServiceImpl implements WeChatService {
         }
     }
 
-    // 上传图片并获取media_id
-    public String uploadImageAndGetMediaId(String alyDataName) throws Exception {
-        String accessKeyId = "LTAI5tA2tf4MXbRJHg9z5NQq";
-        String accessKeySecret = "S6CyPTrtqK3Lb2ZG69jWREXFXE2tQO";
-        String endpoint = "https://oss-us-west-1.aliyuncs.com";
-        OSS ossClient = new OSSClientBuilder().build(endpoint, accessKeyId, accessKeySecret);
+    @Override
+    public void imageEvent(WxMpXmlMessage wxImageMessage) throws WxErrorException {
+        String fromUser = wxImageMessage.getFromUser();
+        if (!redisUtils.tryAiPicLock(fromUser)) {
+            weChatUtils.sendKefuTextMessage(fromUser, "您有未处理完的图片正在处理，请耐心等待！");
+            redisUtils.releaseChatLock(fromUser);
+            return;
+        }
         try {
-            ossClient = new OSSClientBuilder().build(endpoint, accessKeyId, accessKeySecret);
-            // 调用ossClient.getObject返回一个OSSObject实例，该实例包含文件内容及文件元信息。
-            OSSObject ossObject = ossClient.getObject("wechat-gpt", alyDataName);
-            InputStream data = ossObject.getObjectContent();
-            // 上传图片并获取media_id
-            WxMediaUploadResult wxMediaUploadResult = wxMpService.getMaterialService().mediaUpload(WxConsts.XmlMsgType.IMAGE, "jpg", data);
-            return wxMediaUploadResult.getMediaId();
-        } catch (Exception e) {
-            e.printStackTrace();
-            log.debug(e.getMessage());
+            WxMpKefuMessage imageMessage = WxMpKefuMessage.TEXT().toUser(fromUser)
+                    .content("小C图片聊天互动正在学习中噢，如需绘图请进入绘图模式。").build();
+            wxMpService.getKefuService().sendKefuMessage(imageMessage);
         } finally {
-            if (ossClient != null) {
-                ossClient.shutdown();
-            }
-        }
-        return null;
-    }
-
-    // 上传图片并获取media_id
-    public String uploadImageAndGetMediaId(File image) throws Exception {
-        // 上传图片并获取media_id
-        WxMediaUploadResult wxMediaUploadResult = wxMpService.getMaterialService().mediaUpload(WxConsts.XmlMsgType.IMAGE, image);
-        return wxMediaUploadResult.getMediaId();
-    }
-
-    /**
-     * 获取GPT回复
-     *
-     * @param actualChatMessage
-     * @param fromUser
-     * @return
-     */
-    private ChatMessage getResponseMessages(ChatMessage actualChatMessage, String fromUser) throws Exception {
-        WxRedisCatchVo aCatch = redisUtils.getCatch(fromUser);
-        ArrayList<ChatMessage> messages = new ArrayList<>();
-        if (ObjectUtils.isEmpty(aCatch)) {
-            messages.add(actualChatMessage);
-            return gptUtils.askGpt(messages);
-        }
-        messages = aCatch.getChatCatch();
-        return gptUtils.askGpt(messages);
-    }
-
-    /**
-     * 获取WxMpKefuMessage列表
-     *
-     * @param responseMessages
-     * @param fromUserName
-     * @return
-     */
-    private ArrayList<WxMpKefuMessage> getWxMpKefuMessage(String responseMessages, String fromUserName) throws UnsupportedEncodingException {
-        List<String> contents = myStringUtils.splitString(responseMessages, MAX_REPLAY_TOKENS);
-        ArrayList<WxMpKefuMessage> kefuMessages = new ArrayList<>();
-        for (String content : contents) {
-            kefuMessages.add(WxMpKefuMessage.TEXT().toUser(fromUserName).content(content).build());
-        }
-        return kefuMessages;
-    }
-
-
-    /**
-     * 服务出错时的友好回复
-     *
-     * @param fromUserName
-     */
-    private void serverErrorKefuReplay(String fromUserName) {
-        try {
-            wxMpService.getKefuService().sendKefuMessage(
-                    WxMpKefuMessage.TEXT()
-                            .toUser(fromUserName)
-                            .content(SERVER_ERROR_REPLAY)
-                            .build()
-            );
-            // 时间频率锁回退1
-            redisUtils.timeLockFallback(fromUserName);
-        } catch (Exception e) {
-            log.debug(e.getMessage());
-            e.printStackTrace();
+            redisUtils.releasePicLock(fromUser);
+            redisUtils.releaseChatLock(fromUser);
         }
     }
+
 }
