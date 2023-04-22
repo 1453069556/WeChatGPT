@@ -51,11 +51,11 @@ queue:
   check_delay: 15
   check_message_cron: "*/10 * * * * *"
   command:
-    name: midjourney-check-command
+    name: midjourney-check-command-test
     max_thread: 12
     max_command_length: 50
   result:
-    name: midjourney-send-result
+    name: midjourney-send-result-test
 wxchat:
   welcome_words: "
   Hi! 欢迎使用小C！\n\n
@@ -86,7 +86,10 @@ wxchat:
   方式一:<a href=\"https://open.weixin.qq.com/connect/oauth2/authorize?appid=wxba4cf742c969fb56&redirect_uri=http://zhixinyun.work/pay/authCallback&response_type=code&scope=snsapi_base\">开启无限畅聊模式</a>\n\n
   方式二:通过二维码邀请朋友关注可立马刷新等待时间噢~\n\n
   "
-  chars_overflow_response: "超出文本最大范围，请尝试精简您的内容!"
+  chars_overflow_response: "
+  超出文本最大范围，请尝试精简您的内容!\n\n
+  会员支持文本长度为免费版2倍。\n\n
+  "
   default_welcome_words_end: "团队招纳合伙人，有想法可联系客服。"
   server_error_replay: "抱歉，刚才小C开了小差，此次不影响对话次数，现在我们继续~"
   release_lock_replay: "成功邀请用户关注，小C又回来了~现在继续我们的话题。"
