@@ -51,11 +51,11 @@ queue:
   check_delay: 15
   check_message_cron: "*/10 * * * * *"
   command:
-    name: midjourney-check-command-test
+    name: midjourney-check-command
     max_thread: 12
     max_command_length: 50
   result:
-    name: midjourney-send-result-test
+    name: midjourney-send-result
 wxchat:
   welcome_words: "
   Hi! 欢迎使用小C！\n\n
@@ -117,9 +117,10 @@ server:
   port: 80
 wx:
   mp:
-    app-id: wx4e9eeae05d1b7f2d
-    secret: 8eb52cc6acd18d9fb476170ce739654e
+    app-id: wxba4cf742c969fb56
+    secret: a5477d800eb2501068840fed99dafda1
     token: axovhm2nIJZDRPzx2ZcQ9bnsZd
+    aes-key: axovhm2nIJZDRPzx2ZcQ9bnsZdraKa37jFr81Dc9Xhc
   pay:
     app-id: wxba4cf742c969fb56
     mch-id: 1639601254
@@ -128,8 +129,8 @@ wx:
 redislock:
   chatExpireSeconds: 60
   aiPicExpireSeconds: 600
-  timeExpireSeconds: 3600
-  timeMaxCount: 3
+  timeExpireSeconds: 43200
+  timeMaxCount: 10
   chatTimeOut: 600
 spring:
   redis:
