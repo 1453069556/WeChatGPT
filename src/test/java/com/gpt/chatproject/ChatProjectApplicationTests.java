@@ -1,71 +1,54 @@
 package com.gpt.chatproject;
 
-import com.github.binarywang.wxpay.bean.order.WxPayMpOrderResult;
-import com.github.binarywang.wxpay.bean.request.WxPayUnifiedOrderRequest;
-import com.github.binarywang.wxpay.constant.WxPayConstants;
-import com.github.binarywang.wxpay.exception.WxPayException;
-import com.github.binarywang.wxpay.service.WxPayService;
-import com.gpt.chatproject.utils.MyDateUtils;
-import com.gpt.chatproject.utils.MyStringUtils;
-import com.gpt.chatproject.utils.RedisUtils;
-import me.chanjar.weixin.common.api.WxConsts;
-import me.chanjar.weixin.common.bean.menu.WxMenu;
-import me.chanjar.weixin.common.bean.menu.WxMenuButton;
-import me.chanjar.weixin.common.error.WxErrorException;
-import me.chanjar.weixin.mp.api.WxMpService;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-
-import java.util.Calendar;
 
 
 @SpringBootTest
 class ChatProjectApplicationTests {
-    @Autowired
-    private WxMpService wxService;
-    @Autowired
-    private RedisUtils redisUtils;
-
-    @Test
-    public void getMenu() throws WxErrorException {
-        WxMenu menu = new WxMenu();
-        // 提示用的
-        WxMenuButton tips = new WxMenuButton();
-        tips.setName("默认聊天模式");
-        tips.setType(WxConsts.MenuButtonType.CLICK);
-        tips.setKey("RESET_CHAT_TYPE");
-        // 菜单按钮
-        WxMenuButton menuButton = new WxMenuButton();
-        menuButton.setName("菜单");
-        // 菜单按钮-生成群邀请二维码按钮
-        WxMenuButton menuButton1 = new WxMenuButton();
-        menuButton1.setType(WxConsts.MenuButtonType.CLICK);
-        menuButton1.setName("添加客服微信进群");
-        menuButton1.setKey("JOIN_GROUP_POST");
-        menuButton.getSubButtons().add(menuButton1);
-        // 绘图菜单
-        WxMenuButton FunctionBox = new WxMenuButton();
-        FunctionBox.setName("小C功能箱");
-        // 绘图菜单-进入dall绘图聊天模式
-        WxMenuButton FunctionBox2 = new WxMenuButton();
-        FunctionBox2.setType(WxConsts.MenuButtonType.CLICK);
-        FunctionBox2.setName("小C画廊-DALL");
-        FunctionBox2.setKey("AI_IMAGE_CHAT_DALL");
-        FunctionBox.getSubButtons().add(FunctionBox2);
-        // 绘图菜单-进入Midjourney绘图聊天模式
-        WxMenuButton FunctionBox3 = new WxMenuButton();
-        FunctionBox3.setType(WxConsts.MenuButtonType.CLICK);
-        FunctionBox3.setName("小C画廊-Midjourney");
-        FunctionBox3.setKey("AI_IMAGE_CHAT_MIDJOURNEY");
-        FunctionBox.getSubButtons().add(FunctionBox3);
-
-        // 菜单添加并提交
-        menu.getButtons().add(menuButton);
-        menu.getButtons().add(FunctionBox);
-        menu.getButtons().add(tips);
-        this.wxService.getMenuService().menuCreate(menu);
-    }
+//    @Autowired
+//    private WxMpService wxService;
+//    @Autowired
+//    private RedisUtils redisUtils;
+//
+//    @Test
+//    public void getMenu() throws WxErrorException {
+//        WxMenu menu = new WxMenu();
+//        // 提示用的
+//        WxMenuButton tips = new WxMenuButton();
+//        tips.setName("默认聊天模式");
+//        tips.setType(WxConsts.MenuButtonType.CLICK);
+//        tips.setKey("RESET_CHAT_TYPE");
+//        // 菜单按钮
+//        WxMenuButton menuButton = new WxMenuButton();
+//        menuButton.setName("菜单");
+//        // 菜单按钮-生成群邀请二维码按钮
+//        WxMenuButton menuButton1 = new WxMenuButton();
+//        menuButton1.setType(WxConsts.MenuButtonType.CLICK);
+//        menuButton1.setName("添加客服微信进群");
+//        menuButton1.setKey("JOIN_GROUP_POST");
+//        menuButton.getSubButtons().add(menuButton1);
+//        // 绘图菜单
+//        WxMenuButton FunctionBox = new WxMenuButton();
+//        FunctionBox.setName("小C功能箱");
+//        // 绘图菜单-进入dall绘图聊天模式
+//        WxMenuButton FunctionBox2 = new WxMenuButton();
+//        FunctionBox2.setType(WxConsts.MenuButtonType.CLICK);
+//        FunctionBox2.setName("小C画廊-DALL");
+//        FunctionBox2.setKey("AI_IMAGE_CHAT_DALL");
+//        FunctionBox.getSubButtons().add(FunctionBox2);
+//        // 绘图菜单-进入Midjourney绘图聊天模式
+//        WxMenuButton FunctionBox3 = new WxMenuButton();
+//        FunctionBox3.setType(WxConsts.MenuButtonType.CLICK);
+//        FunctionBox3.setName("小C画廊-Midjourney");
+//        FunctionBox3.setKey("AI_IMAGE_CHAT_MIDJOURNEY");
+//        FunctionBox.getSubButtons().add(FunctionBox3);
+//
+//        // 菜单添加并提交
+//        menu.getButtons().add(menuButton);
+//        menu.getButtons().add(FunctionBox);
+//        menu.getButtons().add(tips);
+//        this.wxService.getMenuService().menuCreate(menu);
+//    }
 //
 //    @Autowired
 //    private WeChatUtils weChatUtils;
@@ -189,25 +172,25 @@ class ChatProjectApplicationTests {
 //        String s = fileUtils.uploadAndGetUrl(new File("C:\\Users\\Ms Tong\\Desktop\\c075780e2b51e68a3f1b8e85712cef33_1.jpg"));
 //        System.out.println(s);
 //    }
-
-    @Autowired
-    private WxPayService wxPayService;
-
-    @Test
-    public void testOrder() throws WxPayException {
-
-        WxPayUnifiedOrderRequest orderRequest = new WxPayUnifiedOrderRequest();
-        orderRequest.setBody("主题");
-        orderRequest.setOutTradeNo("订单号");
-        orderRequest.setTotalFee(10);//分
-        orderRequest.setTradeType(WxPayConstants.TradeType.JSAPI);
-        orderRequest.setNotifyUrl("https://www.weixin.qq.com/wxpay/pay.php");
-        orderRequest.setOpenid("o0tN_51atgSUnMxqyWd1bON_uhkk");
-        orderRequest.setOutTradeNo(MyStringUtils.generateRandomString(32));
-        orderRequest.setSpbillCreateIp("127.0.0.1");
-        orderRequest.setTimeStart(MyDateUtils.getBeijingTime("yyyyMMddHHmmss"));
-        orderRequest.setTimeExpire(MyDateUtils.dateFormat(MyDateUtils.add(Calendar.MINUTE, 5), "yyyyMMddHHmmss"));
-        WxPayMpOrderResult order = wxPayService.createOrder(orderRequest);
-        System.out.println(order);
-    }
+//
+//    @Autowired
+//    private WxPayService wxPayService;
+//
+//    @Test
+//    public void testOrder() throws WxPayException {
+//
+//        WxPayUnifiedOrderRequest orderRequest = new WxPayUnifiedOrderRequest();
+//        orderRequest.setBody("主题");
+//        orderRequest.setOutTradeNo("订单号");
+//        orderRequest.setTotalFee(10);//分
+//        orderRequest.setTradeType(WxPayConstants.TradeType.JSAPI);
+//        orderRequest.setNotifyUrl("https://www.weixin.qq.com/wxpay/pay.php");
+//        orderRequest.setOpenid("o0tN_51atgSUnMxqyWd1bON_uhkk");
+//        orderRequest.setOutTradeNo(MyStringUtils.generateRandomString(32));
+//        orderRequest.setSpbillCreateIp("127.0.0.1");
+//        orderRequest.setTimeStart(MyDateUtils.getBeijingTime("yyyyMMddHHmmss"));
+//        orderRequest.setTimeExpire(MyDateUtils.dateFormat(MyDateUtils.add(Calendar.MINUTE, 5), "yyyyMMddHHmmss"));
+//        WxPayMpOrderResult order = wxPayService.createOrder(orderRequest);
+//        System.out.println(order);
+//    }
 }

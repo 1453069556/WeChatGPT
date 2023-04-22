@@ -18,7 +18,9 @@ import me.chanjar.weixin.mp.bean.kefu.WxMpKefuMessage;
 import me.chanjar.weixin.mp.bean.message.WxMpXmlMessage;
 import me.chanjar.weixin.mp.bean.result.WxMpQrCodeTicket;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 
@@ -48,6 +50,9 @@ public class WeChatUtils {
     private RedisUtils redisUtils;
     @Autowired
     private FileUtils fileUtils;
+    @Autowired
+    @Qualifier("myThreadPoolTaskExecutor")
+    private ThreadPoolTaskExecutor threadPoolTaskExecutor;
     @Value("${wxchat.chat_frequency_response}")
     private String CHAT_FREQUENCY_RESPONSE;
 
@@ -149,37 +154,51 @@ public class WeChatUtils {
      */
     public String getLock(WxRedisCatchVo catchVo, String fromUser, WxMpXmlMessage wxMpXmlMessage, long delta) throws IOException, WxErrorException {
         String result;
-        File qrcode = null;
         // 加锁&&一问一答限制
         if (!redisUtils.tryChatLock(fromUser)) {
             result = xmlMapper.writeValueAsString(new WechatResponseTextMessage(fromUser, wxMpXmlMessage.getToUser(), WxConsts.XmlMsgType.TEXT, CHAT_FREQUENCY_RESPONSE));
             return result;
         }
-        if (catchVo.getMemberLevel() == null) {
+        if (catchVo.getMemberLevel() == null && !redisUtils.tryTimeLock(fromUser, delta)) {
             // 过滤每小时会话频率，超过阈值则强制休息一小时
-            if (!redisUtils.tryTimeLock(fromUser, delta)) {
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
-                ZonedDateTime localDateTime = dateAddSeconds(redisUtils.getExpireByKey(fromUser));
-                String replay = TIME_FREQUENCY_RESPONSE + "预计" + localDateTime.format(formatter) + "可以重新开始对话。";
-                // 返回提示语
-                result = xmlMapper.writeValueAsString(new WechatResponseTextMessage(fromUser, wxMpXmlMessage.getToUser(), WxConsts.XmlMsgType.TEXT, replay));
-                // 发送专属邀请二维码
-                try {
-                    qrcode = getQrcode(fromUser);
-                    WxMediaUploadResult wxMediaUploadResult = wxMpService.getMaterialService().mediaUpload(WxConsts.XmlMsgType.IMAGE, qrcode);
-                    WxMpKefuMessage kefuMessage = WxMpKefuMessage.IMAGE().toUser(fromUser).mediaId(wxMediaUploadResult.getMediaId()).build();
-                    wxMpService.getKefuService().sendKefuMessage(kefuMessage);
-                    redisUtils.releaseChatLock(fromUser);
-                    return result;
-                } finally {
-                    if (qrcode != null) {
-                        Files.deleteIfExists(qrcode.toPath());
-                    }
-                }
-            }
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+            ZonedDateTime localDateTime = dateAddSeconds(redisUtils.getExpireByKey(fromUser));
+            String replay = TIME_FREQUENCY_RESPONSE + "预计" + localDateTime.format(formatter) + "可以重新开始对话。";
+            // 返回提示语
+            result = xmlMapper.writeValueAsString(new WechatResponseTextMessage(fromUser, wxMpXmlMessage.getToUser(), WxConsts.XmlMsgType.TEXT, replay));
+            sendQrcodeAndReleaseLock(fromUser);
+            return result;
         }
         return "";
     }
+
+    private void sendQrcodeAndReleaseLock(String fromUser) {
+        threadPoolTaskExecutor.execute(() -> {
+            File qrcode = null;
+            try {
+                qrcode = getQrcode(fromUser);
+                WxMediaUploadResult wxMediaUploadResult = wxMpService.getMaterialService().mediaUpload(WxConsts.XmlMsgType.IMAGE, qrcode);
+                sendKefuImageMessage(fromUser, wxMediaUploadResult.getMediaId());
+                redisUtils.releaseChatLock(fromUser);
+            } catch (WxErrorException e) {
+                throw new RuntimeException(e);
+            } finally {
+                safelyDeleteFile(qrcode);
+            }
+        });
+    }
+
+    private void safelyDeleteFile(File file) {
+        if (file != null) {
+            try {
+                Files.deleteIfExists(file.toPath());
+            } catch (IOException e) {
+                // 这里可以记录日志，但不要再抛出异常，以避免覆盖之前的异常
+                log.info("Error deleting file: " + e.getMessage());
+            }
+        }
+    }
+
 
     /**
      * 发送客服文本消息
