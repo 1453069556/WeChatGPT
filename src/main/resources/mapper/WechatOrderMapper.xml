@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.gpt.chatproject.dao.WechatOrderDao">
+    <resultMap id="WechatOrderMap" type="com.gpt.chatproject.entity.WechatOrder">
+        <id column="order_id" property="orderId"/>
+        <result column="user_id" property="userId"/>
+        <result column="order_name" property="orderName"/>
+        <result column="membership_pricing_id" property="membershipPricingId"/>
+        <result column="out_trade_no" property="outTradeNo"/>
+        <result column="transaction_id" property="transactionId"/>
+        <result column="total_fee" property="totalFee"/>
+        <result column="order_status" property="orderStatus"/>
+        <result column="create_time" property="createTime"/>
+        <result column="pay_time" property="payTime"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.gpt.chatproject.entity.WechatOrder">
+        INSERT INTO wechat_order
+        (user_id, order_name, membership_pricing_id, out_trade_no, transaction_id, total_fee, order_status, create_time, pay_time)
+        VALUES (#{userId}, #{orderName}, #{membershipPricingId}, #{outTradeNo}, #{transactionId}, #{totalFee}, #{orderStatus}, #{createTime}, #{payTime})
+    </insert>
+
+    <update id="update" parameterType="com.gpt.chatproject.dao.WechatOrderDao">
+        UPDATE wechat_order
+        SET user_id        = #{userId},
+            transaction_id = #{transactionId},
+            total_fee      = #{totalFee},
+            order_status   = #{orderStatus},
+            create_time    = #{createTime},
+            pay_time       = #{payTime}
+        WHERE order_id = #{orderId}
+    </update>
+
+    <delete id="delete" parameterType="java.lang.Integer">
+        DELETE
+        FROM wechat_order
+        WHERE order_id = #{orderId}
+    </delete>
+
+    <select id="findById" parameterType="java.lang.Integer" resultMap="WechatOrderMap">
+        SELECT *
+        FROM wechat_order
+        WHERE order_id = #{orderId}
+    </select>
+
+    <select id="findAll" resultMap="WechatOrderMap">
+        SELECT *
+        FROM wechat_order
+    </select>
+
+    <select id="findByUserId" parameterType="java.lang.String" resultMap="WechatOrderMap">
+        SELECT *
+        FROM wechat_order
+        WHERE user_id = #{userId}
+    </select>
+
+    <select id="findByOutTradeNo" parameterType="java.lang.String" resultMap="WechatOrderMap">
+        SELECT *
+        FROM wechat_order
+        WHERE out_trade_no = #{outTradeNo}
+    </select>
+
+</mapper>
+

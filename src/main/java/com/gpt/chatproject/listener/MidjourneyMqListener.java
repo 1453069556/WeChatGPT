@@ -74,7 +74,7 @@ public class MidjourneyMqListener {
                     weChatUtils.sendKefuTextMessage(fromUser, String.format("当前绘制进度%s...", percentage));
                 }
 
-                if (!messageVo.getContent().contains("(Waiting to start)") && !StringUtils.isNotBlank(percentage)) {
+                if (!messageVo.getContent().contains("(Waiting to start)") && StringUtils.isBlank(percentage)) {
                     DiscordHttpMessageVo.ReferencedMessageDTO.AttachmentsDTO attachmentsDTO = messageVo.getAttachments().get(0);
                     String sendOkMessage = getSendOkMessage(messageVo);
                     String mediaId = weChatUtils.getIMediaIdByUrl(fromUser, attachmentsDTO.getUrl());

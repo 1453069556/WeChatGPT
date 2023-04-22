@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.gpt.chatproject.dao.MembershipPricingDao">
+    <resultMap id="MembershipPricingMap" type="com.gpt.chatproject.entity.MembershipPricing">
+        <id property="id" column="id"/>
+        <result property="date" column="date"/>
+        <result property="price" column="price"/>
+        <result property="oPrice" column="oPrice"/>
+        <result property="discounts" column="discounts"/>
+    </resultMap>
+    <insert id="insert" parameterType="com.gpt.chatproject.entity.MembershipPricing" useGeneratedKeys="true"
+            keyProperty="id">
+        INSERT INTO membership_pricing (date, price,oPrice,discounts)
+        VALUES (#{date}, #{price}, #{oPrice}, #{discounts})
+    </insert>
+
+
+    <update id="update" parameterType="com.gpt.chatproject.entity.MembershipPricing">
+        UPDATE membership_pricing
+        SET date = #{date},
+            price  = #{price},
+            oPrice  = #{oPrice},
+            discounts  = #{discounts}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="delete" parameterType="int">
+        DELETE
+        FROM membership_pricing
+        WHERE id = #{id}
+    </delete>
+
+    <select id="findById" resultMap="MembershipPricingMap" parameterType="int">
+        SELECT *
+        FROM membership_pricing
+        WHERE id = #{id}
+    </select>
+
+    <select id="findAll" resultMap="MembershipPricingMap">
+        SELECT *
+        FROM membership_pricing
+    </select>
+</mapper>

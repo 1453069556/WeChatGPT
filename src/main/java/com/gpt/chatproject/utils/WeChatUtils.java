@@ -147,7 +147,7 @@ public class WeChatUtils {
      * @throws JsonProcessingException
      * @throws WxErrorException
      */
-    public String getLock(String fromUser, WxMpXmlMessage wxMpXmlMessage, long delta) throws IOException, WxErrorException {
+    public String getLock(WxRedisCatchVo catchVo, String fromUser, WxMpXmlMessage wxMpXmlMessage, long delta) throws IOException, WxErrorException {
         String result;
         File qrcode = null;
         // 加锁&&一问一答限制
@@ -155,24 +155,26 @@ public class WeChatUtils {
             result = xmlMapper.writeValueAsString(new WechatResponseTextMessage(fromUser, wxMpXmlMessage.getToUser(), WxConsts.XmlMsgType.TEXT, CHAT_FREQUENCY_RESPONSE));
             return result;
         }
-        // 过滤每小时会话频率，超过阈值则强制休息一小时
-        if (!redisUtils.tryTimeLock(fromUser, delta)) {
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
-            ZonedDateTime localDateTime = dateAddSeconds(redisUtils.getExpireByKey(fromUser));
-            String replay = TIME_FREQUENCY_RESPONSE + "预计" + localDateTime.format(formatter) + "可以重新开始对话。";
-            // 返回提示语
-            result = xmlMapper.writeValueAsString(new WechatResponseTextMessage(fromUser, wxMpXmlMessage.getToUser(), WxConsts.XmlMsgType.TEXT, replay));
-            // 发送专属邀请二维码
-            try {
-                qrcode = getQrcode(fromUser);
-                WxMediaUploadResult wxMediaUploadResult = wxMpService.getMaterialService().mediaUpload(WxConsts.XmlMsgType.IMAGE, qrcode);
-                WxMpKefuMessage kefuMessage = WxMpKefuMessage.IMAGE().toUser(fromUser).mediaId(wxMediaUploadResult.getMediaId()).build();
-                wxMpService.getKefuService().sendKefuMessage(kefuMessage);
-                redisUtils.releaseChatLock(fromUser);
-                return result;
-            } finally {
-                if (qrcode != null) {
-                    Files.deleteIfExists(qrcode.toPath());
+        if (catchVo.getMemberLevel() == null) {
+            // 过滤每小时会话频率，超过阈值则强制休息一小时
+            if (!redisUtils.tryTimeLock(fromUser, delta)) {
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+                ZonedDateTime localDateTime = dateAddSeconds(redisUtils.getExpireByKey(fromUser));
+                String replay = TIME_FREQUENCY_RESPONSE + "预计" + localDateTime.format(formatter) + "可以重新开始对话。";
+                // 返回提示语
+                result = xmlMapper.writeValueAsString(new WechatResponseTextMessage(fromUser, wxMpXmlMessage.getToUser(), WxConsts.XmlMsgType.TEXT, replay));
+                // 发送专属邀请二维码
+                try {
+                    qrcode = getQrcode(fromUser);
+                    WxMediaUploadResult wxMediaUploadResult = wxMpService.getMaterialService().mediaUpload(WxConsts.XmlMsgType.IMAGE, qrcode);
+                    WxMpKefuMessage kefuMessage = WxMpKefuMessage.IMAGE().toUser(fromUser).mediaId(wxMediaUploadResult.getMediaId()).build();
+                    wxMpService.getKefuService().sendKefuMessage(kefuMessage);
+                    redisUtils.releaseChatLock(fromUser);
+                    return result;
+                } finally {
+                    if (qrcode != null) {
+                        Files.deleteIfExists(qrcode.toPath());
+                    }
                 }
             }
         }
@@ -181,6 +183,7 @@ public class WeChatUtils {
 
     /**
      * 发送客服文本消息
+     *
      * @param toUser  接收方
      * @param content 发送内容
      * @return 是否成功发送
@@ -193,6 +196,7 @@ public class WeChatUtils {
 
     /**
      * 发送客服图片消息
+     *
      * @param toUser  接收方
      * @param mediaId 图片mediaId
      * @return 是否成功发送
@@ -202,10 +206,12 @@ public class WeChatUtils {
         WxMpKefuMessage wxMpKefuMessage = WxMpKefuMessage.IMAGE().toUser(toUser).mediaId(mediaId).build();
         return wxMpService.getKefuService().sendKefuMessage(wxMpKefuMessage);
     }
+
     /**
      * 发送客服图片消息
-     * @param toUser  接收方
-     * @param url 图片url
+     *
+     * @param toUser 接收方
+     * @param url    图片url
      * @return 是否成功发送
      */
     public boolean sendKefuImageMessageByUrl(String toUser, String url) throws IOException, WxErrorException {
@@ -216,7 +222,7 @@ public class WeChatUtils {
             WxMpKefuMessage wxMpKefuMessage = WxMpKefuMessage.IMAGE().toUser(toUser).mediaId(mediaId).build();
             return wxMpService.getKefuService().sendKefuMessage(wxMpKefuMessage);
         } catch (Exception e) {
-            sendKefuTextMessage(toUser,"图片发送失败了,请联系管理员~");
+            sendKefuTextMessage(toUser, "图片发送失败了,请联系管理员~");
             throw new RuntimeException(e);
         } finally {
             Files.deleteIfExists(file.toPath());
@@ -225,8 +231,9 @@ public class WeChatUtils {
 
     /**
      * 发送客服图片消息
-     * @param toUser  接收方
-     * @param url 图片url
+     *
+     * @param toUser 接收方
+     * @param url    图片url
      * @return 是否成功发送
      */
     public String getIMediaIdByUrl(String toUser, String url) throws IOException, WxErrorException {
@@ -235,14 +242,16 @@ public class WeChatUtils {
         try {
             return uploadImageAndGetMediaId(file);
         } catch (Exception e) {
-            sendKefuTextMessage(toUser,"图片发送失败了,请联系管理员~");
+            sendKefuTextMessage(toUser, "图片发送失败了,请联系管理员~");
             throw new RuntimeException(e);
         } finally {
             Files.deleteIfExists(file.toPath());
         }
     }
+
     /**
      * 发送客服消息公用方法
+     *
      * @param fromUser
      * @param chatMessage
      * @throws WxErrorException

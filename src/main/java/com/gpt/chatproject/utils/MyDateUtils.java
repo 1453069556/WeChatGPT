@@ -1,6 +1,7 @@
 package com.gpt.chatproject.utils;
 
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -22,7 +23,17 @@ public class MyDateUtils {
         Date now = new Date();
         return dateFormat.format(now);
     }
-
+    /**
+     * 获取中国北京时间字符串
+     *
+     * @return 中国北京时间字符串
+     */
+    public static Date getBeijingDate() {
+        TimeZone timeZone = TimeZone.getTimeZone("Asia/Shanghai");
+        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        dateFormat.setTimeZone(timeZone);
+        return new Date();
+    }
     /**
      * 获取中国北京时间字符串（默认格式）
      *
@@ -74,5 +85,23 @@ public class MyDateUtils {
         DateFormat dateFormat = new SimpleDateFormat(format);
         dateFormat.setTimeZone(timeZone);
         return dateFormat.format(date);
+    }
+
+    /**
+     * 将字符串转换成DATE
+     *
+     * @param dateString   要进行转换的日期字符串
+     * @param format format字符串
+     * @return 运算后的日期
+     */
+    public static Date formatDate(String dateString,String format) {
+        SimpleDateFormat formatter = new SimpleDateFormat(format);
+        Date date = null;
+        try {
+            date = formatter.parse(dateString);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return date;
     }
 }

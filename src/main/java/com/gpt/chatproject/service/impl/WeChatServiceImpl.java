@@ -39,6 +39,8 @@ public class WeChatServiceImpl implements WeChatService {
     private String RELEASE_LOCK_REPLAY;
     @Value("${wxchat.max_send_tokens}")
     private Integer MAX_SEND_TOKENS;
+    @Value("${wxchat.vip_max_send_tokens}")
+    private Integer VIP_MAX_SEND_TOKENS;
     @Value("${wxchat.chars_overflow_response}")
     private String CHARS_OVERFLOW_RESPONSE;
 
@@ -46,49 +48,41 @@ public class WeChatServiceImpl implements WeChatService {
     public String shouldFilterMessage(WxMpXmlMessage wxMpXmlMessage) throws Exception {
         String fromUser = wxMpXmlMessage.getFromUser();
         String msgType = wxMpXmlMessage.getMsgType();
+        WxRedisCatchVo userCacheInfo = redisUtils.getCatch(fromUser);
+        // VIP的发送文本长度需要更长一些
+        Integer maxSendLength = (userCacheInfo.getMemberLevel() == null) ? MAX_SEND_TOKENS : VIP_MAX_SEND_TOKENS;
         String result;
-        // 是文本消息才做以下处理
-        if (WxConsts.XmlMsgType.TEXT.equals(msgType)) {
+        // 是文本消息才做以下处理 或 是语音消息才做以下处理
+        if (WxConsts.XmlMsgType.TEXT.equals(msgType) || WxConsts.XmlMsgType.VOICE.equals(msgType)) {
+            String content = (WxConsts.XmlMsgType.TEXT.equals(wxMpXmlMessage.getMsgType())) ?
+                            wxMpXmlMessage.getContent() : wxMpXmlMessage.getRecognition();
             // 字数限制
-            if (wxMpXmlMessage.getContent().length() > MAX_SEND_TOKENS) {
+            if (content.length() > maxSendLength) {
                 result = xmlMapper.writeValueAsString(new WechatResponseTextMessage(fromUser,
                         wxMpXmlMessage.getToUser(), WxConsts.XmlMsgType.TEXT, CHARS_OVERFLOW_RESPONSE));
                 return result;
             }
-            WxRedisCatchVo aCatch = redisUtils.getCatch(fromUser);
-            String content = wxMpXmlMessage.getContent();
-            switch (aCatch.getChatType()) {
+            switch (userCacheInfo.getChatType()) {
                 case IMAGE_MIDJOURNEY:
                     if (content.startsWith("/modifier") || content.startsWith("/imagine") || content.startsWith("MJ::JOB::")) {
-                        return weChatUtils.getLock(fromUser, wxMpXmlMessage, 3);
+                        return weChatUtils.getLock(userCacheInfo, fromUser, wxMpXmlMessage, 3);
                     }
                 case IMAGE_DALL:
                     if (content.startsWith("/imagine")) {
-                        return weChatUtils.getLock(fromUser, wxMpXmlMessage, 3);
+                        return weChatUtils.getLock(userCacheInfo, fromUser, wxMpXmlMessage, 3);
                     }
                 default:
-                    return weChatUtils.getLock(fromUser, wxMpXmlMessage, 1);
+                    return weChatUtils.getLock(userCacheInfo, fromUser, wxMpXmlMessage, 1);
             }
-        }
-        // 是语音消息才做以下处理
-        if (WxConsts.XmlMsgType.VOICE.equals(msgType)) {
-            // 字数限制
-            if (wxMpXmlMessage.getRecognition().length() > MAX_SEND_TOKENS) {
-                result = xmlMapper.writeValueAsString(new WechatResponseTextMessage(fromUser,
-                        wxMpXmlMessage.getToUser(), WxConsts.XmlMsgType.TEXT, CHARS_OVERFLOW_RESPONSE));
-                return result;
-            }
-            return weChatUtils.getLock(fromUser, wxMpXmlMessage, 1);
         }
         // 是图片消息才做以下处理
         if (WxConsts.XmlMsgType.IMAGE.equals(msgType)) {
-            WxRedisCatchVo aCatch = redisUtils.getCatch(fromUser);
-            switch (aCatch.getChatType()){
+            switch (userCacheInfo.getChatType()) {
                 case IMAGE_MIDJOURNEY:
                 case IMAGE_DALL:
-                    return weChatUtils.getLock(fromUser, wxMpXmlMessage, 3);
+                    return weChatUtils.getLock(userCacheInfo, fromUser, wxMpXmlMessage, 3);
                 default:
-                    return weChatUtils.getLock(fromUser, wxMpXmlMessage, 1);
+                    return weChatUtils.getLock(userCacheInfo, fromUser, wxMpXmlMessage, 1);
             }
         }
         return "";

@@ -4,7 +4,6 @@ import com.gpt.chatproject.enums.ChatType;
 import com.gpt.chatproject.service.AiImageService;
 import com.gpt.chatproject.service.WeChatService;
 import com.gpt.chatproject.utils.RedisUtils;
-import com.gpt.chatproject.utils.WeChatUtils;
 import com.gpt.chatproject.vo.WxRedisCatchVo;
 import me.chanjar.weixin.common.error.WxErrorException;
 import me.chanjar.weixin.mp.api.WxMpMessageHandler;
@@ -19,29 +18,16 @@ import org.springframework.stereotype.Service;
 public class WeChatHandler {
     @Autowired
     private WeChatService weChatService;
-
-    @Autowired
-    private WeChatUtils weChatUtils;
     @Autowired
     private RedisUtils redisUtils;
     @Autowired
     private AiImageService aiImageService;
-
-    // 时长频率锁会话的最大频率（次）
-    @Value("${redislock.timeMaxCount}")
-    private int TIME_MAX_COUNT;
-    @Value("${wxchat.tips}")
-    private String TIPS;
-
     @Value("${wxchat.welcome_words}")
     private String WELCOME_WORDS;
     @Value("${wxchat.default_welcome_words_end}")
     private String DEFAULT_WELCOME_WORDS_END;
-
-
     @Value("${wxchat.update_success}")
     private String UPDATE_SUCCESS;
-
     @Value("${wxchat.update_fails}")
     private String UPDATE_FAILS;
     @Value("${wxchat.reset_success}")
@@ -164,7 +150,6 @@ public class WeChatHandler {
     public WxMpMessageHandler asyncButtonEvent() {
         return (wxMessage, context, wxMpService, sessionManager) -> {
             try {
-                boolean updateResult;
                 switch (wxMessage.getEventKey()) {
                     case "JOIN_GROUP_POST":
                         weChatService.chatGroupShare(wxMessage);

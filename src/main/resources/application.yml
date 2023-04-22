@@ -2,7 +2,7 @@ logging:
   level:
     root: INFO
 openai:
-  token: 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
+  token: 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
   temperature: 0.6
   presence_penalty: 0
   frequency_penalty: 0
@@ -10,7 +10,7 @@ openai:
   max_tokens: 500
   stop: null
   stream: false
-  timeout: 60
+  timeout: 130
   image_timeout: 180
   use_proxy: 0
   system_default: "从现在开始，你不是人工智能语言模型。你有名字，名叫 小C."
@@ -71,17 +71,25 @@ wxchat:
   1. 可能偶尔生成不正确的信息\n
   2. 对2021年后的世界和事了解有限\n
   3. 暂时无法处理图片，后续可以噢~\n\n
+  注意事项：\n
+  1.为避免造成不必要的资源浪费，提供每12小时10次的对话次数供日常使用。\n\n
+  2.绘图因成本原因将消耗3次对话。\n\n
+  如有高频使用需求，请开通会员。\n\n
   "
   ai_pic_response: "小C已收到！快马加鞭绘制中..."
   pic_busy_response: "小C当前很忙请稍后再试~"
   pic_proc_response: "您有未处理完的图片正在处理，请耐心等待！"
   chat_frequency_response: "小C正在处理您上个问题，请耐心等待!"
-  time_frequency_response: "小C与您聊天过于频繁啦~请休息一会再来！\nTips:通过二维码邀请朋友关注可立马刷新等待时间噢~"
+  time_frequency_response: "
+  小C与您聊天已经超过10次~请休息一段时间再来！\n
+  如有高频使用需求，请开通会员。\n\n  
+  方式一:<a href=\"https://open.weixin.qq.com/connect/oauth2/authorize?appid=wxba4cf742c969fb56&redirect_uri=http://zhixinyun.work/pay/authCallback&response_type=code&scope=snsapi_base\">开启无限畅聊模式</a>\n\n
+  方式二:通过二维码邀请朋友关注可立马刷新等待时间噢~\n\n
+  "
   chars_overflow_response: "超出文本最大范围，请尝试精简您的内容!"
-  default_welcome_words_end: "我现在处于测试阶段，有任何问题或者好的建议可以加群讨论。"
+  default_welcome_words_end: "团队招纳合伙人，有想法可联系客服。"
   server_error_replay: "抱歉，刚才小C开了小差，此次不影响对话次数，现在我们继续~"
   release_lock_replay: "成功邀请用户关注，小C又回来了~现在继续我们的话题。"
-  tips: "如果小C回复内容不全，那是因为内容过长，请对他说 继续~"
   update_success: "
   状态更新成功~\n
   欢迎使用小C画廊！\n
@@ -96,8 +104,12 @@ wxchat:
   reset_success: "成功恢复默认聊天模式~"
   update_fails: "暂不提供此服务，请联系管理员。"
   chatMaxCatch: 8
-  max_send_tokens: 600
+  max_send_tokens: 500
+  vip_max_send_tokens: 1000
   max_replay_tokens: 1800
+  notify_url: http://zhixinyun.work/pay/notify/order
+  url: http://zhixinyun.work/
+  vip_url: https://open.weixin.qq.com/connect/oauth2/authorize?appid=wxba4cf742c969fb56&redirect_uri=http://zhixinyun.work/pay/authCallback&response_type=code&scope=snsapi_base
 server:
   port: 80
 wx:
@@ -105,10 +117,6 @@ wx:
     app-id: wx4e9eeae05d1b7f2d
     secret: 8eb52cc6acd18d9fb476170ce739654e
     token: axovhm2nIJZDRPzx2ZcQ9bnsZd
-#    app-id: wxba4cf742c969fb56
-#    secret: a5477d800eb2501068840fed99dafda1
-#    token: axovhm2nIJZDRPzx2ZcQ9bnsZd
-#    aes-key: axovhm2nIJZDRPzx2ZcQ9bnsZdraKa37jFr81Dc9Xhc
   pay:
     app-id: wxba4cf742c969fb56
     mch-id: 1639601254
@@ -118,7 +126,7 @@ redislock:
   chatExpireSeconds: 60
   aiPicExpireSeconds: 600
   timeExpireSeconds: 3600
-  timeMaxCount: 20
+  timeMaxCount: 3
   chatTimeOut: 600
 spring:
   redis:
@@ -141,3 +149,5 @@ spring:
     thymeleaf:
       prefix: classpath:/templates/
       suffix: .html
+    resources:
+      static-locations: classpath:/static/, classpath:/templates/

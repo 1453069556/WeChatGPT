@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.gpt.chatproject.dao.UserPropertiesDao">
-    <resultMap id="UserPropertiesResultMap" type="com.gpt.chatproject.entity.UserProperties">
+    <resultMap id="UserPropertiesMap" type="com.gpt.chatproject.entity.UserProperties">
         <id column="user_id" property="userId" />
         <result column="invited_count" property="invitedCount" />
         <result column="consumption_total" property="consumptionTotal" />
         <result column="balance" property="balance" />
         <result column="points" property="points" />
     </resultMap>
-    <select id="getUserPropertiesByUserId" resultMap="UserPropertiesResultMap" parameterType="String">
+    <select id="getUserPropertiesByUserId" resultMap="UserPropertiesMap" parameterType="String">
         SELECT user_id, invited_count, consumption_total, balance, points
         FROM user_properties
         WHERE user_id = #{userId}

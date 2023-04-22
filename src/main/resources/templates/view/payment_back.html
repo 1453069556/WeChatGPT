@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8"/>
     <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
@@ -9,39 +9,45 @@
     <title>我的会员</title>
     <!-- 三方 -->
     <link rel="stylesheet" th:href="@{/css/vant2.12.css}"/>
-    <link rel="stylesheet" th:href="@{/css/index.css}"/>
+    <link rel="stylesheet" th:href="@{/css/index.css}" />
 </head>
 
 <body>
 <div id="app">
     <div class="paypage">
+        <van-nav-bar title="我的会员" left-arrow>
+            <template #left>
+                <van-icon name="arrow-left" size="18" color="#1E1E1E"/>
+            </template>
+        </van-nav-bar>
+
         <div class="user">
             <div class="imagine">
                 <img :src="imagine" alt=""/>
             </div>
             <div class="message">
                 <p class="name">{{name}}</p>
-                <!--          <p class="uid"><span>ID：</span> {{uid}}</p>-->
+                <p class="uid"><span>ID：</span> {{uid}}</p>
             </div>
         </div>
 
         <div class="notice">
             <van-notice-bar left-icon="volume-o"
-                            text="超级会员特权，无限AI次数，响应更快，字数内容更多... 虚拟产品，可包售后，概不退款，如有顾虑请谨慎支付。"></van-notice-bar>
+                            text="买超级会员，走专属通道，无限AI次数，响应更快，快冲快冲！！！yyds"></van-notice-bar>
         </div>
 
         <div class="pay-box">
-            <!-- <div :style="{'width':width +'%'}"> -->
-            <div :class="['pay-item',active==item.id?'ac':'']" v-for="item in list" :key="item.id"
-                 @click="getMeal(item)">
-                <div class="time">{{item.date}}天</div>
-                <div class="newprice">
-                    <span>￥</span>
-                    <span>{{item.price}}</span>
+            <div :style="{'width':width +'%'}">
+                <div :class="['pay-item',active==item.id?'ac':'']" v-for="item in list" :key="item.id"
+                     @click="getMeal(item)">
+                    <div class="time">{{item.date}}</div>
+                    <div class="newprice">
+                        <span>￥</span>
+                        <span>{{item.price}}</span>
+                    </div>
+                    <div class="price">￥{{item.oPrice}}</div>
+                    <div class="saveprice">{{item.discounts}}</div>
                 </div>
-                <div class="price">￥{{item.oprice}}</div>
-                <div class="saveprice">{{item.discounts}}</div>
-                <!-- </div> -->
             </div>
         </div>
 
@@ -54,17 +60,16 @@
     </div>
 </div>
 
-
 <script th:src="@{/js/vue.min.js}"></script>
 <script th:src="@{/js/vant.min.js}"></script>
 <script th:src="@{/js/flex.js}"></script>
 <!-- 引入jQuery和WeUI JS -->
 <script src="https://res2.wx.qq.com/open/js/jweixin-1.6.0.js"></script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!--<script th:src="@{/js/index.js}"></script>-->
 </body>
 
 </html>
-
 
 <script th:inline="javascript">
     let openid = [[${openid}]];
@@ -73,7 +78,6 @@
     let nonceStr = [[${nonceStr}]];
     let signature = [[${signature}]];
     let MembershipPricing = JSON.parse([[${MembershipPricing}]]);
-    let name = [[${name}]];
     // let UserAgreement = [[${UserAgreement}]];
     new Vue({
         el: "#app",
@@ -81,8 +85,8 @@
         data() {
             return {
                 imagine: "/image/搞怪.png",
-                name: name, // 获取用户名字
-                uid: openid, // 获取用户id
+                name: "mine", // 获取用户名字
+                uid: "123456789", // 获取用户id
                 checked: true,
                 active: 1,
                 list: MembershipPricing
@@ -107,10 +111,9 @@
             onPay() {
                 const item = this.list.find((e) => e.id === this.active);
 
-                this.callWechatPay(item);
+                this.callWechatPay(item.id);
             },
-            callWechatPay(item) {
-                const vm = this; // 保存 Vue 实例的引用
+            callWechatPay(id) {
                 wx.config({
                     // debug: true,
                     appId: appId,
@@ -123,9 +126,8 @@
                     url: "/pay/getWechatPayParams",
                     method: "POST",
                     data: {
-                        id: item.id,
+                        id: id,
                         openid: openid,
-                        dur: item.date,
                     },
                     success: function (response) {
                         wx.chooseWXPay({
@@ -135,36 +137,15 @@
                             signType: response.signType,
                             paySign: response.paySign,
                             success: function (res) {
-                                // 显示支付成功通知
-                                vm.$toast({
-                                    type: 'success',
-                                    message: '开通成功',
-                                    duration: 3000,
-                                    onClose: () => {
-                                        // 关闭当前页面或执行其他操作
-                                        if (typeof WeixinJSBridge !== 'undefined') {
-                                            WeixinJSBridge.call('closeWindow');
-                                        } else {
-                                            console.log("WeixinJSBridge is not available.");
-                                        }
-                                    }
-                                });
+                                weui.toast("支付成功", 3000);
                             },
                             fail: function (res) {
-                                vm.$toast({
-                                    type: 'fail',
-                                    message: '支付失败',
-                                    duration: 3000
-                                });
+                                weui.alert("支付失败");
                             },
                         });
                     },
                     error: function (err) {
-                        vm.$toast({
-                            type: 'fail',
-                            message: '支付失败',
-                            duration: 3000
-                        });
+                        weui.alert("支付失败");
                         console.log(err);
                     },
                 });

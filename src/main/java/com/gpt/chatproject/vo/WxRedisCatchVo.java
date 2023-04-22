@@ -18,7 +18,7 @@ public class WxRedisCatchVo implements Serializable {
         this.chatCatch = new ArrayList<>();
     }
 
-    public WxRedisCatchVo(Integer maxCatch,ChatType chatType) {
+    public WxRedisCatchVo(Integer maxCatch, ChatType chatType) {
         this.chatCount = 0;
         this.chatType = chatType;
         this.maxCatch = maxCatch;
@@ -40,6 +40,8 @@ public class WxRedisCatchVo implements Serializable {
     private Integer maxCatch;
     // 聊天记录
     private ArrayList<ChatMessage> chatCatch;
+    // 身份
+    private String memberLevel;
 
     public void setChatCatch(ArrayList<ChatMessage> chatCatch) {
         if (chatCatch.size() > this.maxCatch) {

@@ -1,18 +1,22 @@
 package com.gpt.chatproject.controller;
 
+import com.github.binarywang.wxpay.bean.notify.WxPayNotifyResponse;
 import com.github.binarywang.wxpay.bean.order.WxPayMpOrderResult;
 import com.github.binarywang.wxpay.exception.WxPayException;
+import com.gpt.chatproject.entity.MembershipPricing;
 import com.gpt.chatproject.service.MyWxPayService;
 import com.gpt.chatproject.utils.JsonUtils;
 import me.chanjar.weixin.common.bean.WxJsapiSignature;
 import me.chanjar.weixin.common.bean.oauth2.WxOAuth2AccessToken;
 import me.chanjar.weixin.mp.api.WxMpService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 @Controller
 @RequestMapping("/pay")
@@ -21,6 +25,10 @@ public class WXPayController {
     private MyWxPayService myWxPayService;
     @Autowired
     private WxMpService wxMpService;
+    @Value("${wxchat.notify_url}")
+    private String NOTIFY_URL;
+    @Value("${wxchat.url}")
+    private String URL;
 
     @GetMapping("/authCallback")
     public String authCallback(@RequestParam("code") String code, Model model) {
@@ -28,7 +36,7 @@ public class WXPayController {
             // 配置项
             WxOAuth2AccessToken accessToken = wxMpService.getOAuth2Service().getAccessToken(code);
             WxJsapiSignature jsapiSignature = wxMpService.createJsapiSignature(
-                    "https://tl30591383.zicp.fun/pay/authCallback?code=" + code + "&state=");
+                    URL + "pay/authCallback?code=" + code + "&state=");
             String appId = jsapiSignature.getAppId();
             long timestamp = jsapiSignature.getTimestamp();
             String nonceStr = jsapiSignature.getNonceStr();
@@ -37,12 +45,14 @@ public class WXPayController {
             model.addAttribute("timestamp", timestamp);
             model.addAttribute("nonceStr", nonceStr);
             model.addAttribute("signature", signature);
-
+            List<MembershipPricing> membershipPricingList = myWxPayService.getMembershipPricingList();
+            String membershipPricingJson = JsonUtils.toJson(membershipPricingList);
+            model.addAttribute("MembershipPricing", membershipPricingJson);
             // 获取用户的OpenID
             String openid = accessToken.getOpenId();
             // 将OpenID存储到js中
             model.addAttribute("openid", openid);
-            model.addAttribute("product_name", "小C会员开通");
+            model.addAttribute("name", myWxPayService.getMemberStatus(openid));
             // 重定向到支付页面，前端可以通过Ajax调用/getWechatPayParams接口发起支付
             return "view/payment";
         } catch (Exception e) {
@@ -51,16 +61,27 @@ public class WXPayController {
         }
     }
 
-
     @PostMapping(value = "/getWechatPayParams", produces = "application/json")
     @ResponseBody
-    public String getWechatPayParams(@RequestParam("amount") Integer amount,
+    public String getWechatPayParams(@RequestParam("id") Integer MembershipPricingId,
                                      @RequestParam("openid") String openid,
+                                     @RequestParam("dur") String dur,
                                      HttpServletRequest request) throws WxPayException {
         String remoteAddr = request.getRemoteAddr();
-        WxPayMpOrderResult orderInfo = myWxPayService.getOrderInfo("小C会员开通", remoteAddr, openid, amount);
+        WxPayMpOrderResult orderInfo = myWxPayService.getOrderInfo("小C会员-" + dur + "天",
+                remoteAddr, openid, MembershipPricingId, NOTIFY_URL);
         return JsonUtils.toJson(orderInfo);
     }
 
+    @PostMapping("/notify/order")
+    @ResponseBody
+    public String parseOrderNotifyResult(@RequestBody String xmlData) {
+        try {
+            myWxPayService.payNotify(xmlData);
+        } catch (WxPayException e) {
+            return WxPayNotifyResponse.fail(e.getMessage());
+        }
+        return WxPayNotifyResponse.success("OK");
+    }
 
 }

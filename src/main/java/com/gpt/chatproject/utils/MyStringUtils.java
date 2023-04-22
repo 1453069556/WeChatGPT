@@ -8,6 +8,7 @@ import java.nio.charset.CoderResult;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -15,7 +16,6 @@ import java.util.regex.Pattern;
 public class MyStringUtils {
     private static final Charset charset = StandardCharsets.UTF_8;
     private static final CharsetDecoder decoder = charset.newDecoder();
-
     private static final String HREF_BUTTON_PREFIX = "<a href=\"weixin://bizmsgmenu?msgmenucontent=";
     private static final String HREF_BUTTON_MID = "&msgmenuid=1\">";
     private static final String HREF_BUTTON_SUFFIX = "</a>";
@@ -77,5 +77,23 @@ public class MyStringUtils {
                 .mapToObj(i -> Integer.toString(i, 36))
                 .collect(StringBuilder::new, StringBuilder::append, StringBuilder::append)
                 .toString();
+    }
+
+    /**
+     * 指定数量随机整数字符串
+     *
+     * @param length
+     * @return
+     */
+    public static String getRandomIntegerString(int length) {
+        Random random = new Random();
+        StringBuilder sb = new StringBuilder();
+
+        for (int i = 0; i < length; i++) {
+            int randomNumber = random.nextInt(10); // 生成0-9之间的随机整数
+            sb.append(randomNumber);
+        }
+
+        return sb.toString();
     }
 }

@@ -1,5 +1,7 @@
 package com.gpt.chatproject.utils;
 
+import com.gpt.chatproject.dao.MemberInfoDao;
+import com.gpt.chatproject.entity.MemberInfo;
 import com.gpt.chatproject.enums.ChatType;
 import com.gpt.chatproject.vo.MidjourneyRedisVo;
 import com.gpt.chatproject.vo.WxRedisCatchVo;
@@ -21,6 +23,8 @@ import java.util.concurrent.TimeUnit;
 public class RedisUtils {
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
+    @Autowired
+    private MemberInfoDao memberInfoDao;
     private static final String CHAT_LOCK_PREFIX = "chat_lock:";
     private static final String TIME_LOCK_PREFIX = "time_lock:";
     private static final String PIC_LOCK_PREFIX = "pic_lock:";
@@ -121,10 +125,11 @@ public class RedisUtils {
 
     /**
      * 尝试获取AI绘图锁
+     *
      * @param key key
      * @return
      */
-    public boolean tryAiPicLock(String key){
+    public boolean tryAiPicLock(String key) {
         String lockKey = PIC_LOCK_PREFIX + key;
         // 尝试获取锁
         boolean success = Boolean.TRUE.equals(redisTemplate.opsForValue().setIfAbsent(lockKey, UUID.randomUUID().toString()));
@@ -138,10 +143,11 @@ public class RedisUtils {
 
     /**
      * 是否被锁
+     *
      * @param key
      * @return
      */
-    public boolean aiPicIsLock(String key){
+    public boolean aiPicIsLock(String key) {
         String lockKey = PIC_LOCK_PREFIX + key;
         String lock = (String) redisTemplate.opsForValue().get(lockKey);
         return StringUtils.isNotBlank(lock);
@@ -149,13 +155,15 @@ public class RedisUtils {
 
     /**
      * 释放绘图锁
+     *
      * @param key key
      * @return
      */
-    public void releasePicLock(String key){
+    public void releasePicLock(String key) {
         String lockKey = PIC_LOCK_PREFIX + key;
         redisTemplate.delete(lockKey);
     }
+
     /**
      * 尝试获取会话锁
      *
@@ -210,7 +218,8 @@ public class RedisUtils {
             messages.add(new ChatMessage(role, content));
             newWxRedisCatchVo.setChatCatch(messages);
             newWxRedisCatchVo.setChatCount(newWxRedisCatchVo.getChatCount() + 1);
-            redisTemplate.opsForValue().set(fromUser, newWxRedisCatchVo, CHAT_TIME_OUT, TimeUnit.SECONDS);
+            WxRedisCatchVo catchVo = loadMember(newWxRedisCatchVo, fromUser);
+            redisTemplate.opsForValue().set(fromUser, catchVo, CHAT_TIME_OUT, TimeUnit.SECONDS);
             return true;
         } catch (Exception e) {
             log.debug(e.getMessage());
@@ -238,7 +247,8 @@ public class RedisUtils {
             WxRedisCatchVo newWxRedisCatchVo = new WxRedisCatchVo(CHAT_MAX_CATCH, chatType);
             ArrayList<ChatMessage> messages = new ArrayList<>();
             newWxRedisCatchVo.setChatCatch(messages);
-            redisTemplate.opsForValue().set(fromUser, newWxRedisCatchVo, CHAT_TIME_OUT, TimeUnit.SECONDS);
+            WxRedisCatchVo catchVo = loadMember(newWxRedisCatchVo, fromUser);
+            redisTemplate.opsForValue().set(fromUser, catchVo, CHAT_TIME_OUT, TimeUnit.SECONDS);
             return true;
         } catch (Exception e) {
             log.debug(e.getMessage());
@@ -249,23 +259,34 @@ public class RedisUtils {
 
     /**
      * 获取聊天缓存
+     *
      * @param fromUser
      * @return
      */
     public WxRedisCatchVo getCatch(String fromUser) {
         Object result = redisTemplate.opsForValue().get(fromUser);
-        if (result == null){
-            return new WxRedisCatchVo(CHAT_MAX_CATCH,ChatType.NORMAL);
+        if (result == null) {
+            return loadMember(new WxRedisCatchVo(CHAT_MAX_CATCH, ChatType.NORMAL), fromUser);
         }
         return (WxRedisCatchVo) result;
     }
 
+    private WxRedisCatchVo loadMember(WxRedisCatchVo wxRedisCatchVo, String fromUser) {
+        MemberInfo byUserId = memberInfoDao.findByUserId(fromUser);
+        if (byUserId != null) {
+            String memberLevel = byUserId.getMemberLevel();
+            wxRedisCatchVo.setMemberLevel(memberLevel);
+        }
+        return wxRedisCatchVo;
+    }
+
     /**
      * 刷新缓存过期时间
+     *
      * @param fromUser
      * @return
      */
     public void resetCatchExpire(String fromUser) {
-        redisTemplate.expire(fromUser,CHAT_TIME_OUT, TimeUnit.SECONDS);
+        redisTemplate.expire(fromUser, CHAT_TIME_OUT, TimeUnit.SECONDS);
     }
 }

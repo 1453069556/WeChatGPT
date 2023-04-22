@@ -62,7 +62,7 @@ public class WechatController {
                 // 路由用户关注事件，异步处理数据库
                 .rule().async(true).msgType(WxConsts.XmlMsgType.EVENT)
                 .event(WxConsts.EventType.SUBSCRIBE)
-                .handler(weChatHandler.getInvitedEventDBHandler()).end()
+                .handler(weChatHandler.getInvitedEventDBHandler()).next()
                 // 路由用户关注事件，回复消息
                 .rule().async(false).msgType(WxConsts.XmlMsgType.EVENT)
                 .event(WxConsts.EventType.SUBSCRIBE)
