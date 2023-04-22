@@ -150,24 +150,25 @@ public class WeChatUtils {
      * @param wxMpXmlMessage
      * @return
      * @throws JsonProcessingException
-     * @throws WxErrorException
      */
-    public String getLock(WxRedisCatchVo catchVo, String fromUser, WxMpXmlMessage wxMpXmlMessage, long delta) throws IOException, WxErrorException {
+    public String getLock(WxRedisCatchVo catchVo, String fromUser, WxMpXmlMessage wxMpXmlMessage, long delta) throws IOException {
         String result;
         // 加锁&&一问一答限制
         if (!redisUtils.tryChatLock(fromUser)) {
             result = xmlMapper.writeValueAsString(new WechatResponseTextMessage(fromUser, wxMpXmlMessage.getToUser(), WxConsts.XmlMsgType.TEXT, CHAT_FREQUENCY_RESPONSE));
             return result;
         }
-        if (catchVo.getMemberLevel() == null && !redisUtils.tryTimeLock(fromUser, delta)) {
-            // 过滤每小时会话频率，超过阈值则强制休息一小时
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
-            ZonedDateTime localDateTime = dateAddSeconds(redisUtils.getExpireByKey(fromUser));
-            String replay = TIME_FREQUENCY_RESPONSE + "预计" + localDateTime.format(formatter) + "可以重新开始对话。";
-            // 返回提示语
-            result = xmlMapper.writeValueAsString(new WechatResponseTextMessage(fromUser, wxMpXmlMessage.getToUser(), WxConsts.XmlMsgType.TEXT, replay));
-            sendQrcodeAndReleaseLock(fromUser);
-            return result;
+        if (catchVo.getMemberLevel() == null) {
+            if (!redisUtils.tryTimeLock(fromUser, delta)) {
+                // 过滤每小时会话频率，超过阈值则强制休息一小时
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+                ZonedDateTime localDateTime = dateAddSeconds(redisUtils.getExpireByKey(fromUser));
+                String replay = TIME_FREQUENCY_RESPONSE + "预计" + localDateTime.format(formatter) + "可以重新开始对话。";
+                // 返回提示语
+                result = xmlMapper.writeValueAsString(new WechatResponseTextMessage(fromUser, wxMpXmlMessage.getToUser(), WxConsts.XmlMsgType.TEXT, replay));
+                sendQrcodeAndReleaseLock(fromUser);
+                return result;
+            }
         }
         return "";
     }
