@@ -143,6 +143,15 @@ spring:
     url: jdbc:mysql://35.225.210.233:3306/wechat_schema?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC
     username: root
     password: f}TBj;0]MvUXQ7L5
+    type: com.alibaba.druid.pool.DruidDataSource
+    druid:
+      min-idle: 10
+      max-active: 50
+      initial-size: 10
+      min-evictable-idle-time-millis: 60000
+      max-wait: 5000
+      time-between-eviction-runs-millis: 30000
+      validation-query: SELECT 1
   rabbitmq:
     host: 104.197.64.191
     port: 5672
