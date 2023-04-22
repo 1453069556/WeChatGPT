@@ -266,7 +266,9 @@ public class RedisUtils {
     public WxRedisCatchVo getCatch(String fromUser) {
         Object result = redisTemplate.opsForValue().get(fromUser);
         if (result == null) {
-            return loadMember(new WxRedisCatchVo(CHAT_MAX_CATCH, ChatType.NORMAL), fromUser);
+            WxRedisCatchVo wxRedisCatchVo = loadMember(new WxRedisCatchVo(CHAT_MAX_CATCH, ChatType.NORMAL), fromUser);
+            redisTemplate.opsForValue().set(fromUser, wxRedisCatchVo, CHAT_TIME_OUT, TimeUnit.SECONDS);
+            return wxRedisCatchVo;
         }
         return (WxRedisCatchVo) result;
     }
