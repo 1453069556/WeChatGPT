@@ -96,8 +96,7 @@ wxchat:
   "
   chars_overflow_response: "
   超出文本最大范围，请尝试精简您的内容!\n\n
-  <a href=\"https://open.weixin.qq.com/connect/oauth2/authorize?appid=wxba4cf742c969fb56&redirect_uri=http://zhixinyun.work/pay/authCallback&response_type=code&scope=snsapi_base\">开通会员扩充文本最大范围</a>
-  "
+  <a href=\"https://open.weixin.qq.com/connect/oauth2/authorize?appid=wxba4cf742c969fb56&redirect_uri=http://zhixinyun.work/pay/authCallback&response_type=code&scope=snsapi_base\">开通会员扩充文本最大范围</a>"
   default_welcome_words_end: "团队招纳合伙人，有想法可联系客服。"
   server_error_replay: "抱歉，刚才小C开了小差，此次不影响对话次数，现在我们继续~"
   release_lock_replay: "成功邀请用户关注，小C又回来了~现在继续我们的话题。"
@@ -109,11 +108,9 @@ wxchat:
   2.自己写形容词，格式:/imagine+英文形容词，可直接绘制图片。\n\n
   3.发送图片然后进行形容词修饰生成新的图片，格式:/modifier+英文形容词。\n\n
   4.<a href=\"https://mp.weixin.qq.com/s/v75fYC7vBEDCxhpC_Zss0A\">关键词大全</a>\n\n
-  请严格按照以上格式画图!\n
-  所有形容词皆英文，否则乱画。\n
-  如出现违规词汇将会绘图超时，发布违法违规词汇次数过多直接拉黑。\n
-  出图时间为1-3分钟，请耐心等待~
-  "
+  请严格按照以上格式画图!\n\n
+  所有形容词皆英文，否则乱画。\n\n
+  如出现违规词汇将会绘图超时，发布违法违规词汇次数过多直接拉黑。\n\n出图时间为1-3分钟，请耐心等待~"
   reset_success: "成功恢复默认聊天模式~"
   update_fails: "暂不提供此服务，请联系管理员。"
   chatMaxCatch: 8
