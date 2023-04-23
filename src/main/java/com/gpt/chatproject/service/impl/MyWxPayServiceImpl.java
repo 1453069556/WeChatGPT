@@ -18,6 +18,7 @@ import com.gpt.chatproject.enums.OrderStatus;
 import com.gpt.chatproject.service.MyWxPayService;
 import com.gpt.chatproject.utils.MyDateUtils;
 import com.gpt.chatproject.utils.MyStringUtils;
+import com.gpt.chatproject.utils.RedisUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -35,6 +36,9 @@ public class MyWxPayServiceImpl implements MyWxPayService {
 
     @Autowired
     private MembershipPricingDao membershipPricingDao;
+
+    @Autowired
+    private RedisUtils redisUtils;
 
     @Autowired
     private UserAgreementDao userAgreementDao;
@@ -136,6 +140,7 @@ public class MyWxPayServiceImpl implements MyWxPayService {
                 byUserId.setExpireTime(MyDateUtils.dateFormat(newDate, "yyyyMMddHHmmss"));
                 memberInfoDao.update(byUserId);
             }
+            redisUtils.setMemberLevel(result.getOpenid(),MemberLevel.REG);
         } catch (WxPayException e) {
             log.error("微信支付-通知失败", e);
         }

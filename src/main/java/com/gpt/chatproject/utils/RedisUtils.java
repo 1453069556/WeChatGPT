@@ -3,6 +3,7 @@ package com.gpt.chatproject.utils;
 import com.gpt.chatproject.dao.MemberInfoDao;
 import com.gpt.chatproject.entity.MemberInfo;
 import com.gpt.chatproject.enums.ChatType;
+import com.gpt.chatproject.enums.MemberLevel;
 import com.gpt.chatproject.vo.MidjourneyRedisVo;
 import com.gpt.chatproject.vo.WxRedisCatchVo;
 import com.theokanning.openai.completion.chat.ChatMessage;
@@ -258,6 +259,20 @@ public class RedisUtils {
     }
 
     /**
+     * 设置会员状态
+     * @return
+     */
+    public void setMemberLevel(String fromUser, MemberLevel memberLevel) {
+        WxRedisCatchVo catchVo = (WxRedisCatchVo) redisTemplate.opsForValue().get(fromUser);
+        if (catchVo == null) {
+            WxRedisCatchVo wxRedisCatchVo = loadMember(new WxRedisCatchVo(CHAT_MAX_CATCH, ChatType.NORMAL), fromUser);
+            redisTemplate.opsForValue().set(fromUser, wxRedisCatchVo, CHAT_TIME_OUT, TimeUnit.SECONDS);
+            return;
+        }
+        catchVo.setMemberLevel(memberLevel.getType());
+        redisTemplate.opsForValue().set(fromUser, catchVo, CHAT_TIME_OUT, TimeUnit.SECONDS);
+    }
+    /**
      * 获取聊天缓存
      *
      * @param fromUser
@@ -266,7 +281,9 @@ public class RedisUtils {
     public WxRedisCatchVo getCatch(String fromUser) {
         Object result = redisTemplate.opsForValue().get(fromUser);
         if (result == null) {
-            return loadMember(new WxRedisCatchVo(CHAT_MAX_CATCH, ChatType.NORMAL), fromUser);
+            WxRedisCatchVo wxRedisCatchVo = loadMember(new WxRedisCatchVo(CHAT_MAX_CATCH, ChatType.NORMAL), fromUser);
+            redisTemplate.opsForValue().set(fromUser, wxRedisCatchVo, CHAT_TIME_OUT, TimeUnit.SECONDS);
+            return wxRedisCatchVo;
         }
         return (WxRedisCatchVo) result;
     }
