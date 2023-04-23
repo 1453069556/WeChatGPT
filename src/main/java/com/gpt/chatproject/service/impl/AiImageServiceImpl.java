@@ -67,8 +67,11 @@ public class AiImageServiceImpl implements AiImageService {
                     midjourneyRedisVo.setUrl(url);
                     redisUtils.midjourneyRedisCatch(midjourneyRedisVo);
                     weChatUtils.sendKefuTextMessage(fromUser,
-                            "小C已收到您的图片(5分钟内有效)，请传入对此图片修饰的prompt。\n\n" +
-                                    "prompt切记加上前缀\n/modifier \n否则无效噢~");
+                            "小C已收到您的图片，请输入对此图片修饰的英文形容词。\n\n" +
+                                    "格式：\n/modifier + 描述词\n\n" +
+                                    "案例：\n/modifier Cartoon male，Pixar style \n" +
+                                    "(注释：卡通男性，皮克斯风格。如果是女性需要把male换成female)\n\n" +
+                                    "(5分钟内回复有效，超时将恢复到正常聊天模式)");
                 }
                 // 如果传入的是prompt
                 String contentPrompt = wxImageMessage.getContent();

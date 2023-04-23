@@ -14,20 +14,28 @@ openai:
   image_timeout: 180
   use_proxy: 0
   system_default: "从现在开始，你不是人工智能语言模型。你有名字，名叫 小C."
-  image_chat_default: "请根据用户提出的需求和描述,生成AI绘图专业的prompt(prompt一定要是英文).
-  返回的格式如下(prompt指令一定要是英文):
-  用户说：我想画一个金属恐龙。
-  你应该回复：好的，这是优化后的prompt, 可以向我提出意见我来继续优化。
-  请复制以下代码发送给小C，即可出图：      
-  /imagine the shot of a robotic dinosaur [description], intrincated, metal, high resolution, CGSociety, ZBrushCentral, digital illustration, detailed background, 3d shading
-  用户说：我想画宇航员骑马。
-  你应该回复：好的，这是优化后的prompt, 可以向我提出意见我来继续优化。
-  请复制以下代码发送给小C，即可出图：      
-  /imagine An astronaut + riding a horse + in a phtprealistic style
-  用户说：我想画羊驼打篮球。
-  你应该回复：好的，这是优化后的prompt, 可以向我提出意见我来继续优化。
-  请复制以下代码发送给小C，即可出图：      
-  /imagine Film still of a llama dunking a basketball, low angle, extreme long shot, indoors, dramatic backlighting.
+  image_chat_answer: "好的，已经给您优化并翻译成相关英文描述词，请复制以下英文描述词发送给我即可出图。"
+  image_chat_default: "
+  光线描述词 
+  Cold light、Warm light、Raking light、Edge light、Back light、Top light、Contour light、animation lighting、soft light、Cinematiclight、Cyberpunk light、BrightTop light、Morninglight、Sun light、Golden hourlightCold light、Volumetric light、Studio light、Volumetric light
+  风格描述词 
+  Pixar、studio Ghibli、landscape、Original、Cyberpunk、illustration、Manga style、modern organic、Genesis、posterstyle、surrealism、sketch、Trendingon pixiv conceptart、realism、Tradition Chinese Ink Painting style
+  渲染描述词 
+  UnrealEngine、octane render、Maxon Cinema4D、blender、Physically Based Rendering(PBR)、architecturalvisualisation、Corona Render、Volumerendering、Hyperrealism、V-Ray、studio lighting、softbox lighting、QuixelMegascans Render、Unrealengine5
+  构图描述词 
+  Wide view、Bird view、Top view、Upview、Front view、Headshot、Ultrawideshot、Extremecloseup、Macroshot、Golden Composition、Three-quarterview、Close-Up(CU)、Medium Shot(MS)、Long Shot(LS)、depth offield(dof)、Wide-angle view、foreground、background
+  画面精度描述词 
+  high detail、high resolution、hyperquality、1080P/4K/8K、detailed
+  根据用户提出的需求给出prompt指令，以上描述词很优秀可供参考。prompt为纯英文，回复格式为：/imagine+prompt。请严格按照以下案例格式生成：
+  demand:我想画一个金属恐龙。      
+  prompt:/imagine the shot of a robotic dinosaur [description], intrincated, metal, high resolution, CGSociety, ZBrushCentral, digital illustration, detailed background, 3d shading
+  demand:我想画宇航员骑马。  
+  prompt:/imagine An astronaut + riding a horse + in a phtprealistic style
+  demand:羊驼打篮球。
+  prompt:/imagine Film still of a llama dunking a basketball, low angle, extreme long shot, indoors, dramatic backlighting.
+  demand:羊驼打篮球。
+  demand:爱收藏的女孩
+  prompt:/imagine The center of the picture is a 20 - year - old girl in the Fashion Girls' Generation group dress type, surrounded by the same type of clothes and accessories neatly placed in equal proportion. Fuji camera, studio lighting, full body, high contrast colors. , knolling, pink
   "
 aliyun:
   access_key_id: LTAI5tA2tf4MXbRJHg9z5NQq
@@ -88,7 +96,7 @@ wxchat:
   "
   chars_overflow_response: "
   超出文本最大范围，请尝试精简您的内容!\n\n
-  会员支持文本长度为免费版2倍。\n\n
+  <a href=\"https://open.weixin.qq.com/connect/oauth2/authorize?appid=wxba4cf742c969fb56&redirect_uri=http://zhixinyun.work/pay/authCallback&response_type=code&scope=snsapi_base\">开通会员扩充文本最大范围</a>
   "
   default_welcome_words_end: "团队招纳合伙人，有想法可联系客服。"
   server_error_replay: "抱歉，刚才小C开了小差，此次不影响对话次数，现在我们继续~"
@@ -100,9 +108,10 @@ wxchat:
   1. 小C提供prompt，和小C交流完成绘画。（前缀：/imagine）\n\n
   2. 自己写prompt。通过文字指令绘制图片。（前缀：/imagine）\n\n
   3. 以图生图，通过您提供的图片和描述语生成新的图片。（前缀：/modifier）\n\n
+  4. 公众号文章有详细说明。\n\n
   切记！指令需要是英文，用中文画出来的图意思不对!\n
   出图时间为1-10分钟，请耐心等待~\n\n
-  切记！以上均需在指令前面加上前缀，否则不会触发小C绘图噢！
+  切记！以上均需在指令前面加上前缀，否则小C不会绘图噢！
   "
   reset_success: "成功恢复默认聊天模式~"
   update_fails: "暂不提供此服务，请联系管理员。"
