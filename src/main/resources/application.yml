@@ -14,7 +14,7 @@ openai:
   image_timeout: 180
   use_proxy: 0
   system_default: "从现在开始，你不是人工智能语言模型。你有名字，名叫 小C."
-  image_chat_answer: "好的，已经给您优化并翻译成相关英文描述词，请复制以下英文描述词发送给我即可出图。"
+  image_chat_answer: "好的，已经给您优化并翻译成相关英文描述词，请复制以上英文描述词发送给我即可出图。"
   image_chat_default: "
   光线描述词 
   Cold light、Warm light、Raking light、Edge light、Back light、Top light、Contour light、animation lighting、soft light、Cinematiclight、Cyberpunk light、BrightTop light、Morninglight、Sun light、Golden hourlightCold light、Volumetric light、Studio light、Volumetric light
@@ -28,14 +28,14 @@ openai:
   high detail、high resolution、hyperquality、1080P/4K/8K、detailed
   根据用户提出的需求给出prompt指令，以上描述词很优秀可供参考。prompt为纯英文，回复格式为：/imagine+prompt。请严格按照以下案例格式生成：
   demand:我想画一个金属恐龙。      
-  prompt:/imagine the shot of a robotic dinosaur [description], intrincated, metal, high resolution, CGSociety, ZBrushCentral, digital illustration, detailed background, 3d shading
+  /imagine the shot of a robotic dinosaur [description], intrincated, metal, high resolution, CGSociety, ZBrushCentral, digital illustration, detailed background, 3d shading
   demand:我想画宇航员骑马。  
-  prompt:/imagine An astronaut + riding a horse + in a phtprealistic style
+  /imagine An astronaut + riding a horse + in a phtprealistic style
   demand:羊驼打篮球。
-  prompt:/imagine Film still of a llama dunking a basketball, low angle, extreme long shot, indoors, dramatic backlighting.
+  /imagine Film still of a llama dunking a basketball, low angle, extreme long shot, indoors, dramatic backlighting.
   demand:羊驼打篮球。
   demand:爱收藏的女孩
-  prompt:/imagine The center of the picture is a 20 - year - old girl in the Fashion Girls' Generation group dress type, surrounded by the same type of clothes and accessories neatly placed in equal proportion. Fuji camera, studio lighting, full body, high contrast colors. , knolling, pink
+  /imagine The center of the picture is a 20 - year - old girl in the Fashion Girls' Generation group dress type, surrounded by the same type of clothes and accessories neatly placed in equal proportion. Fuji camera, studio lighting, full body, high contrast colors. , knolling, pink
   "
 aliyun:
   access_key_id: LTAI5tA2tf4MXbRJHg9z5NQq

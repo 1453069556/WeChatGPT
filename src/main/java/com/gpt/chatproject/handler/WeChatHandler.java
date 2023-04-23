@@ -69,6 +69,7 @@ public class WeChatHandler {
             String fromUser = wxMessage.getFromUser();
             try {
                 WxRedisCatchVo aCatch = redisUtils.getCatch(fromUser);
+                wxMessage.setContent(wxMessage.getContent().replaceFirst("^\\s+", ""));
                 switch (aCatch.getChatType()) {
                     case NORMAL:
                         weChatService.textEvent(wxMessage);
@@ -85,8 +86,8 @@ public class WeChatHandler {
                             aiImageService.imageMidjourneyCustom(wxMessage);
                             break;
                         }
-                        weChatUtils.sendKefuTextMessage(fromUser, IMAGE_CHAT_ANSWER);
                         weChatService.textEvent(wxMessage);
+                        weChatUtils.sendKefuTextMessage(fromUser, IMAGE_CHAT_ANSWER);
                         break;
                     case IMAGE_DALL:
                         // 触发了图片prompt指令,生成图片
