@@ -147,6 +147,7 @@ public class MidjourneyMqListener {
 
     public static String getSendOkMessage(DiscordHttpMessageVo messageVo) {
         StringBuilder hrefButton = new StringBuilder();
+        hrefButton.append("可通过点击以下指令操作图片:\n\n");
         List<DiscordHttpMessageVo.ComponentsDTO> components = messageVo.getComponents();
         for (int index = 0; index < components.size(); index++) {
             List<DiscordHttpMessageVo.ComponentsDTO.ComponentsDTOInner> components2 = components.get(index).getComponents();
@@ -174,7 +175,7 @@ public class MidjourneyMqListener {
                         hrefButton.append(MyStringUtils.generateMidjourneyHrefButton("\uD83D\uDC49\uD83D\uDC47", componentsDTOInner.getCustomId(), text));
                         break;
                     case 4:
-                        text = "基于原指令生成一组新图\n\n";
+                        text = "基于原指令重铸一组新图\n\n";
                         hrefButton.append(MyStringUtils.generateMidjourneyHrefButton("✌", componentsDTOInner.getCustomId(), text));
                         break;
                 }

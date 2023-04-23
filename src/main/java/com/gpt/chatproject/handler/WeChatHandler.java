@@ -4,6 +4,7 @@ import com.gpt.chatproject.enums.ChatType;
 import com.gpt.chatproject.service.AiImageService;
 import com.gpt.chatproject.service.WeChatService;
 import com.gpt.chatproject.utils.RedisUtils;
+import com.gpt.chatproject.utils.WeChatUtils;
 import com.gpt.chatproject.vo.WxRedisCatchVo;
 import me.chanjar.weixin.common.error.WxErrorException;
 import me.chanjar.weixin.mp.api.WxMpMessageHandler;
@@ -21,6 +22,8 @@ public class WeChatHandler {
     @Autowired
     private RedisUtils redisUtils;
     @Autowired
+    private WeChatUtils weChatUtils;
+    @Autowired
     private AiImageService aiImageService;
     @Value("${wxchat.welcome_words}")
     private String WELCOME_WORDS;
@@ -32,6 +35,8 @@ public class WeChatHandler {
     private String UPDATE_FAILS;
     @Value("${wxchat.reset_success}")
     private String RESET_CHAT_SUCCESS;
+    @Value("${openai.image_chat_answer}")
+    private String IMAGE_CHAT_ANSWER;
 
     /**
      * 回复关注语
@@ -64,6 +69,7 @@ public class WeChatHandler {
             String fromUser = wxMessage.getFromUser();
             try {
                 WxRedisCatchVo aCatch = redisUtils.getCatch(fromUser);
+                wxMessage.setContent(wxMessage.getContent().replaceFirst("^\\s+", ""));
                 switch (aCatch.getChatType()) {
                     case NORMAL:
                         weChatService.textEvent(wxMessage);
@@ -81,6 +87,7 @@ public class WeChatHandler {
                             break;
                         }
                         weChatService.textEvent(wxMessage);
+                        weChatUtils.sendKefuTextMessage(fromUser, IMAGE_CHAT_ANSWER);
                         break;
                     case IMAGE_DALL:
                         // 触发了图片prompt指令,生成图片
