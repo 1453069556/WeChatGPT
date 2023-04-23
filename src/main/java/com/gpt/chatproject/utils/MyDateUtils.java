@@ -95,7 +95,9 @@ public class MyDateUtils {
      * @return 运算后的日期
      */
     public static Date formatDate(String dateString,String format) {
+        TimeZone timeZone = TimeZone.getTimeZone("Asia/Shanghai");
         SimpleDateFormat formatter = new SimpleDateFormat(format);
+        formatter.setTimeZone(timeZone);
         Date date = null;
         try {
             date = formatter.parse(dateString);
