@@ -174,7 +174,12 @@ public class WeChatUtils {
         if (delta == RedisLockType.IMAGE_MIDJOURNEY) {
             if (!redisUtils.decrImageNum(catchVo, fromUser)) {
                 // 会员绘图次数已用完，返回提示语
-                return "您的会员绘图次数已用完，续费会员可增加相应的绘图次数~";
+                return xmlMapper.writeValueAsString(
+                        new WechatResponseTextMessage(fromUser,
+                                wxMpXmlMessage.getToUser(),
+                                WxConsts.XmlMsgType.TEXT,
+                                "您的会员绘图次数已用完，续费会员可增加相应的绘图次数~"
+                        ));
             }
         }
         return "";

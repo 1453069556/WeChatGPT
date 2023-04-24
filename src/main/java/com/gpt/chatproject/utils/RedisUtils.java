@@ -372,6 +372,6 @@ public class RedisUtils {
      * @return Set<String>
      */
     public Set<String> getWxRedisCatchVoKeys() {
-        return redisTemplate.keys(CHAT_PREFIX);
+        return redisTemplate.keys(CHAT_PREFIX+"*");
     }
 }

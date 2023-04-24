@@ -44,7 +44,8 @@ public class MemberServiceImpl implements MemberService {
         String dateStartFormat = MyDateUtils.dateFormat(dateStart, "yyyy-MM-dd HH:mm:ss");
         memberInfo.append("会员开通日期:").append("\n").append(dateStartFormat).append("\n\n");
         memberInfo.append("会员到期日期:").append("\n").append(dateExpireFormat).append("\n\n");
-        memberInfo.append("AI绘图剩余次数:").append(imageNum).append("次");
+        memberInfo.append("AI绘图剩余次数:").append(imageNum).append("次").append("\n\n");
+        memberInfo.append("ChatGpt剩余次数:").append("\n").append("无限制");
         return memberInfo.toString();
     }
 }
