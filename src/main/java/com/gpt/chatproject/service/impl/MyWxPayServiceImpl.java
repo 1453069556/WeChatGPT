@@ -19,6 +19,7 @@ import com.gpt.chatproject.service.MyWxPayService;
 import com.gpt.chatproject.utils.MyDateUtils;
 import com.gpt.chatproject.utils.MyStringUtils;
 import com.gpt.chatproject.utils.RedisUtils;
+import com.gpt.chatproject.vo.WxRedisCatchVo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -122,10 +123,10 @@ public class MyWxPayServiceImpl implements MyWxPayService {
             wechatOrderDao.update(wechatOrder);
             // 添加会员信息
             Date beijingDate = MyDateUtils.getBeijingDate();
-            MemberInfo byUserId = memberInfoDao.findByUserId(result.getOpenid());
+            MemberInfo memberInfo = memberInfoDao.findByUserId(result.getOpenid());
             MembershipPricing membershipPricing = membershipPricingDao.findById(wechatOrder.getMembershipPricingId());
-            if (byUserId == null) {
-                MemberInfo memberInfo = new MemberInfo();
+            if (memberInfo == null) {
+                memberInfo = new MemberInfo();
                 memberInfo.setUserId(result.getOpenid());
                 memberInfo.setMemberLevel(MemberLevel.REG.getType());
                 memberInfo.setPoints(result.getTotalFee());
@@ -135,7 +136,7 @@ public class MyWxPayServiceImpl implements MyWxPayService {
                 memberInfoDao.insert(memberInfo);
             } else {
                 // 在现有的时间基础上续时
-                String expireTime = byUserId.getExpireTime();
+                String expireTime = memberInfo.getExpireTime();
                 Date date = MyDateUtils.formatDate(expireTime, "yyyyMMddHHmmss");
                 Date nowDate = MyDateUtils.getBeijingDate();
                 Date newDate;
@@ -144,13 +145,29 @@ public class MyWxPayServiceImpl implements MyWxPayService {
                 } else {
                     newDate = MyDateUtils.add(date, Calendar.DATE, membershipPricing.getDate());
                 }
-                byUserId.setExpireTime(MyDateUtils.dateFormat(newDate, "yyyyMMddHHmmss"));
-                memberInfoDao.update(byUserId);
+                memberInfo.setExpireTime(MyDateUtils.dateFormat(newDate, "yyyyMMddHHmmss"));
+                memberInfoDao.update(memberInfo);
             }
-            redisUtils.setMemberLevel(result.getOpenid(), MemberLevel.REG);
+            dataUpdateWork(memberInfo, result.getOpenid(), membershipPricing.getImageNum());
         } catch (WxPayException e) {
             log.error("微信支付-通知失败", e);
         }
+    }
+
+    /**
+     * 数据统一更新
+     *
+     * @param openid   openid
+     * @param imageNum imageNum
+     */
+    private void dataUpdateWork(MemberInfo memberInfo, String openid, int imageNum) {
+        WxRedisCatchVo catchVo = redisUtils.getCatch(openid);
+        int oldImageNum = catchVo.getImageNum();
+        int newImageNum = oldImageNum + imageNum;
+        redisUtils.updateImageNum(openid, newImageNum);
+        memberInfo.setImageNum(newImageNum);
+        memberInfoDao.update(memberInfo);
+        redisUtils.setMemberLevel(openid, MemberLevel.REG);
     }
 
     @Override

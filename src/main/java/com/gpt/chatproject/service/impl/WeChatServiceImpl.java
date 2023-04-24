@@ -4,6 +4,7 @@ import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.gpt.chatproject.dao.FansDao;
 import com.gpt.chatproject.entity.Fans;
 import com.gpt.chatproject.enums.GptRoleType;
+import com.gpt.chatproject.enums.RedisLockType;
 import com.gpt.chatproject.form.Wechat.WechatResponseTextMessage;
 import com.gpt.chatproject.service.WeChatService;
 import com.gpt.chatproject.utils.RedisUtils;
@@ -66,14 +67,14 @@ public class WeChatServiceImpl implements WeChatService {
             switch (userCacheInfo.getChatType()) {
                 case IMAGE_MIDJOURNEY:
                     if (content.startsWith("/modifier") || content.startsWith("/imagine") || content.startsWith("MJ::JOB::")) {
-                        return weChatUtils.getLock(userCacheInfo, fromUser, wxMpXmlMessage, 3);
+                        return weChatUtils.getLock(userCacheInfo, fromUser, wxMpXmlMessage, RedisLockType.IMAGE_MIDJOURNEY);
                     }
                 case IMAGE_DALL:
                     if (content.startsWith("/imagine")) {
-                        return weChatUtils.getLock(userCacheInfo, fromUser, wxMpXmlMessage, 3);
+                        return weChatUtils.getLock(userCacheInfo, fromUser, wxMpXmlMessage, RedisLockType.IMAGE_MIDJOURNEY);
                     }
                 default:
-                    return weChatUtils.getLock(userCacheInfo, fromUser, wxMpXmlMessage, 1);
+                    return weChatUtils.getLock(userCacheInfo, fromUser, wxMpXmlMessage, RedisLockType.NORMAL);
             }
         }
         // 是图片消息才做以下处理
@@ -81,9 +82,9 @@ public class WeChatServiceImpl implements WeChatService {
             switch (userCacheInfo.getChatType()) {
                 case IMAGE_MIDJOURNEY:
                 case IMAGE_DALL:
-                    return weChatUtils.getLock(userCacheInfo, fromUser, wxMpXmlMessage, 3);
+                    return weChatUtils.getLock(userCacheInfo, fromUser, wxMpXmlMessage, RedisLockType.IMAGE_MIDJOURNEY);
                 default:
-                    return weChatUtils.getLock(userCacheInfo, fromUser, wxMpXmlMessage, 1);
+                    return weChatUtils.getLock(userCacheInfo, fromUser, wxMpXmlMessage, RedisLockType.NORMAL);
             }
         }
         return "";

@@ -30,13 +30,19 @@ public class WxButtonConfig {
         // 会员按钮-点击进入会员开通页
         WxMenuButton myVipButton = new WxMenuButton();
         myVipButton.setType(WxConsts.MenuButtonType.VIEW);
-        myVipButton.setName("我的会员");
+        myVipButton.setName("开通小C会员");
         myVipButton.setUrl(VIP_URL);
         menuButton.getSubButtons().add(myVipButton);
+        // 查询会员次数按钮-点击获取绘图剩余次数
+        WxMenuButton getImageNumButton = new WxMenuButton();
+        getImageNumButton.setType(WxConsts.MenuButtonType.CLICK);
+        getImageNumButton.setName("获取会员信息");
+        getImageNumButton.setKey("GET_MEMBER_INFO");
+        menuButton.getSubButtons().add(getImageNumButton);
         // 菜单按钮-生成群邀请二维码按钮
         WxMenuButton menuButton1 = new WxMenuButton();
         menuButton1.setType(WxConsts.MenuButtonType.CLICK);
-        menuButton1.setName("添加客服微信进群");
+        menuButton1.setName("添加客服微信");
         menuButton1.setKey("JOIN_GROUP_POST");
         menuButton.getSubButtons().add(menuButton1);
         // 绘图菜单

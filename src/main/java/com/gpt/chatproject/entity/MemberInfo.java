@@ -14,6 +14,8 @@ public class MemberInfo {
     private String userId;
     @TableField(value = "member_level")
     private String memberLevel;
+    @TableField(value = "image_num")
+    private int imageNum;
     @TableField(value = "points")
     private Integer points;
     @TableField(value = "start_time")
