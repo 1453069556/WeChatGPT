@@ -120,13 +120,13 @@ public class WeChatServiceImpl implements WeChatService {
      * @param wechatTextMessage wechatTextMessage
      */
     @Override
-    public void textEvent(WxMpXmlMessage wechatTextMessage) {
+    public String textEvent(WxMpXmlMessage wechatTextMessage) {
         try {
             String content = wechatTextMessage.getContent();
             ChatMessage actualChatMessage = new ChatMessage(GptRoleType.USER.getRole(), content);
             String fromUser = wechatTextMessage.getFromUser();
             redisUtils.catchChat(fromUser, GptRoleType.USER.getRole(), content);
-            weChatUtils.sendKefuMessages(fromUser, actualChatMessage);
+            return weChatUtils.sendKefuMessages(fromUser, actualChatMessage);
         } catch (Exception e) {
             weChatUtils.serverErrorKefuReplay(wechatTextMessage.getFromUser());
             throw new RuntimeException(e);

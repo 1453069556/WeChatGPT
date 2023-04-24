@@ -86,8 +86,10 @@ public class WeChatHandler {
                             aiImageService.imageMidjourneyCustom(wxMessage);
                             break;
                         }
-                        weChatService.textEvent(wxMessage);
-                        weChatUtils.sendKefuTextMessage(fromUser, IMAGE_CHAT_ANSWER);
+                        String sendContent = weChatService.textEvent(wxMessage);
+                        if (sendContent.replaceFirst("^\\s+", "").startsWith("/imagine")){
+                            weChatUtils.sendKefuTextMessage(fromUser, IMAGE_CHAT_ANSWER);
+                        }
                         break;
                     case IMAGE_DALL:
                         // 触发了图片prompt指令,生成图片
