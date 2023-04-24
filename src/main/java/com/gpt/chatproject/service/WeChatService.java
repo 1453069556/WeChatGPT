@@ -26,7 +26,7 @@ public interface WeChatService {
      * @param wechatTextMessage
      * @throws WxErrorException
      */
-    void textEvent(WxMpXmlMessage wechatTextMessage) throws WxErrorException;
+    String textEvent(WxMpXmlMessage wechatTextMessage) throws WxErrorException;
 
     /**
      * 异步回复语音事件

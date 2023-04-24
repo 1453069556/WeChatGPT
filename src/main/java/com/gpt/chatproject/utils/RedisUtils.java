@@ -232,19 +232,13 @@ public class RedisUtils {
     /**
      * 更改当前缓存聊天状态
      *
-     * @param fromUser
-     * @param chatType
-     * @return
+     * @param fromUser fromUser
+     * @param chatType chatType
+     * @return boolean
      */
     public boolean updateChatCatchType(String fromUser, ChatType chatType) {
         try {
-            WxRedisCatchVo wxRedisCatchVo = (WxRedisCatchVo) redisTemplate.opsForValue().get(fromUser);
-            if (!ObjectUtils.isEmpty(wxRedisCatchVo)) {
-                wxRedisCatchVo.setChatType(chatType);
-                redisTemplate.opsForValue().set(fromUser, wxRedisCatchVo, CHAT_TIME_OUT, TimeUnit.SECONDS);
-                return true;
-            }
-            // 查询出来为空，说明首次聊天，新建记录
+            // 状态更改，初始化聊天缓存
             WxRedisCatchVo newWxRedisCatchVo = new WxRedisCatchVo(CHAT_MAX_CATCH, chatType);
             ArrayList<ChatMessage> messages = new ArrayList<>();
             newWxRedisCatchVo.setChatCatch(messages);

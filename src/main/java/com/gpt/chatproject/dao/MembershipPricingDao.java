@@ -17,4 +17,6 @@ public interface MembershipPricingDao extends BaseMapper<MembershipPricing> {
     MembershipPricing findById(int id);
 
     List<MembershipPricing> findAll();
+
+    List<MembershipPricing> findExcludeFirstOrder();
 }

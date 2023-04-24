@@ -161,7 +161,7 @@ public class WeChatUtils {
         if (catchVo.getMemberLevel() == null) {
             if (!redisUtils.tryTimeLock(fromUser, delta)) {
                 // 过滤每小时会话频率，超过阈值则强制休息一小时
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
                 ZonedDateTime localDateTime = dateAddSeconds(redisUtils.getExpireByKey(fromUser));
                 String replay = TIME_FREQUENCY_RESPONSE + "预计" + localDateTime.format(formatter) + "可以重新开始对话。";
                 // 返回提示语

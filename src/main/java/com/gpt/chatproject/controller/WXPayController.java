@@ -35,24 +35,24 @@ public class WXPayController {
         try {
             // 配置项
             WxOAuth2AccessToken accessToken = wxMpService.getOAuth2Service().getAccessToken(code);
+            // 获取用户的OpenID
+            String openid = accessToken.getOpenId();
             WxJsapiSignature jsapiSignature = wxMpService.createJsapiSignature(
                     URL + "pay/authCallback?code=" + code + "&state=");
             String appId = jsapiSignature.getAppId();
             long timestamp = jsapiSignature.getTimestamp();
             String nonceStr = jsapiSignature.getNonceStr();
             String signature = jsapiSignature.getSignature();
+            // 将OpenID存储到js中
+            model.addAttribute("openid", openid);
+            model.addAttribute("name", myWxPayService.getMemberStatus(openid));
+            List<MembershipPricing> membershipPricingList = myWxPayService.getMembershipPricingList(openid);
+            String membershipPricingJson = JsonUtils.toJson(membershipPricingList);
+            model.addAttribute("MembershipPricing", membershipPricingJson);
             model.addAttribute("appId", appId);
             model.addAttribute("timestamp", timestamp);
             model.addAttribute("nonceStr", nonceStr);
             model.addAttribute("signature", signature);
-            List<MembershipPricing> membershipPricingList = myWxPayService.getMembershipPricingList();
-            String membershipPricingJson = JsonUtils.toJson(membershipPricingList);
-            model.addAttribute("MembershipPricing", membershipPricingJson);
-            // 获取用户的OpenID
-            String openid = accessToken.getOpenId();
-            // 将OpenID存储到js中
-            model.addAttribute("openid", openid);
-            model.addAttribute("name", myWxPayService.getMemberStatus(openid));
             // 重定向到支付页面，前端可以通过Ajax调用/getWechatPayParams接口发起支付
             return "view/payment";
         } catch (Exception e) {

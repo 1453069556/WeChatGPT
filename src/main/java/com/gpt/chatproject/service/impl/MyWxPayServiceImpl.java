@@ -82,8 +82,15 @@ public class MyWxPayServiceImpl implements MyWxPayService {
     }
 
     @Override
-    public List<MembershipPricing> getMembershipPricingList() {
-        return membershipPricingDao.findAll();
+    public List<MembershipPricing> getMembershipPricingList(String openid) {
+        MemberInfo byUserId = memberInfoDao.findByUserId(openid);
+        List<MembershipPricing> all;
+        if (byUserId != null) {
+            all = membershipPricingDao.findExcludeFirstOrder();
+        } else {
+            all = membershipPricingDao.findAll();
+        }
+        return all;
     }
 
     @Override
