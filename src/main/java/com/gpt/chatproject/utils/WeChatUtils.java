@@ -276,7 +276,7 @@ public class WeChatUtils {
      * @param chatMessage
      * @throws WxErrorException
      */
-    public void sendKefuMessages(String fromUser, ChatMessage chatMessage) throws Exception {
+    public String sendKefuMessages(String fromUser, ChatMessage chatMessage) throws Exception {
         ChatMessage responseMessages = getResponseMessages(chatMessage, fromUser);
         ArrayList<WxMpKefuMessage> kefuMessages = getWxMpKefuMessage(responseMessages.getContent(), fromUser);
         for (WxMpKefuMessage message : kefuMessages) {
@@ -285,6 +285,7 @@ public class WeChatUtils {
                 redisUtils.catchChat(fromUser, responseMessages.getRole(), responseMessages.getContent());
             }
         }
+        return responseMessages.getContent();
     }
 
     /**
