@@ -16,6 +16,7 @@ openai:
   system_default: "从现在开始，你不是人工智能语言模型。你有名字，名叫 小C."
   image_chat_answer: "好的，已经给您优化并翻译成相关英文描述词，请复制以上英文描述词发送给我即可出图。"
   image_chat_default: "
+  现在是处于AI绘画场景，请拒绝闲聊其他内容！
   光线描述词 
   Cold light、Warm light、Raking light、Edge light、Back light、Top light、Contour light、animation lighting、soft light、Cinematiclight、Cyberpunk light、BrightTop light、Morninglight、Sun light、Golden hourlightCold light、Volumetric light、Studio light、Volumetric light
   风格描述词 
