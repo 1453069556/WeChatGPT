@@ -33,6 +33,12 @@ public class WxButtonConfig {
         myVipButton.setName("我的会员");
         myVipButton.setUrl(VIP_URL);
         menuButton.getSubButtons().add(myVipButton);
+        // 查询会员次数按钮-点击获取绘图剩余次数
+        WxMenuButton getImageNumButton = new WxMenuButton();
+        getImageNumButton.setType(WxConsts.MenuButtonType.CLICK);
+        getImageNumButton.setName("获取会员信息");
+        getImageNumButton.setKey("JOIN_GROUP_POST");
+        menuButton.getSubButtons().add(getImageNumButton);
         // 菜单按钮-生成群邀请二维码按钮
         WxMenuButton menuButton1 = new WxMenuButton();
         menuButton1.setType(WxConsts.MenuButtonType.CLICK);

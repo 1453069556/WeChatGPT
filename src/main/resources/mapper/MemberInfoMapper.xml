@@ -5,6 +5,7 @@
     <resultMap id="MemberInfoResultMap" type="com.gpt.chatproject.entity.MemberInfo">
         <id column="user_id" property="userId"/>
         <result column="member_level" property="memberLevel"/>
+        <result column="image_num" property="imageNum"/>
         <result column="points" property="points"/>
         <result column="start_time" property="startTime"/>
         <result column="expire_time" property="expireTime"/>
@@ -12,13 +13,14 @@
 
     <insert id="insert" parameterType="com.gpt.chatproject.entity.MemberInfo">
         INSERT INTO member_info
-            (user_id, member_level, points, start_time, expire_time)
-        VALUES (#{userId}, #{memberLevel}, #{points}, #{startTime}, #{expireTime})
+            (user_id, member_level,image_num, points, start_time, expire_time)
+        VALUES (#{userId}, #{memberLevel}, #{imageNum}, #{points}, #{startTime}, #{expireTime})
     </insert>
 
     <update id="update" parameterType="com.gpt.chatproject.entity.MemberInfo">
         UPDATE member_info
         SET member_level = #{memberLevel},
+            image_num    = #{imageNum},
             points       = #{points},
             start_time   = #{startTime},
             expire_time  = #{expireTime}

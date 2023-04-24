@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 
 import java.util.ArrayList;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -26,6 +27,7 @@ public class RedisUtils {
     private RedisTemplate<String, Object> redisTemplate;
     @Autowired
     private MemberInfoDao memberInfoDao;
+    private static final String CHAT_PREFIX = "chat_catch:";
     private static final String CHAT_LOCK_PREFIX = "chat_lock:";
     private static final String TIME_LOCK_PREFIX = "time_lock:";
     private static final String PIC_LOCK_PREFIX = "pic_lock:";
@@ -73,6 +75,20 @@ public class RedisUtils {
     public long getExpireByKey(String key) {
         String lockKey = TIME_LOCK_PREFIX + key;
         return redisTemplate.getExpire(lockKey);
+    }
+
+    /**
+     * 获取时长锁的值
+     * @param Key
+     * @return
+     */
+    public Integer getTimeLock(String Key){
+        String lockKey = TIME_LOCK_PREFIX + Key;
+        Object timeLock = redisTemplate.opsForValue().get(lockKey);
+        if (timeLock == null){
+            return 0;
+        }
+        return Integer.parseInt(timeLock.toString());
     }
 
     /**
@@ -203,14 +219,15 @@ public class RedisUtils {
      * @return
      */
     public boolean catchChat(String fromUser, String role, String content) {
+        String chatKey = CHAT_PREFIX + fromUser;
         try {
-            WxRedisCatchVo wxRedisCatchVo = (WxRedisCatchVo) redisTemplate.opsForValue().get(fromUser);
+            WxRedisCatchVo wxRedisCatchVo = (WxRedisCatchVo) redisTemplate.opsForValue().get(chatKey);
             if (!ObjectUtils.isEmpty(wxRedisCatchVo)) {
                 ArrayList<ChatMessage> chatCatch = wxRedisCatchVo.getChatCatch();
                 chatCatch.add(new ChatMessage(role, content));
                 wxRedisCatchVo.setChatCatch(chatCatch);
                 wxRedisCatchVo.setChatCount(wxRedisCatchVo.getChatCount() + 1);
-                redisTemplate.opsForValue().set(fromUser, wxRedisCatchVo, CHAT_TIME_OUT, TimeUnit.SECONDS);
+                redisTemplate.opsForValue().set(chatKey, wxRedisCatchVo, CHAT_TIME_OUT, TimeUnit.SECONDS);
                 return true;
             }
             // 查询出来为空，说明首次聊天，新建记录
@@ -220,7 +237,7 @@ public class RedisUtils {
             newWxRedisCatchVo.setChatCatch(messages);
             newWxRedisCatchVo.setChatCount(newWxRedisCatchVo.getChatCount() + 1);
             WxRedisCatchVo catchVo = loadMember(newWxRedisCatchVo, fromUser);
-            redisTemplate.opsForValue().set(fromUser, catchVo, CHAT_TIME_OUT, TimeUnit.SECONDS);
+            redisTemplate.opsForValue().set(chatKey, catchVo, CHAT_TIME_OUT, TimeUnit.SECONDS);
             return true;
         } catch (Exception e) {
             log.debug(e.getMessage());
@@ -237,13 +254,14 @@ public class RedisUtils {
      * @return boolean
      */
     public boolean updateChatCatchType(String fromUser, ChatType chatType) {
+        String chatKey = CHAT_PREFIX + fromUser;
         try {
             // 状态更改，初始化聊天缓存
             WxRedisCatchVo newWxRedisCatchVo = new WxRedisCatchVo(CHAT_MAX_CATCH, chatType);
             ArrayList<ChatMessage> messages = new ArrayList<>();
             newWxRedisCatchVo.setChatCatch(messages);
             WxRedisCatchVo catchVo = loadMember(newWxRedisCatchVo, fromUser);
-            redisTemplate.opsForValue().set(fromUser, catchVo, CHAT_TIME_OUT, TimeUnit.SECONDS);
+            redisTemplate.opsForValue().set(chatKey, catchVo, CHAT_TIME_OUT, TimeUnit.SECONDS);
             return true;
         } catch (Exception e) {
             log.debug(e.getMessage());
@@ -254,18 +272,21 @@ public class RedisUtils {
 
     /**
      * 设置会员状态
+     *
      * @return
      */
     public void setMemberLevel(String fromUser, MemberLevel memberLevel) {
-        WxRedisCatchVo catchVo = (WxRedisCatchVo) redisTemplate.opsForValue().get(fromUser);
+        String chatKey = CHAT_PREFIX + fromUser;
+        WxRedisCatchVo catchVo = (WxRedisCatchVo) redisTemplate.opsForValue().get(chatKey);
         if (catchVo == null) {
             WxRedisCatchVo wxRedisCatchVo = loadMember(new WxRedisCatchVo(CHAT_MAX_CATCH, ChatType.NORMAL), fromUser);
-            redisTemplate.opsForValue().set(fromUser, wxRedisCatchVo, CHAT_TIME_OUT, TimeUnit.SECONDS);
+            redisTemplate.opsForValue().set(chatKey, wxRedisCatchVo, CHAT_TIME_OUT, TimeUnit.SECONDS);
             return;
         }
         catchVo.setMemberLevel(memberLevel.getType());
-        redisTemplate.opsForValue().set(fromUser, catchVo, CHAT_TIME_OUT, TimeUnit.SECONDS);
+        redisTemplate.opsForValue().set(chatKey, catchVo, CHAT_TIME_OUT, TimeUnit.SECONDS);
     }
+
     /**
      * 获取聊天缓存
      *
@@ -273,22 +294,14 @@ public class RedisUtils {
      * @return
      */
     public WxRedisCatchVo getCatch(String fromUser) {
-        Object result = redisTemplate.opsForValue().get(fromUser);
+        String chatKey = CHAT_PREFIX + fromUser;
+        Object result = redisTemplate.opsForValue().get(chatKey);
         if (result == null) {
             WxRedisCatchVo wxRedisCatchVo = loadMember(new WxRedisCatchVo(CHAT_MAX_CATCH, ChatType.NORMAL), fromUser);
-            redisTemplate.opsForValue().set(fromUser, wxRedisCatchVo, CHAT_TIME_OUT, TimeUnit.SECONDS);
+            redisTemplate.opsForValue().set(chatKey, wxRedisCatchVo, CHAT_TIME_OUT, TimeUnit.SECONDS);
             return wxRedisCatchVo;
         }
         return (WxRedisCatchVo) result;
-    }
-
-    private WxRedisCatchVo loadMember(WxRedisCatchVo wxRedisCatchVo, String fromUser) {
-        MemberInfo byUserId = memberInfoDao.findByUserId(fromUser);
-        if (byUserId != null) {
-            String memberLevel = byUserId.getMemberLevel();
-            wxRedisCatchVo.setMemberLevel(memberLevel);
-        }
-        return wxRedisCatchVo;
     }
 
     /**
@@ -298,6 +311,67 @@ public class RedisUtils {
      * @return
      */
     public void resetCatchExpire(String fromUser) {
-        redisTemplate.expire(fromUser, CHAT_TIME_OUT, TimeUnit.SECONDS);
+        String chatKey = CHAT_PREFIX + fromUser;
+        redisTemplate.expire(chatKey, CHAT_TIME_OUT, TimeUnit.SECONDS);
+    }
+
+    /**
+     * 加载会员信息
+     *
+     * @param wxRedisCatchVo
+     * @param fromUser
+     * @return
+     */
+    private WxRedisCatchVo loadMember(WxRedisCatchVo wxRedisCatchVo, String fromUser) {
+        MemberInfo memberInfo = memberInfoDao.findByUserId(fromUser);
+        if (memberInfo != null) {
+            String memberLevel = memberInfo.getMemberLevel();
+            wxRedisCatchVo.setMemberLevel(memberLevel);
+            wxRedisCatchVo.setImageNum(memberInfo.getImageNum());
+        }
+        return wxRedisCatchVo;
+    }
+
+
+    /**
+     * 减少图片使用机会
+     *
+     * @param catchVo  缓存
+     * @param fromUser fromUser
+     * @return
+     */
+    public boolean decrImageNum(WxRedisCatchVo catchVo, String fromUser) {
+        String chatKey = CHAT_PREFIX + fromUser;
+        int imageNum = catchVo.getImageNum();
+        if (imageNum > 0) {
+            catchVo.setImageNum(imageNum - 1);
+            redisTemplate.opsForValue().set(chatKey, catchVo, CHAT_TIME_OUT, TimeUnit.SECONDS);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * 更新图片操作次数
+     *
+     * @param imageNum imageNum
+     * @param fromUser fromUser
+     * @return
+     */
+    public boolean updateImageNum(String fromUser, int imageNum) {
+        String chatKey = CHAT_PREFIX + fromUser;
+        WxRedisCatchVo catchVo = getCatch(chatKey);
+        catchVo.setImageNum(catchVo.getImageNum() + imageNum);
+        redisTemplate.opsForValue().set(chatKey, catchVo, CHAT_TIME_OUT, TimeUnit.SECONDS);
+        return false;
+    }
+
+    /**
+     * 获取所有的缓存键
+     *
+     * @return Set<String>
+     */
+    public Set<String> getWxRedisCatchVoKeys() {
+        return redisTemplate.keys(CHAT_PREFIX);
     }
 }

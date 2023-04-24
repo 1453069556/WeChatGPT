@@ -7,11 +7,12 @@
         <result property="price" column="price"/>
         <result property="oPrice" column="oPrice"/>
         <result property="discounts" column="discounts"/>
+        <result property="imageNum" column="image_num"/>
     </resultMap>
     <insert id="insert" parameterType="com.gpt.chatproject.entity.MembershipPricing" useGeneratedKeys="true"
             keyProperty="id">
-        INSERT INTO membership_pricing (date, price,oPrice,discounts)
-        VALUES (#{date}, #{price}, #{oPrice}, #{discounts})
+        INSERT INTO membership_pricing (date, price,oPrice,discounts,imageNum)
+        VALUES (#{date}, #{price}, #{oPrice}, #{discounts}, #{image_num})
     </insert>
 
 
@@ -20,7 +21,8 @@
         SET date = #{date},
             price  = #{price},
             oPrice  = #{oPrice},
-            discounts  = #{discounts}
+            discounts  = #{discounts},
+            image_num  = #{imageNum}
         WHERE id = #{id}
     </update>
 

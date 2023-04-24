@@ -21,4 +21,6 @@ public class MembershipPricing {
     private BigDecimal oPrice;
     @TableField(value = "discounts")
     private String discounts;
+    @TableField(value = "image_num")
+    private int imageNum;
 }

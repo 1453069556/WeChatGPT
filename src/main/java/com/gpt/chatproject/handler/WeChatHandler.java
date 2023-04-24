@@ -2,6 +2,7 @@ package com.gpt.chatproject.handler;
 
 import com.gpt.chatproject.enums.ChatType;
 import com.gpt.chatproject.service.AiImageService;
+import com.gpt.chatproject.service.MemberService;
 import com.gpt.chatproject.service.WeChatService;
 import com.gpt.chatproject.utils.RedisUtils;
 import com.gpt.chatproject.utils.WeChatUtils;
@@ -25,6 +26,8 @@ public class WeChatHandler {
     private WeChatUtils weChatUtils;
     @Autowired
     private AiImageService aiImageService;
+    @Autowired
+    private MemberService memberService;
     @Value("${wxchat.welcome_words}")
     private String WELCOME_WORDS;
     @Value("${wxchat.default_welcome_words_end}")
@@ -87,7 +90,7 @@ public class WeChatHandler {
                             break;
                         }
                         String sendContent = weChatService.textEvent(wxMessage);
-                        if (sendContent.replaceFirst("^\\s+", "").startsWith("/imagine")){
+                        if (sendContent.replaceFirst("^\\s+", "").startsWith("/imagine")) {
                             weChatUtils.sendKefuTextMessage(fromUser, IMAGE_CHAT_ANSWER);
                         }
                         break;
@@ -159,6 +162,7 @@ public class WeChatHandler {
     public WxMpMessageHandler asyncButtonEvent() {
         return (wxMessage, context, wxMpService, sessionManager) -> {
             try {
+
                 switch (wxMessage.getEventKey()) {
                     case "JOIN_GROUP_POST":
                         weChatService.chatGroupShare(wxMessage);
@@ -185,6 +189,9 @@ public class WeChatHandler {
                             wxMpService.getKefuService().sendKefuMessage(WxMpKefuMessage.TEXT().toUser(wxMessage.getFromUser()).content(UPDATE_FAILS).build());
                         }
                         break;
+                    case "GET_MEMBER_INFO":
+                        String memberInfo = memberService.getMemberInfo(wxMessage);
+                        weChatUtils.sendKefuTextMessage(wxMessage.getFromUser(), memberInfo);
                 }
             } catch (Exception e) {
                 e.printStackTrace();

@@ -5,6 +5,7 @@ import com.aliyun.oss.OSSClientBuilder;
 import com.aliyun.oss.model.OSSObject;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.gpt.chatproject.enums.RedisLockType;
 import com.gpt.chatproject.form.Wechat.WechatResponseTextMessage;
 import com.gpt.chatproject.vo.WxRedisCatchVo;
 import com.theokanning.openai.completion.chat.ChatMessage;
@@ -151,7 +152,7 @@ public class WeChatUtils {
      * @return
      * @throws JsonProcessingException
      */
-    public String getLock(WxRedisCatchVo catchVo, String fromUser, WxMpXmlMessage wxMpXmlMessage, long delta) throws IOException {
+    public String getLock(WxRedisCatchVo catchVo, String fromUser, WxMpXmlMessage wxMpXmlMessage, RedisLockType delta) throws IOException {
         String result;
         // 加锁&&一问一答限制
         if (!redisUtils.tryChatLock(fromUser)) {
@@ -159,8 +160,8 @@ public class WeChatUtils {
             return result;
         }
         if (catchVo.getMemberLevel() == null) {
-            if (!redisUtils.tryTimeLock(fromUser, delta)) {
-                // 过滤每小时会话频率，超过阈值则强制休息一小时
+            if (!redisUtils.tryTimeLock(fromUser, delta.getDelta())) {
+                // 过滤每小时会话频率，超过阈值则强制休息
                 DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
                 ZonedDateTime localDateTime = dateAddSeconds(redisUtils.getExpireByKey(fromUser));
                 String replay = TIME_FREQUENCY_RESPONSE + "预计" + localDateTime.format(formatter) + "可以重新开始对话。";
@@ -168,6 +169,12 @@ public class WeChatUtils {
                 result = xmlMapper.writeValueAsString(new WechatResponseTextMessage(fromUser, wxMpXmlMessage.getToUser(), WxConsts.XmlMsgType.TEXT, replay));
                 sendQrcodeAndReleaseLock(fromUser);
                 return result;
+            }
+        }
+        if (delta == RedisLockType.IMAGE_MIDJOURNEY) {
+            if (!redisUtils.decrImageNum(catchVo, fromUser)) {
+                // 会员绘图次数已用完，返回提示语
+                return "您的会员绘图次数已用完，续费会员可增加相应的绘图次数~";
             }
         }
         return "";

@@ -48,4 +48,5 @@ public interface WeChatService {
      * @param wxImageMessage
      */
     void imageEvent(WxMpXmlMessage wxImageMessage) throws WxErrorException;
+
 }
