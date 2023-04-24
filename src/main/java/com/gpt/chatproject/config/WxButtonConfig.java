@@ -37,7 +37,7 @@ public class WxButtonConfig {
         WxMenuButton getImageNumButton = new WxMenuButton();
         getImageNumButton.setType(WxConsts.MenuButtonType.CLICK);
         getImageNumButton.setName("获取会员信息");
-        getImageNumButton.setKey("JOIN_GROUP_POST");
+        getImageNumButton.setKey("GET_MEMBER_INFO");
         menuButton.getSubButtons().add(getImageNumButton);
         // 菜单按钮-生成群邀请二维码按钮
         WxMenuButton menuButton1 = new WxMenuButton();
