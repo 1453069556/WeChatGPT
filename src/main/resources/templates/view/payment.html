@@ -75,7 +75,7 @@
     let signature = [[${ signature }]];
     let MembershipPricing = JSON.parse([[${ MembershipPricing }]]);
     let name = [[${ name }]];
-    let UserAgreement = [[${ UserAgreement }]];
+    let active = [[${ active }]];
 
     new Vue({
         el: "#app",
@@ -86,7 +86,7 @@
                 name: name, // 获取用户名字
                 uid: openid, // 获取用户id
                 checked: true,
-                active: 1,
+                active: active,
                 list: MembershipPricing,
                 loadState: false,
             };

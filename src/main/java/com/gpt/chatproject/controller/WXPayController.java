@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
+import java.util.OptionalInt;
 
 @Controller
 @RequestMapping("/pay")
@@ -53,6 +54,12 @@ public class WXPayController {
             model.addAttribute("timestamp", timestamp);
             model.addAttribute("nonceStr", nonceStr);
             model.addAttribute("signature", signature);
+            OptionalInt minIdOptional = membershipPricingList.stream().mapToInt(MembershipPricing::getId).min();
+            if (minIdOptional.isPresent()) {
+                model.addAttribute("active", minIdOptional.getAsInt());
+            } else {
+                model.addAttribute("active", 1);
+            }
             // 重定向到支付页面，前端可以通过Ajax调用/getWechatPayParams接口发起支付
             return "view/payment";
         } catch (Exception e) {
