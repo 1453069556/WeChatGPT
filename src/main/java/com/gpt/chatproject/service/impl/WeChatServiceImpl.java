@@ -55,11 +55,12 @@ public class WeChatServiceImpl implements WeChatService {
         // 是文本消息才做以下处理 或 是语音消息才做以下处理
         if (WxConsts.XmlMsgType.TEXT.equals(msgType) || WxConsts.XmlMsgType.VOICE.equals(msgType)) {
             String content = (WxConsts.XmlMsgType.TEXT.equals(wxMpXmlMessage.getMsgType())) ?
-                            wxMpXmlMessage.getContent() : wxMpXmlMessage.getRecognition();
+                    wxMpXmlMessage.getContent() : wxMpXmlMessage.getRecognition();
             // 字数限制
             if (content.length() > maxSendLength) {
-                result = xmlMapper.writeValueAsString(new WechatResponseTextMessage(fromUser,
-                        wxMpXmlMessage.getToUser(), WxConsts.XmlMsgType.TEXT, CHARS_OVERFLOW_RESPONSE));
+                String responseText = (userCacheInfo.getMemberLevel() == null) ? CHARS_OVERFLOW_RESPONSE : "超出目前所支持最大字数，请尝试更精简一些。";
+                WechatResponseTextMessage responseMessage = new WechatResponseTextMessage(fromUser, wxMpXmlMessage.getToUser(), WxConsts.XmlMsgType.TEXT, responseText);
+                result = xmlMapper.writeValueAsString(responseMessage);
                 return result;
             }
             switch (userCacheInfo.getChatType()) {

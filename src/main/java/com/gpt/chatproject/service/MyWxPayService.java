@@ -12,7 +12,7 @@ public interface MyWxPayService {
 
     WxPayMpOrderResult getOrderInfo(String orderName, String createIp, String openId, Integer membershipPricingId, String notifyUrl) throws WxPayException;
 
-    List<MembershipPricing> getMembershipPricingList();
+    List<MembershipPricing> getMembershipPricingList(String openid);
 
     String getAgreement();
 

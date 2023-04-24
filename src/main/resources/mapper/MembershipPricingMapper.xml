@@ -40,4 +40,10 @@
         SELECT *
         FROM membership_pricing
     </select>
+
+    <select id="findExcludeFirstOrder" resultType="com.gpt.chatproject.entity.MembershipPricing">
+        SELECT *
+        FROM membership_pricing
+        WHERE id != 1
+    </select>
 </mapper>

@@ -162,6 +162,7 @@ public class WeChatHandler {
                         weChatService.chatGroupShare(wxMessage);
                         break;
                     case "AI_IMAGE_CHAT_DALL":
+                        // TODO 暂时关闭DALL绘图功能
 //                        if (redisUtils.updateChatCatchType(wxMessage.getFromUser(), ChatType.IMAGE_DALL)) {
 //                            wxMpService.getKefuService().sendKefuMessage(WxMpKefuMessage.TEXT().toUser(wxMessage.getFromUser()).content(UPDATE_SUCCESS).build());
 //                        } else {

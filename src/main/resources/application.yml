@@ -33,9 +33,10 @@ openai:
   /imagine An astronaut + riding a horse + in a phtprealistic style
   demand:羊驼打篮球。
   /imagine Film still of a llama dunking a basketball, low angle, extreme long shot, indoors, dramatic backlighting.
-  demand:羊驼打篮球。
   demand:爱收藏的女孩
   /imagine The center of the picture is a 20 - year - old girl in the Fashion Girls' Generation group dress type, surrounded by the same type of clothes and accessories neatly placed in equal proportion. Fuji camera, studio lighting, full body, high contrast colors. , knolling, pink
+  demand:动漫女孩线条霓虹灯
+  /imagine anime girl line drawing neon light
   "
 aliyun:
   access_key_id: LTAI5tA2tf4MXbRJHg9z5NQq
@@ -80,7 +81,7 @@ wxchat:
   2. 对2021年后的世界和事了解有限\n
   3. 暂时无法处理图片，后续可以噢~\n\n
   注意事项：\n
-  1.为避免造成不必要的资源浪费，提供每12小时10次的对话次数供日常使用。\n\n
+  1.为避免造成不必要的资源浪费，提供每天10次的对话次数供日常使用。\n\n
   2.绘图因成本原因将消耗3次对话。\n\n
   如有高频使用需求，请开通会员。\n\n
   "

@@ -82,8 +82,15 @@ public class MyWxPayServiceImpl implements MyWxPayService {
     }
 
     @Override
-    public List<MembershipPricing> getMembershipPricingList() {
-        return membershipPricingDao.findAll();
+    public List<MembershipPricing> getMembershipPricingList(String openid) {
+        MemberInfo byUserId = memberInfoDao.findByUserId(openid);
+        List<MembershipPricing> all;
+        if (byUserId != null) {
+            all = membershipPricingDao.findExcludeFirstOrder();
+        } else {
+            all = membershipPricingDao.findAll();
+        }
+        return all;
     }
 
     @Override
@@ -140,7 +147,7 @@ public class MyWxPayServiceImpl implements MyWxPayService {
                 byUserId.setExpireTime(MyDateUtils.dateFormat(newDate, "yyyyMMddHHmmss"));
                 memberInfoDao.update(byUserId);
             }
-            redisUtils.setMemberLevel(result.getOpenid(),MemberLevel.REG);
+            redisUtils.setMemberLevel(result.getOpenid(), MemberLevel.REG);
         } catch (WxPayException e) {
             log.error("微信支付-通知失败", e);
         }
