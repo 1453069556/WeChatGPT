@@ -31,7 +31,6 @@
         </div>
 
         <div class="pay-box">
-            <!-- <div :style="{'width':width +'%'}"> -->
             <div :class="['pay-item',active==item.id?'ac':'']" v-for="item in list" :key="item.id"
                  @click="getMeal(item)">
                 <div class="time">{{item.date}}天</div>
@@ -41,7 +40,6 @@
                 </div>
                 <div class="price">￥{{item.oprice}}</div>
                 <div class="saveprice">{{item.discounts}}</div>
-                <!-- </div> -->
             </div>
         </div>
 
@@ -50,6 +48,9 @@
             </van-checkbox>
         </div>
 
+        <div class="loading" v-if="loadState">
+            <van-loading size="40px"/>
+        </div>
         <div class="payprice" @click="onPay">立即开通</div>
     </div>
 </div>
@@ -67,14 +68,15 @@
 
 
 <script th:inline="javascript">
-    let openid = [[${openid}]];
-    let appId = [[${appId}]];
-    let timestamp = [[${timestamp}]];
-    let nonceStr = [[${nonceStr}]];
-    let signature = [[${signature}]];
-    let MembershipPricing = JSON.parse([[${MembershipPricing}]]);
-    let name = [[${name}]];
-    // let UserAgreement = [[${UserAgreement}]];
+    let openid = [[${ openid }]];
+    let appId = [[${ appId }]];
+    let timestamp = [[${ timestamp }]];
+    let nonceStr = [[${ nonceStr }]];
+    let signature = [[${ signature }]];
+    let MembershipPricing = JSON.parse([[${ MembershipPricing }]]);
+    let name = [[${ name }]];
+    let UserAgreement = [[${ UserAgreement }]];
+
     new Vue({
         el: "#app",
 
@@ -85,15 +87,19 @@
                 uid: openid, // 获取用户id
                 checked: true,
                 active: 1,
-                list: MembershipPricing
+                list: MembershipPricing,
+                loadState: false,
             };
         },
-        computed: {
-            width() {
-                return this.list.length > 3 ? (this.list.length - 3) * 34 + 100 : 100;
-            },
-        },
         methods: {
+            openLoad() {
+                this.loadState = true;
+            },
+            closeLoad() {
+                setTimeout(() => {
+                    this.loadState = false;
+                }, 200);
+            },
             onClickLeft() {
                 Toast("返回");
             },
@@ -104,9 +110,18 @@
                 const {id} = item;
                 this.active = id;
             },
+            // 服务协议
+            agreement() {
+                if (!this.checked) {
+                    vant.Notify({type: "warning", message: "请勾选会员服务协议"});
+                    return true;
+                }
+                return false;
+            },
             onPay() {
+                if (this.agreement()) return;
                 const item = this.list.find((e) => e.id === this.active);
-
+                this.openLoad()
                 this.callWechatPay(item);
             },
             callWechatPay(item) {
@@ -149,8 +164,10 @@
                                         }
                                     }
                                 });
+                                vm.closeLoad()
                             },
                             fail: function (res) {
+                                vm.closeLoad()
                                 vm.$toast({
                                     type: 'fail',
                                     message: '支付失败',
@@ -160,6 +177,7 @@
                         });
                     },
                     error: function (err) {
+                        vm.closeLoad()
                         vm.$toast({
                             type: 'fail',
                             message: '支付失败',
