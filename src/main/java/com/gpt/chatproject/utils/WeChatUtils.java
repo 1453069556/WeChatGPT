@@ -171,7 +171,7 @@ public class WeChatUtils {
                 return result;
             }
         }
-        if (delta == RedisLockType.IMAGE_MIDJOURNEY) {
+        if (delta == RedisLockType.IMAGE_MIDJOURNEY && catchVo.getMemberLevel() != null) {
             if (!redisUtils.decrImageNum(catchVo, fromUser)) {
                 // 会员绘图次数已用完，返回提示语
                 return xmlMapper.writeValueAsString(
