@@ -79,13 +79,14 @@ public class RedisUtils {
 
     /**
      * 获取时长锁的值
+     *
      * @param Key
      * @return
      */
-    public Integer getTimeLock(String Key){
+    public Integer getTimeLock(String Key) {
         String lockKey = TIME_LOCK_PREFIX + Key;
         Object timeLock = redisTemplate.opsForValue().get(lockKey);
-        if (timeLock == null){
+        if (timeLock == null) {
             return 0;
         }
         return Integer.parseInt(timeLock.toString());
@@ -372,6 +373,6 @@ public class RedisUtils {
      * @return Set<String>
      */
     public Set<String> getWxRedisCatchVoKeys() {
-        return redisTemplate.keys(CHAT_PREFIX+"*");
+        return redisTemplate.keys(CHAT_PREFIX + "*");
     }
 }

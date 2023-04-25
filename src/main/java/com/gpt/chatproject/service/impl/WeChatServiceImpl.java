@@ -3,6 +3,7 @@ package com.gpt.chatproject.service.impl;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.gpt.chatproject.dao.FansDao;
 import com.gpt.chatproject.entity.Fans;
+import com.gpt.chatproject.enums.ChatType;
 import com.gpt.chatproject.enums.GptRoleType;
 import com.gpt.chatproject.enums.RedisLockType;
 import com.gpt.chatproject.form.Wechat.WechatResponseTextMessage;
@@ -22,6 +23,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
+
+import java.util.Objects;
 
 @Service
 @Log4j2
@@ -79,13 +82,11 @@ public class WeChatServiceImpl implements WeChatService {
         }
         // 是图片消息才做以下处理
         if (WxConsts.XmlMsgType.IMAGE.equals(msgType)) {
-            switch (userCacheInfo.getChatType()) {
-                case IMAGE_MIDJOURNEY:
-                case IMAGE_DALL:
-                    return weChatUtils.getLock(userCacheInfo, fromUser, wxMpXmlMessage, RedisLockType.IMAGE_MIDJOURNEY);
-                default:
-                    return weChatUtils.getLock(userCacheInfo, fromUser, wxMpXmlMessage, RedisLockType.NORMAL);
+            //                case IMAGE_MIDJOURNEY:
+            if (Objects.requireNonNull(userCacheInfo.getChatType()) == ChatType.IMAGE_DALL) {
+                return weChatUtils.getLock(userCacheInfo, fromUser, wxMpXmlMessage, RedisLockType.IMAGE_MIDJOURNEY);
             }
+            return weChatUtils.getLock(userCacheInfo, fromUser, wxMpXmlMessage, RedisLockType.NORMAL);
         }
         return "";
     }
