@@ -326,9 +326,13 @@ public class RedisUtils {
     private WxRedisCatchVo loadMember(WxRedisCatchVo wxRedisCatchVo, String fromUser) {
         MemberInfo memberInfo = memberInfoDao.findByUserId(fromUser);
         if (memberInfo != null) {
-            String memberLevel = memberInfo.getMemberLevel();
-            wxRedisCatchVo.setMemberLevel(memberLevel);
-            wxRedisCatchVo.setImageNum(memberInfo.getImageNum());
+            long expireTime = MyDateUtils.formatDate(memberInfo.getExpireTime(), "yyyyMMddHHmmss").getTime();
+            long nowTime = MyDateUtils.getBeijingDate().getTime();
+            if (expireTime - nowTime > 0) {
+                String memberLevel = memberInfo.getMemberLevel();
+                wxRedisCatchVo.setMemberLevel(memberLevel);
+                wxRedisCatchVo.setImageNum(memberInfo.getImageNum());
+            }
         }
         return wxRedisCatchVo;
     }

@@ -114,7 +114,7 @@ public class MidjourneyMqListener {
                 TimeUnit.SECONDS.sleep(CHECK_DELAY);
                 currentCheckCount++;
             }
-            weChatUtils.sendKefuTextMessage(fromUser, "绘图超时，请稍后再试");
+            weChatUtils.sendKefuTextMessage(fromUser, "绘图超时，请检查指令内容是否违规，如果多次违规将被拉黑，请稍后再试。");
         } catch (Exception e) {
             log.info(e.getMessage());
         } finally {
