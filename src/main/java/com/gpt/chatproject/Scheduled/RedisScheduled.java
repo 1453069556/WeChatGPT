@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Set;
+import java.util.regex.Pattern;
 
 @Component
 @EnableScheduling
@@ -27,12 +28,15 @@ public class RedisScheduled {
         // 获取所有聊天缓存键
         Set<String> extraKeys = redisUtils.getWxRedisCatchVoKeys();
         for (String extraKey : extraKeys) {
-            String userId = extraKey.split(CHAT_PREFIX)[1];
-            // 在这里执行同步用户使用次数到数据库的逻辑
-            WxRedisCatchVo catchVo = redisUtils.getCatch(userId);
-            if (catchVo.getMemberLevel() != null){
-                int imageNum = catchVo.getImageNum();
-                tsnUsageCountsToDatabase(userId, imageNum);
+            String[] keyParts = extraKey.split(Pattern.quote(CHAT_PREFIX));
+            if (keyParts.length >= 2) {
+                String userId = keyParts[1];
+                // 在这里执行同步用户使用次数到数据库的逻辑
+                WxRedisCatchVo catchVo = redisUtils.getCatch(userId);
+                if (catchVo.getMemberLevel() != null) {
+                    int imageNum = catchVo.getImageNum();
+                    syncUsageCountsToDatabase(userId, imageNum);
+                }
             }
         }
     }
@@ -43,7 +47,7 @@ public class RedisScheduled {
      * @param imageNum imageNum
      */
     @Transactional
-    void tsnUsageCountsToDatabase(String fromUser, int imageNum) {
+    void syncUsageCountsToDatabase(String fromUser, int imageNum) {
         MemberInfo memberInfo = memberInfoDao.findByUserId(fromUser);
         memberInfo.setImageNum(imageNum);
         memberInfoDao.update(memberInfo);

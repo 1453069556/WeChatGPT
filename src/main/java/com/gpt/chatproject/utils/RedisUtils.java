@@ -79,13 +79,14 @@ public class RedisUtils {
 
     /**
      * 获取时长锁的值
+     *
      * @param Key
      * @return
      */
-    public Integer getTimeLock(String Key){
+    public Integer getTimeLock(String Key) {
         String lockKey = TIME_LOCK_PREFIX + Key;
         Object timeLock = redisTemplate.opsForValue().get(lockKey);
-        if (timeLock == null){
+        if (timeLock == null) {
             return 0;
         }
         return Integer.parseInt(timeLock.toString());
@@ -325,9 +326,13 @@ public class RedisUtils {
     private WxRedisCatchVo loadMember(WxRedisCatchVo wxRedisCatchVo, String fromUser) {
         MemberInfo memberInfo = memberInfoDao.findByUserId(fromUser);
         if (memberInfo != null) {
-            String memberLevel = memberInfo.getMemberLevel();
-            wxRedisCatchVo.setMemberLevel(memberLevel);
-            wxRedisCatchVo.setImageNum(memberInfo.getImageNum());
+            long expireTime = MyDateUtils.formatDate(memberInfo.getExpireTime(), "yyyyMMddHHmmss").getTime();
+            long nowTime = MyDateUtils.getBeijingDate().getTime();
+            if (expireTime - nowTime > 0) {
+                String memberLevel = memberInfo.getMemberLevel();
+                wxRedisCatchVo.setMemberLevel(memberLevel);
+                wxRedisCatchVo.setImageNum(memberInfo.getImageNum());
+            }
         }
         return wxRedisCatchVo;
     }
@@ -372,6 +377,6 @@ public class RedisUtils {
      * @return Set<String>
      */
     public Set<String> getWxRedisCatchVoKeys() {
-        return redisTemplate.keys(CHAT_PREFIX+"*");
+        return redisTemplate.keys(CHAT_PREFIX + "*");
     }
 }

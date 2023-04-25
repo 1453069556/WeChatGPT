@@ -2,66 +2,70 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8"/>
-    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport"
-          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <title>我的会员</title>
     <!-- 三方 -->
-    <link rel="stylesheet" th:href="@{/css/vant2.12.css}"/>
-    <link rel="stylesheet" th:href="@{/css/index.css}"/>
+    <link rel="stylesheet" th:href="@{/css/vant2.12.css}" />
+    <link rel="stylesheet" th:href="@{/css/index.css}" />
 </head>
 
 <body>
-<div id="app" v-cloak>
-    <div class="paypage">
-        <div class="user">
-            <div class="imagine">
-                <img :src="imagine" alt=""/>
-            </div>
-            <div class="message">
-                <p class="name">{{name}}</p>
-                <!--          <p class="uid"><span>ID：</span> {{uid}}</p>-->
-            </div>
-        </div>
-
-        <div class="notice">
-            <van-notice-bar left-icon="volume-o"
-                            text="超级会员特权，无限AI次数，支持更长文本内容，响应更快，字数内容更多... 虚拟产品，可包售后，概不退款，如有顾虑请谨慎支付。"></van-notice-bar>
-        </div>
-
-        <div class="pay-box">
-            <div :class="['pay-item',active==item.id?'ac':'']" v-for="item in list" :key="item.id"
-                 @click="getMeal(item)">
-                <div class="time">{{item.date}}天</div>
-                <div class="newprice">
-                    <span>￥</span>
-                    <span>{{item.price}}</span>
+    <div id="app" v-cloak>
+        <div class="paypage">
+            <div class="user">
+                <div class="imagine">
+                    <img :src="imagine" alt="" />
                 </div>
-                <div class="price">￥{{item.oprice}}</div>
-                <div class="saveprice">{{item.discounts}}</div>
+                <div class="message">
+                    <p class="name">{{name}}</p>
+                    <!--          <p class="uid"><span>ID：</span> {{uid}}</p>-->
+                </div>
             </div>
-        </div>
 
-        <div class="agree">
-            <van-checkbox v-model="checked" icon-size="16px" checked-color="#F17E64"><span>《会员使用服务协议》</span>
-            </van-checkbox>
-        </div>
+            <div class="notice">
+                <van-notice-bar left-icon="volume-o"
+                    text="超级会员特权，无限AI次数，支持更长文本内容，响应更快，字数内容更多... 虚拟产品，可包售后，概不退款，如有顾虑请谨慎支付。"></van-notice-bar>
+            </div>
 
-        <div class="loading" v-if="loadState">
-            <van-loading size="40px"/>
+            <div class="pay-box">
+                <div :class="['pay-item',active==item.id?'ac':'']" v-for="item in list" :key="item.id"
+                    @click="getMeal(item)">
+                    <div class="time">{{item.date}}天</div>
+                    <div class="newprice">
+                        <span>￥</span>
+                        <span>{{item.price}}</span>
+                    </div>
+                    <div class="price">￥{{item.oprice}}</div>
+                    <div class="saveprice">{{item.discounts}}</div>
+                </div>
+            </div>
+
+            <div class="pay-total-quantity">
+                备注：赠送AI绘图次数{{imageNum}}次 + 无限聊
+            </div>
+
+            <div class="agree">
+                <van-checkbox v-model="checked" icon-size="16px" checked-color="#F17E64"><span>《会员使用服务协议》</span>
+                </van-checkbox>
+            </div>
+
+            <div class="loading" v-if="loadState">
+                <van-loading size="40px" />
+            </div>
+            <div class="payprice" @click="onPay">立即开通</div>
         </div>
-        <div class="payprice" @click="onPay">立即开通</div>
     </div>
-</div>
 
 
-<script th:src="@{/js/vue.min.js}"></script>
-<script th:src="@{/js/vant.min.js}"></script>
-<script th:src="@{/js/flex.js}"></script>
-<!-- 引入jQuery和WeUI JS -->
-<script src="https://res2.wx.qq.com/open/js/jweixin-1.6.0.js"></script>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script th:src="@{/js/vue.min.js}"></script>
+    <script th:src="@{/js/vant.min.js}"></script>
+    <script th:src="@{/js/flex.js}"></script>
+    <!-- 引入jQuery和WeUI JS -->
+    <script src="https://res2.wx.qq.com/open/js/jweixin-1.6.0.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </body>
 
 </html>
@@ -76,6 +80,7 @@
     let MembershipPricing = JSON.parse([[${ MembershipPricing }]]);
     let name = [[${ name }]];
     let active = [[${ active }]];
+    let imageNum = [[${ imageNum }]];
 
     new Vue({
         el: "#app",
@@ -87,6 +92,7 @@
                 uid: openid, // 获取用户id
                 checked: true,
                 active: active,
+                imageNum: imageNum,
                 list: MembershipPricing,
                 loadState: false,
             };
@@ -107,13 +113,14 @@
                 Toast("按钮");
             },
             getMeal(item) {
-                const {id} = item;
+                const { id, imageNum } = item;
                 this.active = id;
+                this.imageNum = imageNum
             },
             // 服务协议
             agreement() {
                 if (!this.checked) {
-                    vant.Notify({type: "warning", message: "请勾选会员服务协议"});
+                    vant.Notify({ type: "warning", message: "请勾选会员服务协议" });
                     return true;
                 }
                 return false;

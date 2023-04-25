@@ -31,7 +31,7 @@ public class MemberServiceImpl implements MemberService {
             StringBuilder userInfo = new StringBuilder();
             userInfo.append("您还不是会员，但您每天有基础的日常使用次数。").append("\n\n");
             Integer timeLock = redisUtils.getTimeLock(fromUser);
-            userInfo.append("当前次数剩余: ").append(TIME_MAX_COUNT - timeLock).append("次");
+            userInfo.append("当前次数剩余: ").append("\n").append(TIME_MAX_COUNT - timeLock).append("次");
             return userInfo.toString();
         }
         // 以下是会员的处理方案
