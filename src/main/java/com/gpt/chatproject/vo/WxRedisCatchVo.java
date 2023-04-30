@@ -31,6 +31,7 @@ public class WxRedisCatchVo implements Serializable {
         this.chatCount = 0;
         this.chatType = ChatType.NORMAL;
         this.maxCatch = maxCatch;
+        this.imageNum = 0;
         this.chatCatch = chatCatch;
     }
 
