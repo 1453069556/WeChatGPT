@@ -84,7 +84,8 @@ public class WechatController {
                 .handler(weChatHandler.getWeChatImageReplyHandler()).end();
         WxMpXmlOutMessage outMessage = messageRouter.route(wxMpXmlMessage);
         redisUtils.resetCatchExpire(fromUser);
-        if (outMessage == null && ChatType.NORMAL.equals(redisUtils.getCatch(fromUser).getChatType())) {
+        if (outMessage == null && WxConsts.XmlMsgType.TEXT.equals(wxMpXmlMessage.getMsgType())
+                && ChatType.NORMAL.equals(redisUtils.getCatch(fromUser).getChatType())) {
             //为null，返回思考中
             return xmlMapper.writeValueAsString(
                     new WechatResponseTextMessage(wxMpXmlMessage.getFromUser(),
