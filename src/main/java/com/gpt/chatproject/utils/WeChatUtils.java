@@ -225,8 +225,8 @@ public class WeChatUtils {
     public boolean sendKefuTextMessage(String toUser, String content) throws WxErrorException {
         WxMpKefuService kefuService = wxMpService.getKefuService();
         try {
-            WxMpKefuMessage wxMpKefuMessage = WxMpKefuMessage.TEXT().toUser(toUser).content(content).build();
             kefuService.sendKfTypingState(toUser, "Typing");
+            WxMpKefuMessage wxMpKefuMessage = WxMpKefuMessage.TEXT().toUser(toUser).content(content).build();
             return kefuService.sendKefuMessage(wxMpKefuMessage);
         } finally {
             kefuService.sendKfTypingState(toUser, "CancelTyping");
@@ -298,10 +298,10 @@ public class WeChatUtils {
     public String sendKefuMessages(String fromUser, ChatMessage chatMessage) throws Exception {
         WxMpKefuService kefuService = wxMpService.getKefuService();
         try {
+            kefuService.sendKfTypingState(fromUser, "Typing");
             ChatMessage responseMessages = getResponseMessages(chatMessage, fromUser);
             ArrayList<WxMpKefuMessage> kefuMessages = getWxMpKefuMessage(responseMessages.getContent(), fromUser);
             for (WxMpKefuMessage message : kefuMessages) {
-                kefuService.sendKfTypingState(fromUser, "Typing");
                 boolean sendResult = kefuService.sendKefuMessage(message);
                 if (sendResult) {
                     redisUtils.catchChat(fromUser, responseMessages.getRole(), responseMessages.getContent());
