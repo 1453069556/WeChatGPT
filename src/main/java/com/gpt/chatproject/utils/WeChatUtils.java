@@ -223,7 +223,6 @@ public class WeChatUtils {
     public boolean sendKefuTextMessage(String toUser, String content) throws WxErrorException {
         WxMpKefuService kefuService = wxMpService.getKefuService();
         boolean result = false;
-
         try {
             kefuService.sendKfTypingState(toUser, "Typing");
         } catch (Exception e) {
