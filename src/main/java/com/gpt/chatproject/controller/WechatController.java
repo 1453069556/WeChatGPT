@@ -1,5 +1,7 @@
 package com.gpt.chatproject.controller;
 
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.gpt.chatproject.form.Wechat.WechatResponseTextMessage;
 import com.gpt.chatproject.handler.WeChatHandler;
 import com.gpt.chatproject.service.WeChatService;
 import com.gpt.chatproject.utils.RedisUtils;
@@ -20,6 +22,8 @@ import javax.servlet.http.HttpServletRequest;
 @RequestMapping("/wechat")
 public class WechatController {
 
+    @Autowired
+    private XmlMapper xmlMapper;
     @Autowired
     private RedisUtils redisUtils;
     @Autowired
@@ -79,8 +83,13 @@ public class WechatController {
         WxMpXmlOutMessage outMessage = messageRouter.route(wxMpXmlMessage);
         redisUtils.resetCatchExpire(wxMpXmlMessage.getFromUser());
         if (outMessage == null) {
-            //为null，返回空
-            return "";
+            //为null，返回思考中
+            return xmlMapper.writeValueAsString(
+                    new WechatResponseTextMessage(wxMpXmlMessage.getFromUser(),
+                            wxMpXmlMessage.getToUser(),
+                            WxConsts.XmlMsgType.TEXT,
+                            "思考中请稍后~"
+                    ));
         }
         return outMessage.toXml();
     }
