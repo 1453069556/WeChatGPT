@@ -236,14 +236,6 @@ public class WeChatUtils {
             result = kefuService.sendKefuMessage(wxMpKefuMessage);
         } catch (Exception e) {
             logger.error("Error sending kefu text message", e);
-        } finally {
-            if (ChatType.NORMAL.equals(redisUtils.getCatch(toUser).getChatType())) {
-                try {
-                    kefuService.sendKfTypingState(toUser, "CancelTyping");
-                } catch (Exception e) {
-                    logger.error("Error cancelling typing state", e);
-                }
-            }
         }
         return result;
     }
@@ -312,6 +304,7 @@ public class WeChatUtils {
      */
     public String sendKefuMessages(String fromUser, ChatMessage chatMessage) throws Exception {
         WxMpKefuService kefuService = wxMpService.getKefuService();
+        String sendTextResult = "";
         try {
             kefuService.sendKfTypingState(fromUser, "Typing");
         } catch (Exception e) {
@@ -326,14 +319,12 @@ public class WeChatUtils {
                     redisUtils.catchChat(fromUser, responseMessages.getRole(), responseMessages.getContent());
                 }
             }
-            return responseMessages.getContent();
-        } finally {
-            try {
-                kefuService.sendKfTypingState(fromUser, "CancelTyping");
-            } catch (Exception e) {
-                logger.error("Error cancelling typing state", e);
-            }
+            sendTextResult = responseMessages.getContent();
+            return sendTextResult;
+        } catch (Exception e) {
+            logger.error("Error sending kefu text message", e);
         }
+        return sendTextResult;
     }
 
     /**

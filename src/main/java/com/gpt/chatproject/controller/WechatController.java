@@ -85,6 +85,7 @@ public class WechatController {
         redisUtils.resetCatchExpire(fromUser);
         if (outMessage == null && WxConsts.XmlMsgType.TEXT.equals(wxMpXmlMessage.getMsgType())) {
             //为null，返回思考中
+            wxMpService.getKefuService().sendKfTypingState(fromUser, "Typing");
             return xmlMapper.writeValueAsString(
                     new WechatResponseTextMessage(wxMpXmlMessage.getFromUser(),
                             wxMpXmlMessage.getToUser(),
