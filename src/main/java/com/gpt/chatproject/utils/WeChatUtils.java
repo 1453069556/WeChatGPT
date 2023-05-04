@@ -218,39 +218,49 @@ public class WeChatUtils {
      *
      * @param toUser  接收方
      * @param content 发送内容
-     * @return 是否成功发送
-     * @throws WxErrorException
      */
-    public boolean sendKefuTextMessage(String toUser, String content) throws WxErrorException {
+    public void sendKefuTextMessage(String toUser, String content) throws WxErrorException {
         WxMpKefuService kefuService = wxMpService.getKefuService();
         boolean result = false;
         if (ChatType.NORMAL.equals(redisUtils.getCatch(toUser).getChatType())) {
             try {
                 kefuService.sendKfTypingState(toUser, "Typing");
             } catch (Exception e) {
-                logger.error("Error setting typing state", e);
+                logger.error("Error sendKefuTextMessage setting typing state", e);
             }
         }
         try {
             WxMpKefuMessage wxMpKefuMessage = WxMpKefuMessage.TEXT().toUser(toUser).content(content).build();
-            result = kefuService.sendKefuMessage(wxMpKefuMessage);
-        } catch (Exception e) {
-            logger.error("Error sending kefu text message", e);
+            kefuService.sendKefuMessage(wxMpKefuMessage);
+        } catch (WxErrorException e) {
+            logger.error("Error sendKefuTextMessage sending kefu text message", e);
         }
-        return result;
     }
-
+    /**
+     * 发送客服文本消息
+     *
+     * @param toUser  接收方
+     * @param content 发送内容
+     */
+    public void sendKefuTextMessageWithOutTyping(String toUser, String content) {
+        try {
+            WxMpKefuService kefuService = wxMpService.getKefuService();
+            WxMpKefuMessage wxMpKefuMessage = WxMpKefuMessage.TEXT().toUser(toUser).content(content).build();
+            kefuService.sendKefuMessage(wxMpKefuMessage);
+        } catch (WxErrorException e) {
+            logger.error("Error sendKefuTextMessageWithOutTyping sending kefu text message", e);
+        }
+    }
     /**
      * 发送客服图片消息
      *
      * @param toUser  接收方
      * @param mediaId 图片mediaId
-     * @return 是否成功发送
      * @throws WxErrorException
      */
-    public boolean sendKefuImageMessage(String toUser, String mediaId) throws WxErrorException {
+    public void sendKefuImageMessage(String toUser, String mediaId) throws WxErrorException {
         WxMpKefuMessage wxMpKefuMessage = WxMpKefuMessage.IMAGE().toUser(toUser).mediaId(mediaId).build();
-        return wxMpService.getKefuService().sendKefuMessage(wxMpKefuMessage);
+        wxMpService.getKefuService().sendKefuMessage(wxMpKefuMessage);
     }
 
     /**
@@ -300,31 +310,23 @@ public class WeChatUtils {
      *
      * @param fromUser
      * @param chatMessage
-     * @throws WxErrorException
      */
     public String sendKefuMessages(String fromUser, ChatMessage chatMessage) throws Exception {
         WxMpKefuService kefuService = wxMpService.getKefuService();
-        String sendTextResult = "";
         try {
             kefuService.sendKfTypingState(fromUser, "Typing");
-        } catch (Exception e) {
+        } catch (WxErrorException e) {
             logger.error("Error setting typing state", e);
         }
-        try {
-            ChatMessage responseMessages = getResponseMessages(chatMessage, fromUser);
-            ArrayList<WxMpKefuMessage> kefuMessages = getWxMpKefuMessage(responseMessages.getContent(), fromUser);
-            for (WxMpKefuMessage message : kefuMessages) {
-                boolean sendResult = kefuService.sendKefuMessage(message);
-                if (sendResult) {
-                    redisUtils.catchChat(fromUser, responseMessages.getRole(), responseMessages.getContent());
-                }
+        ChatMessage responseMessages = getResponseMessages(chatMessage, fromUser);
+        ArrayList<WxMpKefuMessage> kefuMessages = getWxMpKefuMessage(responseMessages.getContent(), fromUser);
+        for (WxMpKefuMessage message : kefuMessages) {
+            boolean sendResult = kefuService.sendKefuMessage(message);
+            if (sendResult) {
+                redisUtils.catchChat(fromUser, responseMessages.getRole(), responseMessages.getContent());
             }
-            sendTextResult = responseMessages.getContent();
-            return sendTextResult;
-        } catch (Exception e) {
-            logger.error("Error sending kefu text message", e);
         }
-        return sendTextResult;
+        return responseMessages.getContent();
     }
 
     /**
