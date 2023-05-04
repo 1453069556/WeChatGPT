@@ -88,7 +88,7 @@ public class WechatController {
                     new WechatResponseTextMessage(wxMpXmlMessage.getFromUser(),
                             wxMpXmlMessage.getToUser(),
                             WxConsts.XmlMsgType.TEXT,
-                            "思考中请稍后~"
+                            "思考中，请稍后~"
                     ));
         }
         return outMessage.toXml();
