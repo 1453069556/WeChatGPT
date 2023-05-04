@@ -5,7 +5,6 @@ import com.aliyun.oss.OSSClientBuilder;
 import com.aliyun.oss.model.OSSObject;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
-import com.gpt.chatproject.enums.ChatType;
 import com.gpt.chatproject.enums.RedisLockType;
 import com.gpt.chatproject.form.Wechat.WechatResponseTextMessage;
 import com.gpt.chatproject.vo.WxRedisCatchVo;
@@ -221,13 +220,10 @@ public class WeChatUtils {
      */
     public void sendKefuTextMessage(String toUser, String content) throws WxErrorException {
         WxMpKefuService kefuService = wxMpService.getKefuService();
-        boolean result = false;
-        if (ChatType.NORMAL.equals(redisUtils.getCatch(toUser).getChatType())) {
-            try {
-                kefuService.sendKfTypingState(toUser, "Typing");
-            } catch (Exception e) {
-                logger.error("Error sendKefuTextMessage setting typing state", e);
-            }
+        try {
+            kefuService.sendKfTypingState(toUser, "Typing");
+        } catch (Exception e) {
+            logger.error("Error sendKefuTextMessage setting typing state", e);
         }
         try {
             WxMpKefuMessage wxMpKefuMessage = WxMpKefuMessage.TEXT().toUser(toUser).content(content).build();
@@ -236,6 +232,7 @@ public class WeChatUtils {
             logger.error("Error sendKefuTextMessage sending kefu text message", e);
         }
     }
+
     /**
      * 发送客服文本消息
      *
@@ -251,6 +248,7 @@ public class WeChatUtils {
             logger.error("Error sendKefuTextMessageWithOutTyping sending kefu text message", e);
         }
     }
+
     /**
      * 发送客服图片消息
      *
@@ -313,6 +311,7 @@ public class WeChatUtils {
      */
     public String sendKefuMessages(String fromUser, ChatMessage chatMessage) throws Exception {
         WxMpKefuService kefuService = wxMpService.getKefuService();
+        sendKefuTextMessage(fromUser, "已收到，思考中~");
         try {
             kefuService.sendKfTypingState(fromUser, "Typing");
         } catch (WxErrorException e) {
