@@ -5,6 +5,7 @@ import com.aliyun.oss.OSSClientBuilder;
 import com.aliyun.oss.model.OSSObject;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.gpt.chatproject.enums.ChatType;
 import com.gpt.chatproject.enums.RedisLockType;
 import com.gpt.chatproject.form.Wechat.WechatResponseTextMessage;
 import com.gpt.chatproject.vo.WxRedisCatchVo;
@@ -223,10 +224,12 @@ public class WeChatUtils {
     public boolean sendKefuTextMessage(String toUser, String content) throws WxErrorException {
         WxMpKefuService kefuService = wxMpService.getKefuService();
         boolean result = false;
-        try {
-            kefuService.sendKfTypingState(toUser, "Typing");
-        } catch (Exception e) {
-            logger.error("Error setting typing state", e);
+        if (ChatType.NORMAL.equals(redisUtils.getCatch(toUser).getChatType())) {
+            try {
+                kefuService.sendKfTypingState(toUser, "Typing");
+            } catch (Exception e) {
+                logger.error("Error setting typing state", e);
+            }
         }
         try {
             WxMpKefuMessage wxMpKefuMessage = WxMpKefuMessage.TEXT().toUser(toUser).content(content).build();
@@ -234,10 +237,12 @@ public class WeChatUtils {
         } catch (Exception e) {
             logger.error("Error sending kefu text message", e);
         } finally {
-            try {
-                kefuService.sendKfTypingState(toUser, "CancelTyping");
-            } catch (Exception e) {
-                logger.error("Error cancelling typing state", e);
+            if (ChatType.NORMAL.equals(redisUtils.getCatch(toUser).getChatType())) {
+                try {
+                    kefuService.sendKfTypingState(toUser, "CancelTyping");
+                } catch (Exception e) {
+                    logger.error("Error cancelling typing state", e);
+                }
             }
         }
         return result;
