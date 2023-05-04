@@ -49,11 +49,11 @@ public class WxButtonConfig {
         WxMenuButton FunctionBox = new WxMenuButton();
         FunctionBox.setName("小C功能箱");
         // 绘图菜单-进入dall绘图聊天模式
-//        WxMenuButton FunctionBox2 = new WxMenuButton();
-//        FunctionBox2.setType(WxConsts.MenuButtonType.CLICK);
-//        FunctionBox2.setName("小C画廊-DALL");
-//        FunctionBox2.setKey("AI_IMAGE_CHAT_DALL");
-//        FunctionBox.getSubButtons().add(FunctionBox2);
+        WxMenuButton FunctionBox2 = new WxMenuButton();
+        FunctionBox2.setType(WxConsts.MenuButtonType.CLICK);
+        FunctionBox2.setName("小C画廊-DALL");
+        FunctionBox2.setKey("AI_IMAGE_CHAT_DALL");
+        FunctionBox.getSubButtons().add(FunctionBox2);
         // 绘图菜单-进入Midjourney绘图聊天模式
         WxMenuButton FunctionBox3 = new WxMenuButton();
         FunctionBox3.setType(WxConsts.MenuButtonType.CLICK);

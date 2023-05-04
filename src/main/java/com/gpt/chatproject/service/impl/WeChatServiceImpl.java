@@ -16,7 +16,6 @@ import lombok.extern.log4j.Log4j2;
 import me.chanjar.weixin.common.api.WxConsts;
 import me.chanjar.weixin.common.error.WxErrorException;
 import me.chanjar.weixin.mp.api.WxMpService;
-import me.chanjar.weixin.mp.bean.kefu.WxMpKefuMessage;
 import me.chanjar.weixin.mp.bean.message.WxMpXmlMessage;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -191,9 +190,7 @@ public class WeChatServiceImpl implements WeChatService {
             return;
         }
         try {
-            WxMpKefuMessage imageMessage = WxMpKefuMessage.TEXT().toUser(fromUser)
-                    .content("小C图片聊天互动正在学习中噢，如需绘图请进入绘图模式。").build();
-            wxMpService.getKefuService().sendKefuMessage(imageMessage);
+            weChatUtils.sendKefuTextMessage(fromUser, "小C图片聊天互动正在学习中噢，如需绘图请进入绘图模式。");
         } finally {
             redisUtils.releasePicLock(fromUser);
             redisUtils.releaseChatLock(fromUser);

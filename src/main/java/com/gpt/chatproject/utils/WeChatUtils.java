@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import me.chanjar.weixin.common.api.WxConsts;
 import me.chanjar.weixin.common.bean.result.WxMediaUploadResult;
 import me.chanjar.weixin.common.error.WxErrorException;
+import me.chanjar.weixin.mp.api.WxMpKefuService;
 import me.chanjar.weixin.mp.api.WxMpQrcodeService;
 import me.chanjar.weixin.mp.api.WxMpService;
 import me.chanjar.weixin.mp.bean.kefu.WxMpKefuMessage;
@@ -222,8 +223,14 @@ public class WeChatUtils {
      * @throws WxErrorException
      */
     public boolean sendKefuTextMessage(String toUser, String content) throws WxErrorException {
-        WxMpKefuMessage wxMpKefuMessage = WxMpKefuMessage.TEXT().toUser(toUser).content(content).build();
-        return wxMpService.getKefuService().sendKefuMessage(wxMpKefuMessage);
+        WxMpKefuService kefuService = wxMpService.getKefuService();
+        try {
+            WxMpKefuMessage wxMpKefuMessage = WxMpKefuMessage.TEXT().toUser(toUser).content(content).build();
+            kefuService.sendKfTypingState(toUser, "Typing");
+            return kefuService.sendKefuMessage(wxMpKefuMessage);
+        } finally {
+            kefuService.sendKfTypingState(toUser, "CancelTyping");
+        }
     }
 
     /**
@@ -289,15 +296,21 @@ public class WeChatUtils {
      * @throws WxErrorException
      */
     public String sendKefuMessages(String fromUser, ChatMessage chatMessage) throws Exception {
-        ChatMessage responseMessages = getResponseMessages(chatMessage, fromUser);
-        ArrayList<WxMpKefuMessage> kefuMessages = getWxMpKefuMessage(responseMessages.getContent(), fromUser);
-        for (WxMpKefuMessage message : kefuMessages) {
-            boolean sendResult = wxMpService.getKefuService().sendKefuMessage(message);
-            if (sendResult) {
-                redisUtils.catchChat(fromUser, responseMessages.getRole(), responseMessages.getContent());
+        WxMpKefuService kefuService = wxMpService.getKefuService();
+        try {
+            ChatMessage responseMessages = getResponseMessages(chatMessage, fromUser);
+            ArrayList<WxMpKefuMessage> kefuMessages = getWxMpKefuMessage(responseMessages.getContent(), fromUser);
+            for (WxMpKefuMessage message : kefuMessages) {
+                kefuService.sendKfTypingState(fromUser, "Typing");
+                boolean sendResult = kefuService.sendKefuMessage(message);
+                if (sendResult) {
+                    redisUtils.catchChat(fromUser, responseMessages.getRole(), responseMessages.getContent());
+                }
             }
+            return responseMessages.getContent();
+        } finally {
+            kefuService.sendKfTypingState(fromUser, "CancelTyping");
         }
-        return responseMessages.getContent();
     }
 
     /**

@@ -9,7 +9,6 @@ import com.gpt.chatproject.utils.WeChatUtils;
 import com.gpt.chatproject.vo.WxRedisCatchVo;
 import me.chanjar.weixin.common.error.WxErrorException;
 import me.chanjar.weixin.mp.api.WxMpMessageHandler;
-import me.chanjar.weixin.mp.bean.kefu.WxMpKefuMessage;
 import me.chanjar.weixin.mp.bean.message.WxMpXmlOutMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -169,24 +168,24 @@ public class WeChatHandler {
                         break;
                     case "AI_IMAGE_CHAT_DALL":
                         // TODO 暂时关闭DALL绘图功能
-//                        if (redisUtils.updateChatCatchType(wxMessage.getFromUser(), ChatType.IMAGE_DALL)) {
-//                            wxMpService.getKefuService().sendKefuMessage(WxMpKefuMessage.TEXT().toUser(wxMessage.getFromUser()).content(UPDATE_SUCCESS).build());
-//                        } else {
-                        wxMpService.getKefuService().sendKefuMessage(WxMpKefuMessage.TEXT().toUser(wxMessage.getFromUser()).content(UPDATE_FAILS).build());
-//                        }
+                        if (redisUtils.updateChatCatchType(wxMessage.getFromUser(), ChatType.IMAGE_DALL)) {
+                            weChatUtils.sendKefuTextMessage(wxMessage.getFromUser(), UPDATE_SUCCESS);
+                        } else {
+                            weChatUtils.sendKefuTextMessage(wxMessage.getFromUser(), UPDATE_FAILS);
+                        }
                         break;
                     case "AI_IMAGE_CHAT_MIDJOURNEY":
                         if (redisUtils.updateChatCatchType(wxMessage.getFromUser(), ChatType.IMAGE_MIDJOURNEY)) {
-                            wxMpService.getKefuService().sendKefuMessage(WxMpKefuMessage.TEXT().toUser(wxMessage.getFromUser()).content(UPDATE_SUCCESS).build());
+                            weChatUtils.sendKefuTextMessage(wxMessage.getFromUser(), UPDATE_SUCCESS);
                         } else {
-                            wxMpService.getKefuService().sendKefuMessage(WxMpKefuMessage.TEXT().toUser(wxMessage.getFromUser()).content(UPDATE_FAILS).build());
+                            weChatUtils.sendKefuTextMessage(wxMessage.getFromUser(), UPDATE_FAILS);
                         }
                         break;
                     case "RESET_CHAT_TYPE":
                         if (redisUtils.updateChatCatchType(wxMessage.getFromUser(), ChatType.NORMAL)) {
-                            wxMpService.getKefuService().sendKefuMessage(WxMpKefuMessage.TEXT().toUser(wxMessage.getFromUser()).content(RESET_CHAT_SUCCESS).build());
+                            weChatUtils.sendKefuTextMessage(wxMessage.getFromUser(), RESET_CHAT_SUCCESS);
                         } else {
-                            wxMpService.getKefuService().sendKefuMessage(WxMpKefuMessage.TEXT().toUser(wxMessage.getFromUser()).content(UPDATE_FAILS).build());
+                            weChatUtils.sendKefuTextMessage(wxMessage.getFromUser(), UPDATE_FAILS);
                         }
                         break;
                     case "GET_MEMBER_INFO":
