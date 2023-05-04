@@ -51,7 +51,7 @@ public class WxButtonConfig {
         // 绘图菜单-进入dall绘图聊天模式
         WxMenuButton FunctionBox2 = new WxMenuButton();
         FunctionBox2.setType(WxConsts.MenuButtonType.CLICK);
-        FunctionBox2.setName("小C画廊-DALL");
+        FunctionBox2.setName("小C画廊-娱乐版");
         FunctionBox2.setKey("AI_IMAGE_CHAT_DALL");
         FunctionBox.getSubButtons().add(FunctionBox2);
         // 绘图菜单-进入Midjourney绘图聊天模式
