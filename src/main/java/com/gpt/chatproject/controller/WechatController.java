@@ -1,5 +1,7 @@
 package com.gpt.chatproject.controller;
 
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.gpt.chatproject.form.Wechat.WechatResponseTextMessage;
 import com.gpt.chatproject.handler.WeChatHandler;
 import com.gpt.chatproject.service.WeChatService;
 import com.gpt.chatproject.utils.RedisUtils;
@@ -20,6 +22,8 @@ import javax.servlet.http.HttpServletRequest;
 @RequestMapping("/wechat")
 public class WechatController {
 
+    @Autowired
+    private XmlMapper xmlMapper;
     @Autowired
     private RedisUtils redisUtils;
     @Autowired
@@ -47,6 +51,7 @@ public class WechatController {
     public String weChatPost(HttpServletRequest request) throws Exception {
         ServletInputStream inputStream = request.getInputStream();
         WxMpXmlMessage wxMpXmlMessage = WxMpXmlMessage.fromXml(inputStream);
+        String fromUser = wxMpXmlMessage.getFromUser();
         // 聊天过滤条件，如频率、字数等
         String filterMessage = weChatService.shouldFilterMessage(wxMpXmlMessage);
         //如果返回值不为空字符串则说明被拦截
@@ -77,9 +82,16 @@ public class WechatController {
                 .rule().async(true).msgType(WxConsts.XmlMsgType.IMAGE)
                 .handler(weChatHandler.getWeChatImageReplyHandler()).end();
         WxMpXmlOutMessage outMessage = messageRouter.route(wxMpXmlMessage);
-        redisUtils.resetCatchExpire(wxMpXmlMessage.getFromUser());
-        if (outMessage == null) {
-            //为null，返回空
+        redisUtils.resetCatchExpire(fromUser);
+        if (outMessage == null && WxConsts.XmlMsgType.TEXT.equals(wxMpXmlMessage.getMsgType())) {
+            //为null，返回思考中
+            return xmlMapper.writeValueAsString(
+                    new WechatResponseTextMessage(wxMpXmlMessage.getFromUser(),
+                            wxMpXmlMessage.getToUser(),
+                            WxConsts.XmlMsgType.TEXT,
+                            "收到，思考中~"
+                    ));
+        } else if (outMessage == null) {
             return "";
         }
         return outMessage.toXml();

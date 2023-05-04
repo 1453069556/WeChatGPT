@@ -333,6 +333,7 @@ public class RedisUtils {
                 wxRedisCatchVo.setMemberLevel(memberLevel);
                 wxRedisCatchVo.setImageNum(memberInfo.getImageNum());
             }
+            // TODO 这里可以考虑加上到期之前所剩余的绘图次数
         }
         return wxRedisCatchVo;
     }
