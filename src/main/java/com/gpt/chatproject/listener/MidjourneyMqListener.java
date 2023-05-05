@@ -66,12 +66,12 @@ public class MidjourneyMqListener {
                     continue;
                 }
                 if (messageVo.getEmbeds().size() > 0){
-                    weChatUtils.sendKefuTextMessage(fromUser, "小C希望你换指令重试噢~");
+                    weChatUtils.sendKefuTextMessageWithOutTyping(fromUser, "小C希望你换指令重试噢~");
                     return;
                 }
                 String percentage = MyStringUtils.matchString("\\((100|[1-9]?[0-9])%\\)", messageVo.getContent());
                 if (StringUtils.isNotBlank(percentage)) {
-                    weChatUtils.sendKefuTextMessage(fromUser, String.format("当前绘制进度%s...", percentage));
+                    weChatUtils.sendKefuTextMessageWithOutTyping(fromUser, String.format("当前绘制进度%s...", percentage));
                 }
 
                 if (!messageVo.getContent().contains("(Waiting to start)") && StringUtils.isBlank(percentage)) {
@@ -87,7 +87,7 @@ public class MidjourneyMqListener {
                     }
                     // 如果有文件代表需要发送指令列表
                     if (StringUtils.isNotBlank(sendOkMessage)) {
-                        weChatUtils.sendKefuTextMessage(fromUser, sendOkMessage);
+                        weChatUtils.sendKefuTextMessageWithOutTyping(fromUser, sendOkMessage);
                         // TODO 这里判断是否需要更新discordId，因为大图类不需要修改id，否则会影响后面的迭代生成
                         midjourneyRedisVo.setDiscordMessageId(messageVo.getId());
                     }
@@ -114,7 +114,7 @@ public class MidjourneyMqListener {
                 TimeUnit.SECONDS.sleep(CHECK_DELAY);
                 currentCheckCount++;
             }
-            weChatUtils.sendKefuTextMessage(fromUser, "绘图超时，请检查指令内容是否违规，如果多次违规将被拉黑，请稍后再试。");
+            weChatUtils.sendKefuTextMessageWithOutTyping(fromUser, "绘图超时，请检查指令内容是否违规，如果多次违规将被拉黑，请稍后再试。");
         } catch (Exception e) {
             log.info(e.getMessage());
         } finally {
