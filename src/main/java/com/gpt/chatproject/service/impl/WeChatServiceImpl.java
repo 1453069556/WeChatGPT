@@ -82,7 +82,8 @@ public class WeChatServiceImpl implements WeChatService {
         // 是图片消息才做以下处理
         if (WxConsts.XmlMsgType.IMAGE.equals(msgType)) {
             //                case IMAGE_MIDJOURNEY:
-            if (Objects.requireNonNull(userCacheInfo.getChatType()) == ChatType.IMAGE_DALL) {
+            if (Objects.requireNonNull(userCacheInfo.getChatType()) == ChatType.IMAGE_DALL ||
+                    Objects.requireNonNull(userCacheInfo.getChatType()) == ChatType.IMAGE_MJ_LAZY) {
                 return weChatUtils.getLock(userCacheInfo, fromUser, wxMpXmlMessage, RedisLockType.IMAGE_MIDJOURNEY);
             }
             return weChatUtils.getLock(userCacheInfo, fromUser, wxMpXmlMessage, RedisLockType.NORMAL);
