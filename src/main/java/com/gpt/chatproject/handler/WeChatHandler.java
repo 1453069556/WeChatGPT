@@ -14,6 +14,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.util.Objects;
+
 
 @Service
 public class WeChatHandler {
@@ -81,6 +83,10 @@ public class WeChatHandler {
                     case NORMAL:
                         weChatService.textEvent(wxMessage);
                         break;
+                    case IMAGE_MJ_LAZY:
+                        weChatUtils.sendKefuTextMessage(fromUser,"当前体验模式仅支持图片内容，更高级的玩法请进入专业版。");
+                        redisUtils.releaseChatLock(fromUser);
+                        break;
                     case IMAGE_MIDJOURNEY:
                         // 触发了图片prompt指令,生成图片
                         if (wxMessage.getContent().startsWith("/modifier")) {
@@ -124,8 +130,15 @@ public class WeChatHandler {
      */
     public WxMpMessageHandler getWeChatVoiceReplyHandler() {
         return (wxMessage, context, wxMpService, sessionManager) -> {
+            String fromUser = wxMessage.getFromUser();
             try {
-                weChatService.voiceEvent(wxMessage);
+                WxRedisCatchVo aCatch = redisUtils.getCatch(fromUser);
+                if (Objects.requireNonNull(aCatch.getChatType()) == ChatType.NORMAL) {
+                    weChatService.voiceEvent(wxMessage);
+                } else {
+                    weChatUtils.sendKefuTextMessage(fromUser, "当前模式不支持语音，请恢复默认模式。");
+                    redisUtils.releaseChatLock(fromUser);
+                }
             } catch (WxErrorException e) {
                 e.printStackTrace();
             }

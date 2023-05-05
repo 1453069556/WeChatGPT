@@ -48,7 +48,7 @@ public class WxButtonConfig {
         // 绘图菜单
         WxMenuButton FunctionBox = new WxMenuButton();
         FunctionBox.setName("小C功能箱");
-        // 绘图菜单-进入dall绘图聊天模式
+        // 绘图菜单-进入Midjourney懒人绘图聊天模式
         WxMenuButton MjLazyButton = new WxMenuButton();
         MjLazyButton.setType(WxConsts.MenuButtonType.CLICK);
         MjLazyButton.setName("小C画廊-体验版");
