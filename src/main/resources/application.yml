@@ -159,8 +159,8 @@ redislock:
   chatExpireSeconds: 60
   aiPicExpireSeconds: 600
   timeExpireSeconds: 3600
-  timeMaxCount: 50
-  chatTimeOut: 600
+  timeMaxCount: 3
+  chatTimeOut: 6000
 spring:
   redis:
     database: 0
