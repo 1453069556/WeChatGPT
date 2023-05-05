@@ -170,7 +170,7 @@ public class AiImageServiceImpl implements AiImageService {
                 File imageFile = weChatUtils.getFileByMediaId(fromMediaId);
                 String url = fileUtils.uploadAndGetUrl(imageFile);
                 try {
-                    String prompt = url + " " + "Pixiv --iw 2 --niji 5";
+                    String prompt = url + " " + "Makoto Shinkai style --iw 2 --niji 5";
                     if (redisUtils.tryAiPicLock(fromUser)) {
                         mqUtils.addMidjourneyMqTask(fromUser, prompt);
                     }
