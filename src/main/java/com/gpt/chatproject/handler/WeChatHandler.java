@@ -84,6 +84,10 @@ public class WeChatHandler {
                         weChatService.textEvent(wxMessage);
                         break;
                     case IMAGE_MJ_LAZY:
+                        if (wxMessage.getContent().startsWith("MJ::JOB::")) {
+                            aiImageService.imageMidjourneyCustom(wxMessage);
+                            break;
+                        }
                         weChatUtils.sendKefuTextMessage(fromUser,"当前体验模式仅支持图片内容，更高级的玩法请进入专业版。");
                         redisUtils.releaseChatLock(fromUser);
                         break;
@@ -158,6 +162,7 @@ public class WeChatHandler {
                 WxRedisCatchVo aCatch = redisUtils.getCatch(fromUser);
                 switch (aCatch.getChatType()) {
                     case IMAGE_MJ_LAZY:
+                        weChatUtils.sendKefuTextMessage(fromUser,"已收到，想象中...");
                         aiImageService.imageMidjourneyLazy(wxMessage);
                         break;
                     case IMAGE_MIDJOURNEY:
