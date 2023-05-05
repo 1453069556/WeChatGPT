@@ -164,7 +164,7 @@ public class MidjourneyUtils {
         DiscordHttpInteractionVo.InteractionData.Option option = new DiscordHttpInteractionVo.InteractionData.Option();
         option.setType(3); // 选项类型，3表示字符串
         option.setName("prompt"); // 选项名称
-        option.setValue(" jpg " + prompt + String.format(" --seed %09d", messageId)); // 填充选项值, 由于需要消息定位，无奈之下这里加上自定义的唯一标识
+        option.setValue(prompt + String.format(" --seed %09d", messageId)); // 填充选项值, 由于需要消息定位，无奈之下这里加上自定义的唯一标识
 
         List<DiscordHttpInteractionVo.InteractionData.Option> optionList = new ArrayList<>();
         optionList.add(option);
