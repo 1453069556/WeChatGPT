@@ -162,7 +162,7 @@ public class AiImageServiceImpl implements AiImageService {
             }
             String fromMediaId = wxMessage.getMediaId();
             // 如果传入的是图片
-            if (StringUtils.isNotBlank(fromMediaId)) {
+            if (StringUtils.isBlank(fromMediaId)) {
                 weChatUtils.sendKefuTextMessage(fromUser, "请发送图片，此模式仅支持接收图片。");
                 return;
             }
