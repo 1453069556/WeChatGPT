@@ -14,6 +14,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.util.Objects;
+
 
 @Service
 public class WeChatHandler {
@@ -35,6 +37,8 @@ public class WeChatHandler {
     private String MJ_UPDATE_SUCCESS;
     @Value("${wxchat.dall_update_success}")
     private String DALL_UPDATE_SUCCESS;
+    @Value("${wxchat.mj_lazy_update_success}")
+    private String MJ_LAZY_UPDATE_SUCCESS;
     @Value("${wxchat.update_fails}")
     private String UPDATE_FAILS;
     @Value("${wxchat.reset_success}")
@@ -79,6 +83,14 @@ public class WeChatHandler {
                     case NORMAL:
                         weChatService.textEvent(wxMessage);
                         break;
+                    case IMAGE_MJ_LAZY:
+                        if (wxMessage.getContent().startsWith("MJ::JOB::")) {
+                            aiImageService.imageMidjourneyCustom(wxMessage);
+                            break;
+                        }
+                        weChatUtils.sendKefuTextMessage(fromUser,"当前体验模式仅支持图片内容，更高级的玩法请进入专业版。");
+                        redisUtils.releaseChatLock(fromUser);
+                        break;
                     case IMAGE_MIDJOURNEY:
                         // 触发了图片prompt指令,生成图片
                         if (wxMessage.getContent().startsWith("/modifier")) {
@@ -122,8 +134,15 @@ public class WeChatHandler {
      */
     public WxMpMessageHandler getWeChatVoiceReplyHandler() {
         return (wxMessage, context, wxMpService, sessionManager) -> {
+            String fromUser = wxMessage.getFromUser();
             try {
-                weChatService.voiceEvent(wxMessage);
+                WxRedisCatchVo aCatch = redisUtils.getCatch(fromUser);
+                if (Objects.requireNonNull(aCatch.getChatType()) == ChatType.NORMAL) {
+                    weChatService.voiceEvent(wxMessage);
+                } else {
+                    weChatUtils.sendKefuTextMessage(fromUser, "当前模式不支持语音，请恢复默认模式。");
+                    redisUtils.releaseChatLock(fromUser);
+                }
             } catch (WxErrorException e) {
                 e.printStackTrace();
             }
@@ -142,6 +161,10 @@ public class WeChatHandler {
             try {
                 WxRedisCatchVo aCatch = redisUtils.getCatch(fromUser);
                 switch (aCatch.getChatType()) {
+                    case IMAGE_MJ_LAZY:
+                        weChatUtils.sendKefuTextMessage(fromUser,"已收到，想象中...");
+                        aiImageService.imageMidjourneyLazy(wxMessage);
+                        break;
                     case IMAGE_MIDJOURNEY:
                         aiImageService.imageMidjourneyVariation(wxMessage);
                         break;
@@ -172,8 +195,14 @@ public class WeChatHandler {
                     case "JOIN_GROUP_POST":
                         weChatService.chatGroupShare(wxMessage);
                         break;
+                    case "AI_IMAGE_CHAT_LAZY":
+                        if (redisUtils.updateChatCatchType(wxMessage.getFromUser(), ChatType.IMAGE_MJ_LAZY)) {
+                            weChatUtils.sendKefuTextMessage(wxMessage.getFromUser(), MJ_LAZY_UPDATE_SUCCESS);
+                        } else {
+                            weChatUtils.sendKefuTextMessage(wxMessage.getFromUser(), UPDATE_FAILS);
+                        }
+                        break;
                     case "AI_IMAGE_CHAT_DALL":
-                        // TODO 暂时关闭DALL绘图功能
                         if (redisUtils.updateChatCatchType(wxMessage.getFromUser(), ChatType.IMAGE_DALL)) {
                             weChatUtils.sendKefuTextMessage(wxMessage.getFromUser(), DALL_UPDATE_SUCCESS);
                         } else {

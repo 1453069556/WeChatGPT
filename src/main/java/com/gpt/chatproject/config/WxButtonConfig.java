@@ -48,6 +48,12 @@ public class WxButtonConfig {
         // 绘图菜单
         WxMenuButton FunctionBox = new WxMenuButton();
         FunctionBox.setName("小C功能箱");
+        // 绘图菜单-进入Midjourney懒人绘图聊天模式
+        WxMenuButton MjLazyButton = new WxMenuButton();
+        MjLazyButton.setType(WxConsts.MenuButtonType.CLICK);
+        MjLazyButton.setName("小C画廊-体验版");
+        MjLazyButton.setKey("AI_IMAGE_CHAT_LAZY");
+        FunctionBox.getSubButtons().add(MjLazyButton);
         // 绘图菜单-进入dall绘图聊天模式
         WxMenuButton FunctionBox2 = new WxMenuButton();
         FunctionBox2.setType(WxConsts.MenuButtonType.CLICK);
@@ -57,7 +63,7 @@ public class WxButtonConfig {
         // 绘图菜单-进入Midjourney绘图聊天模式
         WxMenuButton FunctionBox3 = new WxMenuButton();
         FunctionBox3.setType(WxConsts.MenuButtonType.CLICK);
-        FunctionBox3.setName("小C画廊-Midjourney");
+        FunctionBox3.setName("小C画廊-专业版");
         FunctionBox3.setKey("AI_IMAGE_CHAT_MIDJOURNEY");
         FunctionBox.getSubButtons().add(FunctionBox3);
 

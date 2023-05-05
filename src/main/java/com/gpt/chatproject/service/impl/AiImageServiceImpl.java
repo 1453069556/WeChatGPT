@@ -148,6 +148,50 @@ public class AiImageServiceImpl implements AiImageService {
     }
 
     /**
+     * mj的懒人模式，仅支持图生图无需指令
+     *
+     * @param wxMessage wxMessage
+     */
+    @Override
+    public void imageMidjourneyLazy(WxMpXmlMessage wxMessage) {
+        String fromUser = wxMessage.getFromUser();
+        try {
+            if (redisUtils.aiPicIsLock(fromUser)) {
+                weChatUtils.sendKefuTextMessage(fromUser, PIC_PROC_RESPONSE);
+                return;
+            }
+            String fromMediaId = wxMessage.getMediaId();
+            // 如果传入的是图片
+            if (StringUtils.isBlank(fromMediaId)) {
+                weChatUtils.sendKefuTextMessage(fromUser, "请发送图片，此模式仅支持接收图片。");
+                return;
+            }
+            if (ConsumerCounterTotal.get() < MAX_COMMAND_LENGTH) {
+                File imageFile = weChatUtils.getFileByMediaId(fromMediaId);
+                String url = fileUtils.uploadAndGetUrl(imageFile);
+                try {
+                    String prompt = url + " " + "Makoto Shinkai style --iw 2 --niji 5";
+                    if (redisUtils.tryAiPicLock(fromUser)) {
+                        mqUtils.addMidjourneyMqTask(fromUser, prompt);
+                    }
+                    weChatUtils.sendKefuTextMessage(fromUser, AI_PRC_RESPONSE);
+                } finally {
+                    if (imageFile.exists()) {
+                        Files.deleteIfExists(imageFile.toPath());
+                    }
+                    redisUtils.releaseChatLock(fromUser);
+                }
+            } else {
+                weChatUtils.sendKefuTextMessage(wxMessage.getFromUser(), PIC_BUSY_RESPONSE);
+            }
+        } catch (Exception e) {
+            weChatUtils.serverErrorKefuReplay(fromUser);
+            redisUtils.releasePicLock(fromUser);
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
      * 判断midjourney图生图参数是否齐全
      *
      * @param midjourneyRedisVo midjourneyRedisVo
