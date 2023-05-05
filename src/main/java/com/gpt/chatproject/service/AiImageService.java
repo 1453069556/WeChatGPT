@@ -38,5 +38,16 @@ public interface AiImageService {
      */
     void imageMidjourneyVariation(WxMpXmlMessage wxImageMessage) throws Exception;
 
+    /**
+     * 根据衍生指令生成图片
+     * @param wxMessage
+     * @throws WxErrorException
+     */
     void imageMidjourneyCustom(WxMpXmlMessage wxMessage) throws WxErrorException;
+
+    /**
+     * mj的懒人模式，仅支持图生图无需指令
+     * @param wxMessage
+     */
+    void imageMidjourneyLazy(WxMpXmlMessage wxMessage) throws IOException;
 }

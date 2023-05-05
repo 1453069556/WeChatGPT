@@ -19,6 +19,8 @@ import me.chanjar.weixin.mp.api.WxMpService;
 import me.chanjar.weixin.mp.bean.kefu.WxMpKefuMessage;
 import me.chanjar.weixin.mp.bean.message.WxMpXmlMessage;
 import me.chanjar.weixin.mp.bean.result.WxMpQrCodeTicket;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -71,6 +73,7 @@ public class WeChatUtils {
     private String ACCESS_KEY_SECRET;
     @Value("${aliyun.wechat.end_point}")
     private String END_POINT;
+    private static final Logger logger = LoggerFactory.getLogger(WeChatUtils.class);
 
     /**
      * 根据fromUser获取渠道二维码
@@ -175,12 +178,7 @@ public class WeChatUtils {
         if (delta == RedisLockType.IMAGE_MIDJOURNEY && catchVo.getMemberLevel() != null) {
             if (!redisUtils.decrImageNum(catchVo, fromUser)) {
                 // 会员绘图次数已用完，返回提示语
-                return xmlMapper.writeValueAsString(
-                        new WechatResponseTextMessage(fromUser,
-                                wxMpXmlMessage.getToUser(),
-                                WxConsts.XmlMsgType.TEXT,
-                                "您的会员绘图次数已用完，续费会员可增加相应的绘图次数~"
-                        ));
+                return xmlMapper.writeValueAsString(new WechatResponseTextMessage(fromUser, wxMpXmlMessage.getToUser(), WxConsts.XmlMsgType.TEXT, "您的会员绘图次数已用完，续费会员可增加相应的绘图次数~"));
             }
         }
         return "";
@@ -219,17 +217,35 @@ public class WeChatUtils {
      *
      * @param toUser  接收方
      * @param content 发送内容
-     * @return 是否成功发送
-     * @throws WxErrorException
      */
-    public boolean sendKefuTextMessage(String toUser, String content) throws WxErrorException {
+    public void sendKefuTextMessage(String toUser, String content) throws WxErrorException {
         WxMpKefuService kefuService = wxMpService.getKefuService();
         try {
             kefuService.sendKfTypingState(toUser, "Typing");
+        } catch (Exception e) {
+            logger.error("Error sendKefuTextMessage setting typing state", e);
+        }
+        try {
             WxMpKefuMessage wxMpKefuMessage = WxMpKefuMessage.TEXT().toUser(toUser).content(content).build();
-            return kefuService.sendKefuMessage(wxMpKefuMessage);
-        } finally {
-            kefuService.sendKfTypingState(toUser, "CancelTyping");
+            kefuService.sendKefuMessage(wxMpKefuMessage);
+        } catch (WxErrorException e) {
+            logger.error("Error sendKefuTextMessage sending kefu text message", e);
+        }
+    }
+
+    /**
+     * 发送客服文本消息
+     *
+     * @param toUser  接收方
+     * @param content 发送内容
+     */
+    public void sendKefuTextMessageWithOutTyping(String toUser, String content) {
+        try {
+            WxMpKefuService kefuService = wxMpService.getKefuService();
+            WxMpKefuMessage wxMpKefuMessage = WxMpKefuMessage.TEXT().toUser(toUser).content(content).build();
+            kefuService.sendKefuMessage(wxMpKefuMessage);
+        } catch (WxErrorException e) {
+            logger.error("Error sendKefuTextMessageWithOutTyping sending kefu text message", e);
         }
     }
 
@@ -238,12 +254,11 @@ public class WeChatUtils {
      *
      * @param toUser  接收方
      * @param mediaId 图片mediaId
-     * @return 是否成功发送
      * @throws WxErrorException
      */
-    public boolean sendKefuImageMessage(String toUser, String mediaId) throws WxErrorException {
+    public void sendKefuImageMessage(String toUser, String mediaId) throws WxErrorException {
         WxMpKefuMessage wxMpKefuMessage = WxMpKefuMessage.IMAGE().toUser(toUser).mediaId(mediaId).build();
-        return wxMpService.getKefuService().sendKefuMessage(wxMpKefuMessage);
+        wxMpService.getKefuService().sendKefuMessage(wxMpKefuMessage);
     }
 
     /**
@@ -293,24 +308,24 @@ public class WeChatUtils {
      *
      * @param fromUser
      * @param chatMessage
-     * @throws WxErrorException
      */
     public String sendKefuMessages(String fromUser, ChatMessage chatMessage) throws Exception {
         WxMpKefuService kefuService = wxMpService.getKefuService();
+        sendKefuTextMessage(fromUser, "已收到，思考中~");
         try {
             kefuService.sendKfTypingState(fromUser, "Typing");
-            ChatMessage responseMessages = getResponseMessages(chatMessage, fromUser);
-            ArrayList<WxMpKefuMessage> kefuMessages = getWxMpKefuMessage(responseMessages.getContent(), fromUser);
-            for (WxMpKefuMessage message : kefuMessages) {
-                boolean sendResult = kefuService.sendKefuMessage(message);
-                if (sendResult) {
-                    redisUtils.catchChat(fromUser, responseMessages.getRole(), responseMessages.getContent());
-                }
-            }
-            return responseMessages.getContent();
-        } finally {
-            kefuService.sendKfTypingState(fromUser, "CancelTyping");
+        } catch (WxErrorException e) {
+            logger.error("Error setting typing state", e);
         }
+        ChatMessage responseMessages = getResponseMessages(chatMessage, fromUser);
+        ArrayList<WxMpKefuMessage> kefuMessages = getWxMpKefuMessage(responseMessages.getContent(), fromUser);
+        for (WxMpKefuMessage message : kefuMessages) {
+            boolean sendResult = kefuService.sendKefuMessage(message);
+            if (sendResult) {
+                redisUtils.catchChat(fromUser, responseMessages.getRole(), responseMessages.getContent());
+            }
+        }
+        return responseMessages.getContent();
     }
 
     /**
@@ -356,12 +371,7 @@ public class WeChatUtils {
      */
     public void serverErrorKefuReplay(String fromUserName) {
         try {
-            wxMpService.getKefuService().sendKefuMessage(
-                    WxMpKefuMessage.TEXT()
-                            .toUser(fromUserName)
-                            .content(SERVER_ERROR_REPLAY)
-                            .build()
-            );
+            wxMpService.getKefuService().sendKefuMessage(WxMpKefuMessage.TEXT().toUser(fromUserName).content(SERVER_ERROR_REPLAY).build());
             // 时间频率锁回退1
             redisUtils.timeLockFallback(fromUserName);
         } catch (Exception e) {
