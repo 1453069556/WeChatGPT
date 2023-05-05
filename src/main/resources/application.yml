@@ -50,14 +50,14 @@ aliyun:
 dall:
   n: 1
 midjourney:
-  authorization: MTA3NDU3MDI4Mjk4OTI2MDgxMA.GuC3t0.uRaYGYec2pFkmKBfdoeAITD-3NWYKyCZBBzCu4
+  authorization: MTA4NDk5NjI2OTU2MDMwNzc4Mw.GHreAp.HiZZ261OIoiLNbm85O-k4poHpGqmSYjeg6Lh_4
   applicationId: 936929561302675456
-  guild_id: 1090974037800407130
-  channel_id: 1091233915701841930
-  session_id: ab444fba21c8a468e80fe08ef5d582a5
+  guild_id: 1103105491502125196
+  channel_id: 1103105699409571870
+  session_id: 94dd4bf1371eda9da3ea34589324714d
   messages_limit: 50
 queue:
-  check_count: 30
+  check_count: 40
   check_delay: 15
   check_message_cron: "*/10 * * * * *"
   command:
