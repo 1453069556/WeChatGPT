@@ -107,7 +107,7 @@ public class RedisUtils {
             // 首次设定超时时间
             redisTemplate.expire(lockKey, TIME_EXPIRE_SECONDS, TimeUnit.SECONDS);
         } else {
-            if (Integer.parseInt(timeLock.toString()) > TIME_MAX_COUNT) {
+            if (Integer.parseInt(timeLock.toString()) >= TIME_MAX_COUNT) {
                 return false;
             }
             // 增长1
