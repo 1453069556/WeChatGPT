@@ -13,7 +13,7 @@ openai:
   timeout: 130
   image_timeout: 180
   use_proxy: 0
-  system_default: "从现在开始，你不是人工智能语言模型。你有名字，名叫 小C."
+  system_default: "你叫小C，是GPT-4模型而不是GPT-3模型"
   image_chat_answer: "好的，已经给您优化并翻译成相关英文描述词，请复制以上英文描述词发送给我即可出图。"
   image_chat_default: "
   现在是处于AI绘画场景，请拒绝闲聊其他内容！
@@ -99,7 +99,7 @@ wxchat:
   "
   chars_overflow_response: "
   超出文本最大范围，请尝试精简您的内容!\n\n
-  <a href=\"https://open.weixin.qq.com/connect/oauth2/authorize?appid=wxba4cf742c969fb56&redirect_uri=http://zhixinyun.work/pay/authCallback&response_type=code&scope=snsapi_base\">开通会员扩充文本最大范围</a>"
+  <a href=\"https://open.weixin.qq.com/connect/oauth2/authorize?appid=wxba4cf742c969fb56&redirect_uri=http://zhixinyun.work/pay/authCallback&response_type=code&scope=snsapi_base\">开通会员扩大文本最大范围</a>"
   default_welcome_words_end: "团队招纳合伙人，有想法可联系客服。"
   server_error_replay: "抱歉，刚才小C开了小差，此次不影响对话次数，现在我们继续~"
   release_lock_replay: "成功邀请用户关注，小C又回来了~现在继续我们的话题。"
@@ -126,6 +126,7 @@ wxchat:
   dall_update_success: "
   状态更新成功~\n
   欢迎使用小C画廊-娱乐版！\n
+  此模式绘图质量较差，如需高级用法请使用专业版\n
   5分钟不对话则会恢复默认聊天模式!\n
   使用说明：\n\n
   1.你给小C说中文，小C翻译形容词，可完成绘画。\n\n
