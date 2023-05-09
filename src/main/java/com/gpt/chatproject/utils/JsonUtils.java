@@ -1,6 +1,7 @@
 package com.gpt.chatproject.utils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Component;
@@ -54,6 +55,8 @@ public class JsonUtils {
      */
     public static <T> T[] fromJsonArray(String jsonArray, Class<T> clazz) {
         try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
             JavaType type = objectMapper.getTypeFactory().constructArrayType(clazz);
             return objectMapper.readValue(jsonArray, type);
         } catch (JsonProcessingException e) {
