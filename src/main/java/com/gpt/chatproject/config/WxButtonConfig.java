@@ -47,11 +47,11 @@ public class WxButtonConfig {
         menuButton.getSubButtons().add(menuButton1);
         // 绘图菜单
         WxMenuButton FunctionBox = new WxMenuButton();
-        FunctionBox.setName("小C功能箱");
+        FunctionBox.setName("小C绘图");
         // 绘图菜单-进入Midjourney懒人绘图聊天模式
         WxMenuButton MjLazyButton = new WxMenuButton();
         MjLazyButton.setType(WxConsts.MenuButtonType.CLICK);
-        MjLazyButton.setName("小C画廊-体验版");
+        MjLazyButton.setName("小C画廊-简易版");
         MjLazyButton.setKey("AI_IMAGE_CHAT_LAZY");
         FunctionBox.getSubButtons().add(MjLazyButton);
         // 绘图菜单-进入dall绘图聊天模式

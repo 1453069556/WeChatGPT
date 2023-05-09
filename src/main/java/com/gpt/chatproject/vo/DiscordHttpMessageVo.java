@@ -10,6 +10,7 @@ import java.util.List;
 
 @NoArgsConstructor
 @Data
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class DiscordHttpMessageVo implements Serializable {
 
     @JsonProperty("id")
@@ -25,7 +26,6 @@ public class DiscordHttpMessageVo implements Serializable {
     @JsonProperty("attachments")
     private List<ReferencedMessageDTO.AttachmentsDTO> attachments;
     @JsonProperty("embeds")
-    @JsonIgnoreProperties(ignoreUnknown = true)
     private List<?> embeds;
     @JsonProperty("mentions")
     private List<MentionsDTO> mentions;
@@ -52,10 +52,8 @@ public class DiscordHttpMessageVo implements Serializable {
     @JsonProperty("webhook_id")
     private String webhookId;
     @JsonProperty("message_reference")
-    @JsonIgnoreProperties(ignoreUnknown = true)
     private MessageReferenceDTO messageReference;
     @JsonProperty("referenced_message")
-    @JsonIgnoreProperties(ignoreUnknown = true)
     private ReferencedMessageDTO referencedMessage;
 
     @NoArgsConstructor

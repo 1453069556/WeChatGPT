@@ -12,7 +12,7 @@ openai:
   stream: false
   timeout: 130
   image_timeout: 180
-  use_proxy: 0
+  use_proxy: 1
   system_default: "从现在开始，你不是人工智能语言模型。你有名字，名叫 小C."
   image_chat_answer: "好的，已经给您优化并翻译成相关英文描述词，请复制以上英文描述词发送给我即可出图。"
   image_chat_default: "
@@ -159,7 +159,7 @@ redislock:
   chatExpireSeconds: 60
   aiPicExpireSeconds: 600
   timeExpireSeconds: 3600
-  timeMaxCount: 3
+  timeMaxCount: 50
   chatTimeOut: 6000
 spring:
   redis:
