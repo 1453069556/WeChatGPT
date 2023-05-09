@@ -55,7 +55,7 @@ public class HttpUtils {
         OkHttpClient client;
             client = new OkHttpClient.Builder()
 //                    .addInterceptor(new HttpInterceptor())
-                    .proxy(proxy)
+//                    .proxy(proxy)
                     .readTimeout(20, TimeUnit.SECONDS).build();
         try (Response response = client.newCall(request).execute()) {
             if (!response.isSuccessful()) {
