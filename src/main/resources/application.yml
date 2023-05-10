@@ -137,8 +137,8 @@ wxchat:
   reset_success: "成功恢复默认聊天模式~"
   update_fails: "暂不提供此服务，请联系管理员。"
   chatMaxCatch: 8
-  max_send_tokens: 500
-  vip_max_send_tokens: 1000
+  max_send_tokens: 600
+  vip_max_send_tokens: 1200
   max_replay_tokens: 1800
   notify_url: http://zhixinyun.work/pay/notify/order
   url: http://zhixinyun.work/
