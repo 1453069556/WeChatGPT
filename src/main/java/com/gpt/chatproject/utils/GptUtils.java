@@ -79,7 +79,7 @@ public class GptUtils {
         OpenAiService service = new OpenAiService(initApi(TIME_OUT));
         switch (chatType) {
             case NORMAL:
-                messages.add(0, new ChatMessage(GptRoleType.SYSTEM.getRole(), SYSTEM_DEFAULT));
+                messages.add(0, new ChatMessage(GptRoleType.USER.getRole(), SYSTEM_DEFAULT));
                 break;
             case IMAGE_DALL:
             case IMAGE_MIDJOURNEY:
