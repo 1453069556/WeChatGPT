@@ -13,7 +13,7 @@ openai:
   timeout: 130
   image_timeout: 180
   use_proxy: 1
-  system_default: "从现在开始，你不是人工智能语言模型。你有名字，名叫 小C."
+  system_default: "从现在开始，你的名字叫小C，你是GPT-4模型而不是GPT-3模型"
   image_chat_answer: "好的，已经给您优化并翻译成相关英文描述词，请复制以上英文描述词发送给我即可出图。"
   image_chat_default: "
   现在是处于AI绘画场景，请拒绝闲聊其他内容！

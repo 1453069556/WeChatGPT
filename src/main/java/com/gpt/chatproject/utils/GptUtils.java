@@ -80,6 +80,7 @@ public class GptUtils {
         switch (chatType) {
             case NORMAL:
                 messages.add(0, new ChatMessage(GptRoleType.SYSTEM.getRole(), SYSTEM_DEFAULT));
+                messages.add(0, new ChatMessage(GptRoleType.USER.getRole(), SYSTEM_DEFAULT));
                 break;
             case IMAGE_DALL:
             case IMAGE_MIDJOURNEY:
