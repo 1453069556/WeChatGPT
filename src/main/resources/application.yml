@@ -186,7 +186,7 @@ spring:
       time-between-eviction-runs-millis: 30000
       validation-query: SELECT 1
   rabbitmq:
-    host: 104.197.64.191
+    host: 34.121.255.129
     port: 5672
     username: admin
     password: zhixinyun2023
