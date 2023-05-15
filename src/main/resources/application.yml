@@ -94,12 +94,13 @@ wxchat:
   time_frequency_response: "
   小C与您聊天已经超过当日限制~请休息一段时间再来！\n
   如有高频使用需求，请开通会员。\n\n  
-  方式一:<a href=\"https://open.weixin.qq.com/connect/oauth2/authorize?appid=wxba4cf742c969fb56&redirect_uri=http://zhixinyun.work/pay/authCallback&response_type=code&scope=snsapi_base\">开启无限畅聊模式</a>\n\n
+  方式一:<a href=\"https://open.weixin.qq.com/connect/oauth2/authorize?appid=wxba4cf742c969fb56&redirect_uri=http://zhixinyun.work/pay/authCallback&response_type=code&scope=snsapi_base\">开启高级无限畅聊</a>\n\n
   方式二:通过二维码邀请朋友关注可立马刷新等待时间噢~\n\n
   "
   chars_overflow_response: "
-  超出文本最大范围，请尝试精简您的内容!\n\n
-  <a href=\"https://open.weixin.qq.com/connect/oauth2/authorize?appid=wxba4cf742c969fb56&redirect_uri=http://zhixinyun.work/pay/authCallback&response_type=code&scope=snsapi_base\">开通会员扩大文本最大范围</a>"
+  您发送的内容字数过多。\n\n
+  方式一:请尝试精简您的内容~\n\n
+  方式二:<a href=\"https://open.weixin.qq.com/connect/oauth2/authorize?appid=wxba4cf742c969fb56&redirect_uri=http://zhixinyun.work/pay/authCallback&response_type=code&scope=snsapi_base\">开启超长文本内容</a>"
   default_welcome_words_end: "团队招纳合伙人，有想法可联系客服。"
   server_error_replay: "抱歉，刚才小C开了小差，此次不影响对话次数，现在我们继续~"
   release_lock_replay: "成功邀请用户关注，小C又回来了~现在继续我们的话题。"
@@ -162,7 +163,7 @@ redislock:
   aiPicExpireSeconds: 600
   timeExpireSeconds: 86400
   timeMaxCount: 6
-  chatTimeOut: 600
+  chatTimeOut: 1800
 spring:
   redis:
     database: 0
