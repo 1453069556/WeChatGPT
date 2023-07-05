@@ -2,7 +2,7 @@ logging:
   level:
     root: INFO
 openai:
-  token: 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
+  token: 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
   temperature: 0.6
   presence_penalty: 0
   frequency_penalty: 0
