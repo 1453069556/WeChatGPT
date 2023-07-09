@@ -6,6 +6,7 @@ import com.github.binarywang.wxpay.exception.WxPayException;
 import com.gpt.chatproject.entity.MembershipPricing;
 import com.gpt.chatproject.service.MyWxPayService;
 import com.gpt.chatproject.utils.JsonUtils;
+import lombok.extern.slf4j.Slf4j;
 import me.chanjar.weixin.common.bean.WxJsapiSignature;
 import me.chanjar.weixin.common.bean.oauth2.WxOAuth2AccessToken;
 import me.chanjar.weixin.mp.api.WxMpService;
@@ -21,6 +22,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Controller
+@Slf4j
 @RequestMapping("/pay")
 public class WXPayController {
     @Autowired
@@ -68,6 +70,7 @@ public class WXPayController {
             // 重定向到支付页面，前端可以通过Ajax调用/getWechatPayParams接口发起支付
             return "view/payment";
         } catch (Exception e) {
+            log.info(e.getMessage());
             e.printStackTrace();
             return "auth failed";
         }
@@ -91,6 +94,7 @@ public class WXPayController {
         try {
             myWxPayService.payNotify(xmlData);
         } catch (WxPayException e) {
+            log.info(e.getMessage());
             return WxPayNotifyResponse.fail(e.getMessage());
         }
         return WxPayNotifyResponse.success("OK");

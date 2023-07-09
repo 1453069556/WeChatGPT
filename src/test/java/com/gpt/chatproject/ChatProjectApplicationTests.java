@@ -175,7 +175,7 @@ class ChatProjectApplicationTests {
 //
 //    @Autowired
 //    private WxPayService wxPayService;
-
+//
 //    @Test
 //    public void testOrder() throws WxPayException {
 //
@@ -192,13 +192,5 @@ class ChatProjectApplicationTests {
 //        orderRequest.setTimeExpire(MyDateUtils.dateFormat(MyDateUtils.add(Calendar.MINUTE, 5), "yyyyMMddHHmmss"));
 //        WxPayMpOrderResult order = wxPayService.createOrder(orderRequest);
 //        System.out.println(order);
-//    }
-
-//    @Autowired
-//    private WxMpService wxMpService;
-//
-//    @Test
-//    public void testSendCard() throws WxPayException {
-//        wxMpService.getCardService().
 //    }
 }

@@ -2,7 +2,7 @@ logging:
   level:
     root: INFO
 openai:
-  token: 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
+  token: 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
   temperature: 0.6
   presence_penalty: 0
   frequency_penalty: 0
@@ -12,7 +12,7 @@ openai:
   stream: false
   timeout: 130
   image_timeout: 180
-  use_proxy: 1
+  use_proxy: 0
   system_default: "从现在开始，你的名字叫小C，你是GPT-4模型而不是GPT-3模型"
   image_chat_answer: "好的，已经给您优化并翻译成相关英文描述词，请复制以上英文描述词发送给我即可出图。"
   image_chat_default: "
@@ -57,15 +57,15 @@ midjourney:
   session_id: 94dd4bf1371eda9da3ea34589324714d
   messages_limit: 50
 queue:
-  check_count: 30
+  check_count: 40
   check_delay: 15
   check_message_cron: "*/10 * * * * *"
   command:
-    name: midjourney-check-command-test
+    name: midjourney-check-command
     max_thread: 12
     max_command_length: 50
   result:
-    name: midjourney-send-result-test
+    name: midjourney-send-result
 wxchat:
   welcome_words: "
   Hi! 欢迎使用小C！\n\n
@@ -74,15 +74,15 @@ wxchat:
   2. 对一个10岁的生日有什么创意吗？\n
   3. 如何在JavaScript中发出http请求？\n\n
   🔧 我能力包含以下：\n
-  1. 记住用户之前在对话中说过的话\n
-  2. 允许用户提供后续更正\n
-  3. 能够接受语音消息，讲普通话噢~\n\n
+  1. 接受并修改自己的错误\n
+  2. 进入绘图模式可图片交互\n
+  3. 能接收语音消息\n\n
   ❌ 我局限性包含以下：\n
   1. 可能偶尔生成不正确的信息\n
   2. 对2021年后的世界和事了解有限\n
   3. 暂时无法处理图片，后续可以噢~\n\n
   注意事项：\n
-  1.为避免造成不必要的资源浪费，提供每天10次的对话次数供日常使用。\n\n
+  1.为避免造成不必要的资源浪费，提供每天6次的对话次数供日常使用。\n\n
   2.绘图因成本原因将消耗3次对话。\n\n
   3.建议将小C置顶，这样方便日常使用。\n\n
   如有高频使用需求，请开通会员。\n\n
@@ -94,12 +94,13 @@ wxchat:
   time_frequency_response: "
   小C与您聊天已经超过当日限制~请休息一段时间再来！\n
   如有高频使用需求，请开通会员。\n\n  
-  方式一:<a href=\"https://open.weixin.qq.com/connect/oauth2/authorize?appid=wxba4cf742c969fb56&redirect_uri=http://zhixinyun.work/pay/authCallback&response_type=code&scope=snsapi_base\">开启无限畅聊模式</a>\n\n
+  方式一:<a href=\"https://open.weixin.qq.com/connect/oauth2/authorize?appid=wxba4cf742c969fb56&redirect_uri=http://zhixinyun.work/pay/authCallback&response_type=code&scope=snsapi_base\">开启高级无限畅聊</a>\n\n
   方式二:通过二维码邀请朋友关注可立马刷新等待时间噢~\n\n
   "
   chars_overflow_response: "
-  超出文本最大范围，请尝试精简您的内容!\n\n
-  <a href=\"https://open.weixin.qq.com/connect/oauth2/authorize?appid=wxba4cf742c969fb56&redirect_uri=http://zhixinyun.work/pay/authCallback&response_type=code&scope=snsapi_base\">开通会员扩充文本最大范围</a>"
+  您发送的内容字数过多。\n\n
+  方式一:请尝试精简您的内容~\n\n
+  方式二:<a href=\"https://open.weixin.qq.com/connect/oauth2/authorize?appid=wxba4cf742c969fb56&redirect_uri=http://zhixinyun.work/pay/authCallback&response_type=code&scope=snsapi_base\">开启超长文本内容</a>"
   default_welcome_words_end: "团队招纳合伙人，有想法可联系客服。"
   server_error_replay: "抱歉，刚才小C开了小差，此次不影响对话次数，现在我们继续~"
   release_lock_replay: "成功邀请用户关注，小C又回来了~现在继续我们的话题。"
@@ -109,7 +110,7 @@ wxchat:
   5分钟不对话则会恢复默认聊天模式!\n\n
   使用说明：\n\n
   此模式仅支持接收图片，高级用法请进入专业版。\n\n
-  您现在可以给下C发图片了。
+  您现在可以给小C发图片了。
   "
   mj_update_success: "
   状态更新成功~\n
@@ -126,6 +127,7 @@ wxchat:
   dall_update_success: "
   状态更新成功~\n
   欢迎使用小C画廊-娱乐版！\n
+  此模式绘图质量较差，如需高级用法请使用专业版\n
   5分钟不对话则会恢复默认聊天模式!\n
   使用说明：\n\n
   1.你给小C说中文，小C翻译形容词，可完成绘画。\n\n
@@ -147,9 +149,10 @@ server:
   port: 80
 wx:
   mp:
-    app-id: wx4e9eeae05d1b7f2d
-    secret: 8eb52cc6acd18d9fb476170ce739654e
+    app-id: wxba4cf742c969fb56
+    secret: a5477d800eb2501068840fed99dafda1
     token: axovhm2nIJZDRPzx2ZcQ9bnsZd
+    aes-key: axovhm2nIJZDRPzx2ZcQ9bnsZdraKa37jFr81Dc9Xhc
   pay:
     app-id: wxba4cf742c969fb56
     mch-id: 1639601254
@@ -158,9 +161,9 @@ wx:
 redislock:
   chatExpireSeconds: 60
   aiPicExpireSeconds: 600
-  timeExpireSeconds: 3600
-  timeMaxCount: 50
-  chatTimeOut: 6000
+  timeExpireSeconds: 86400
+  timeMaxCount: 6
+  chatTimeOut: 1800
 spring:
   redis:
     database: 0
