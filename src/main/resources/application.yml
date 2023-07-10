@@ -173,9 +173,9 @@ spring:
   aop:
     auto: true
   datasource:
-    url: jdbc:mysql://35.225.210.233:3306/wechat_schema?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC
-    username: root
-    password: f}TBj;0]MvUXQ7L5
+    url: jdbc:mysql://rm-cn-x0r3ark1b00161wo.rwlb.rds.aliyuncs.com:3306/wechat_schema?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC
+    username: wechat_xc
+    password: Jie981209!!
     type: com.alibaba.druid.pool.DruidDataSource
     druid:
       min-idle: 10
@@ -186,7 +186,7 @@ spring:
       time-between-eviction-runs-millis: 30000
       validation-query: SELECT 1
   rabbitmq:
-    host: 104.197.64.191
+    host: 34.121.255.129
     port: 5672
     username: admin
     password: zhixinyun2023
